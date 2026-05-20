@@ -1,0 +1,219 @@
+{
+    "navbar": {
+        "platform": "المنصة",
+        "infrastructure": "البنية التحتية",
+        "developers": "المطورون",
+        "solutions": "الحلول",
+        "research": "الأبحاث",
+        "foundation": "المؤسسة",
+        "company": "الشركة",
+        "platform_core": "الخدمات الأساسية",
+        "platform_resources": "المصادر",
+        "infrastructure_stack": "مكدس الذكاء الاصطناعي",
+        "developers_explore": "استكشف للمطورين",
+        "developers_support": "المجتمع والدعم",
+        "solutions_industries": "القطاعات",
+        "solutions_security": "الأمان والامتثال",
+        "research_topics": "المجالات",
+        "research_programs": "البرامج",
+        "foundation_initiatives": "المبادرات",
+        "company_about": "من نحن",
+        "company_connect": "تواصل معنا",
+        "latest_release": "أحدث إصدار",
+        "voice_card_title": "تعرّف على OpenQCore Voice",
+        "voice_card_desc": "بنية تحتية فورية للمحادثات الذكية للجيل القادم من أنظمة الذكاء الاصطناعي.",
+        "release_title": "GPT-5.5 متاح الآن",
+        "release_desc": "اكتشف أبرز المزايا الجديدة في الإصدار الأحدث."
+    },
+    "menu": {
+        "openqcore_platform": {
+            "title": "منصة OpenQCore",
+            "desc": "منصة موحدة للبنية التحتية للذكاء الاصطناعي"
+        },
+        "studio": {
+            "title": "الاستوديو",
+            "desc": "أنشئ ونسّق تدفقات عمل الذكاء الاصطناعي"
+        },
+        "voice": {
+            "title": "الصوت",
+            "desc": "بنية تحتية صوتية فورية"
+        },
+        "agents": {
+            "title": "الوكلاء",
+            "desc": "وكلاء متعددون الوسائط وقابلون للتكيّف"
+        },
+        "docs": {
+            "title": "التوثيق",
+            "desc": "توثيق المنصة"
+        },
+        "api_reference": {
+            "title": "مرجع API",
+            "desc": "تفاصيل واجهات البرمجة الأساسية"
+        },
+        "system_status": {
+            "title": "حالة النظام",
+            "desc": "تحديثات مباشرة لحالة الأنظمة"
+        },
+        "pulse_engine": {
+            "title": "Pulse Engine",
+            "desc": "محرك التنسيق الأساسي"
+        },
+        "memory_systems": {
+            "title": "أنظمة الذاكرة",
+            "desc": "ذاكرة تكيفية دائمة"
+        },
+        "realtime_runtime": {
+            "title": "بيئة التشغيل الفورية",
+            "desc": "تنفيذ ذكاء اصطناعي بزمن استجابة منخفض"
+        },
+        "multimodal_stack": {
+            "title": "المكدس متعدد الوسائط",
+            "desc": "النصوص والصوت والصور والفيديو"
+        },
+        "sdks": {
+            "title": "حزم SDK",
+            "desc": "أدوات التطوير الرسمية"
+        },
+        "playground": {
+            "title": "ساحة التجربة",
+            "desc": "اختبر النماذج وواجهات البرمجة"
+        },
+        "integration_guides": {
+            "title": "أدلة التكامل",
+            "desc": "الأدلة والشروحات العملية"
+        },
+        "developer_blog": {
+            "title": "مدونة المطورين",
+            "desc": "الأخبار والمحتوى الهندسي"
+        },
+        "showcase": {
+            "title": "المعرض",
+            "desc": "مشاريع المجتمع والمطورين"
+        },
+        "support": {
+            "title": "الدعم",
+            "desc": "احصل على المساعدة وتواصل معنا"
+        },
+        "enterprise": {
+            "title": "المؤسسات",
+            "desc": "حلول ذكاء اصطناعي للشركات"
+        },
+        "startups": {
+            "title": "الشركات الناشئة",
+            "desc": "وسّع منتجاتك بشكل أسرع"
+        },
+        "security": {
+            "title": "الأمان",
+            "desc": "حماية بمستوى المؤسسات"
+        },
+        "compliance": {
+            "title": "الامتثال",
+            "desc": "المعايير والضوابط العالمية"
+        },
+        "research_index": {
+            "title": "فهرس الأبحاث",
+            "desc": "أحدث أبحاث OpenQCore"
+        },
+        "ai_safety": {
+            "title": "سلامة الذكاء الاصطناعي",
+            "desc": "أنظمة ذكاء اصطناعي مسؤولة وآمنة"
+        },
+        "voice_intelligence": {
+            "title": "الذكاء الصوتي",
+            "desc": "ذكاء اصطناعي صوتي فوري"
+        },
+        "residency": {
+            "title": "برنامج الإقامة البحثية",
+            "desc": "برنامج للتعاون والأبحاث"
+        },
+        "open_research": {
+            "title": "الأبحاث المفتوحة",
+            "desc": "مبادرات تعاونية لأبحاث الذكاء الاصطناعي"
+        },
+        "community": {
+            "title": "المجتمع",
+            "desc": "برامج للمطورين والبنّائين"
+        },
+        "education": {
+            "title": "التعليم",
+            "desc": "موارد تعليمية وتدريب في الذكاء الاصطناعي"
+        },
+        "responsibility": {
+            "title": "مسؤولية الذكاء الاصطناعي",
+            "desc": "أنظمة ذكاء اصطناعي آمنة وشفافة"
+        },
+        "about": {
+            "title": "من نحن",
+            "desc": "رؤيتنا ورسالتنا"
+        },
+        "careers": {
+            "title": "الوظائف",
+            "desc": "انضم إلى فريق OpenQCore"
+        },
+        "brand_assets": {
+            "title": "الهوية البصرية",
+            "desc": "الشعارات والملفات البصرية"
+        },
+        "blog": {
+            "title": "المدونة",
+            "desc": "الأخبار والتحديثات"
+        },
+        "contact": {
+            "title": "تواصل معنا",
+            "desc": "تواصل مع فريقنا"
+        }
+    },
+    "footer": {
+        "platform": "المنصة",
+        "products": "المنتجات",
+        "developers": "المطورون",
+        "company": "الشركة",
+        "overview": "نظرة عامة",
+        "runtime": "بيئة التشغيل",
+        "studio": "الاستوديو",
+        "agents": "الوكلاء",
+        "voice_infrastructure": "البنية التحتية الصوتية",
+        "documentation": "التوثيق",
+        "sdks": "حزم SDK",
+        "api_platform": "منصة API",
+        "system_status": "حالة النظام",
+        "changelog": "سجل التغييرات",
+        "about": "من نحن",
+        "careers": "الوظائف",
+        "privacy": "الخصوصية",
+        "security": "الأمان",
+        "contact": "تواصل معنا",
+        "footer_description": "بنية تحتية بمستوى المؤسسات للأنظمة الذكية، والتنسيق الفوري، والذكاء الاصطناعي متعدد الوسائط، والوكلاء التكيفيين، وتطبيقات الذكاء الاصطناعي الحديثة.",
+        "all_systems_operational": "جميع الأنظمة تعمل بشكل طبيعي",
+        "copyright": "جميع الحقوق محفوظة.",
+        "terms": "الشروط"
+    },
+    "right_actions": {
+        "workspace": "مساحة العمل",
+        "get_started": "ابدأ الآن",
+        "workspace_desc": "إدارة المشاريع والبنية التحتية",
+        "api_platform_desc": "واجهات البرمجة وأدوات المطورين",
+        "qxt_products": "منتجات QXT",
+        "open": "فتح"
+    },
+    "language_switcher": {
+        "select_language": "اختر اللغة"
+    },
+    "search": {
+        "suggestions": {
+            "infrastructure": "ابحث في البنية التحتية...",
+            "pulse_engine": "اسأل عن Pulse Engine...",
+            "apis": "استكشف واجهات البرمجة...",
+            "voice_sdks": "ابحث عن حزم SDK الصوتية...",
+            "research_qxt": "ابحث في ResearchQXT...",
+            "realtime_systems": "استكشف الأنظمة الفورية..."
+        },
+        "quick": {
+            "voice": "الصوت",
+            "agents": "الوكلاء",
+            "realtime": "الأنظمة الفورية",
+            "sdks": "حزم SDK",
+            "research": "الأبحاث"
+        }
+    }
+}

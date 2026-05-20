@@ -1,0 +1,219 @@
+{
+    "navbar": {
+        "platform": "Platform",
+        "infrastructure": "Infrastructure",
+        "developers": "Developers",
+        "solutions": "Solutions",
+        "research": "Research",
+        "foundation": "Foundation",
+        "company": "Company",
+        "platform_core": "Core Services",
+        "platform_resources": "Resources",
+        "infrastructure_stack": "AI Stack",
+        "developers_explore": "Explore Developers",
+        "developers_support": "Community & Support",
+        "solutions_industries": "Industries",
+        "solutions_security": "Compliance & Security",
+        "research_topics": "Topics",
+        "research_programs": "Programs",
+        "foundation_initiatives": "Initiatives",
+        "company_about": "About Us",
+        "company_connect": "Connect",
+        "latest_release": "Latest Release",
+        "voice_card_title": "Introducing OpenQCore Voice",
+        "voice_card_desc": "Realtime conversational infrastructure for next-generation AI systems.",
+        "release_title": "GPT-5.5 Now Available",
+        "release_desc": "See what's new in the latest version."
+    },
+    "menu": {
+        "openqcore_platform": {
+            "title": "OpenQCore Platform",
+            "desc": "Unified AI infrastructure platform"
+        },
+        "studio": {
+            "title": "Studio",
+            "desc": "Build and orchestrate AI workflows"
+        },
+        "voice": {
+            "title": "Voice",
+            "desc": "Realtime voice infrastructure"
+        },
+        "agents": {
+            "title": "Agents",
+            "desc": "Adaptive multimodal agents"
+        },
+        "docs": {
+            "title": "Docs",
+            "desc": "Platform documentation"
+        },
+        "api_reference": {
+            "title": "API Reference",
+            "desc": "Core API details"
+        },
+        "system_status": {
+            "title": "System Status",
+            "desc": "Real-time status updates"
+        },
+        "pulse_engine": {
+            "title": "Pulse Engine",
+            "desc": "Core orchestration engine"
+        },
+        "memory_systems": {
+            "title": "Memory Systems",
+            "desc": "Persistent adaptive memory"
+        },
+        "realtime_runtime": {
+            "title": "Realtime Runtime",
+            "desc": "Low-latency AI execution"
+        },
+        "multimodal_stack": {
+            "title": "Multimodal Stack",
+            "desc": "Text, voice, image, video"
+        },
+        "sdks": {
+            "title": "SDKs",
+            "desc": "Official developer toolkits"
+        },
+        "playground": {
+            "title": "Playground",
+            "desc": "Test models and APIs"
+        },
+        "integration_guides": {
+            "title": "Integration Guides",
+            "desc": "Docs & how-tos"
+        },
+        "developer_blog": {
+            "title": "Developer Blog",
+            "desc": "News and engineering"
+        },
+        "showcase": {
+            "title": "Showcase",
+            "desc": "Projects from the community"
+        },
+        "support": {
+            "title": "Support",
+            "desc": "Get help & contact"
+        },
+        "enterprise": {
+            "title": "Enterprise",
+            "desc": "AI for companies"
+        },
+        "startups": {
+            "title": "Startups",
+            "desc": "Scale products faster"
+        },
+        "security": {
+            "title": "Security",
+            "desc": "Enterprise-grade protection"
+        },
+        "compliance": {
+            "title": "Compliance",
+            "desc": "Global standards"
+        },
+        "research_index": {
+            "title": "Research Index",
+            "desc": "Latest OpenQCore research"
+        },
+        "ai_safety": {
+            "title": "AI Safety",
+            "desc": "Responsible AI systems"
+        },
+        "voice_intelligence": {
+            "title": "Voice Intelligence",
+            "desc": "Realtime conversational AI"
+        },
+        "residency": {
+            "title": "Residency",
+            "desc": "Research collaboration program"
+        },
+        "open_research": {
+            "title": "Open Research",
+            "desc": "Collaborative AI research initiatives"
+        },
+        "community": {
+            "title": "Community",
+            "desc": "Programs for developers and builders"
+        },
+        "education": {
+            "title": "Education",
+            "desc": "Learning resources and AI training"
+        },
+        "responsibility": {
+            "title": "AI Responsibility",
+            "desc": "Safe and transparent AI systems"
+        },
+        "about": {
+            "title": "About",
+            "desc": "Our mission and vision"
+        },
+        "careers": {
+            "title": "Careers",
+            "desc": "Join the OpenQCore team"
+        },
+        "brand_assets": {
+            "title": "Brand Assets",
+            "desc": "Logos & visual assets"
+        },
+        "blog": {
+            "title": "Blog",
+            "desc": "News and updates"
+        },
+        "contact": {
+            "title": "Contact",
+            "desc": "Reach out to us"
+        }
+    },
+    "footer": {
+        "platform": "Platform",
+        "products": "Products",
+        "developers": "Developers",
+        "company": "Company",
+        "overview": "Overview",
+        "runtime": "Runtime",
+        "studio": "Studio",
+        "agents": "Agents",
+        "voice_infrastructure": "Voice Infrastructure",
+        "documentation": "Documentation",
+        "sdks": "SDKs",
+        "api_platform": "API Platform",
+        "system_status": "System Status",
+        "changelog": "Changelog",
+        "about": "About",
+        "careers": "Careers",
+        "privacy": "Privacy",
+        "security": "Security",
+        "contact": "Contact",
+        "footer_description": "Enterprise-grade infrastructure for intelligent systems, realtime orchestration, multimodal AI, adaptive agents, and next-generation AI-native applications.",
+        "all_systems_operational": "All systems operational",
+        "copyright": "All rights reserved.",
+        "terms": "Terms"
+    },
+    "right_actions": {
+        "workspace": "Workspace",
+        "get_started": "Get Started",
+        "workspace_desc": "Manage projects & infrastructure",
+        "api_platform_desc": "Developer APIs & tools",
+        "qxt_products": "QXT Products",
+        "open": "Open"
+    },
+    "language_switcher": {
+        "select_language": "Select language"
+    },
+    "search": {
+        "suggestions": {
+            "infrastructure": "Search infrastructure...",
+            "pulse_engine": "Ask about Pulse Engine...",
+            "apis": "Explore APIs...",
+            "voice_sdks": "Find Voice SDKs...",
+            "research_qxt": "Search ResearchQXT...",
+            "realtime_systems": "Explore realtime systems..."
+        },
+        "quick": {
+            "voice": "Voice",
+            "agents": "Agents",
+            "realtime": "Realtime",
+            "sdks": "SDKs",
+            "research": "Research"
+        }
+    }
+}
