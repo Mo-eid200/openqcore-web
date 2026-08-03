@@ -1,60 +1,91 @@
 import React from "react";
-import { Badge } from "../../components/ui/Badge";
-import { Card, CardContent } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
+import { Trash2, ExternalLink } from "lucide-react";
 
 type Project = {
-    id: string;
-    name: string;
-    status: "active" | "paused" | "archived";
-    createdAt?: string;
+  id:          string;
+  name:        string;
+  status:      "active" | "paused" | "archived";
+  description?: string;
+  createdAt?:  string;
+};
+
+const statusConfig = {
+  active:   "bg-emerald-500/10 border-emerald-400/20 text-emerald-300",
+  paused:   "bg-white/[0.05] border-white/[0.08] text-white/40",
+  archived: "bg-red-500/10 border-red-400/20 text-red-300",
 };
 
 export function ProjectsTable({
-    data,
-    onOpen,
-    onEdit,
-    onDelete,
+  data,
+  onOpen,
+  onDelete,
 }: {
-    data: Project[];
-    onOpen?: (id: string) => void;
-    onEdit?: (id: string) => void;
-    onDelete?: (id: string) => void;
+  data:       Project[];
+  onOpen?:    (id: string) => void;
+  onDelete?:  (id: string) => void;
 }) {
-    return (
-        <Card>
-            <CardContent className="p-0">
-                <table className="min-w-full divide-y divide-white/10">
-                    <thead>
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Name</th>
-                            <th className="px-6 py-3 text-xs text-slate-400 uppercase">Status</th>
-                            <th className="px-6 py-3 text-xs text-slate-400 uppercase">Created</th>
-                            <th className="px-6 py-3" />
-                        </tr>
-                    </thead>
-                    <tbody className="bg-transparent divide-y divide-white/10">
-                        {data.map((p) => (
-                            <tr key={p.id} className="hover:bg-white/[0.03] transition">
-                                <td className="px-6 py-3 font-semibold text-white">{p.name}</td>
-                                <td className="px-6 py-3">
-                                    <Badge color={p.status === "active" ? "emerald" : p.status === "paused" ? "slate" : "danger"}>
-                                        {p.status}
-                                    </Badge>
-                                </td>
-                                <td className="px-6 py-3 text-sm text-slate-400">{p.createdAt}</td>
-                                <td className="px-6 py-3 text-right space-x-2">
-                                    <Button variant="secondary" className="px-3 text-xs" onClick={() => onOpen?.(p.id)}>
-                                        Open
-                                    </Button>
-                                    <Button variant="outline" className="px-3 text-xs" onClick={() => onEdit?.(p.id)}>Edit</Button>
-                                    <Button variant="outline" className="px-3 text-xs" onClick={() => onDelete?.(p.id)}>Delete</Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </CardContent>
-        </Card>
-    );
+  if (!data.length) return null;
+
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-[#0d0d10]/95 backdrop-blur-xl overflow-hidden">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-white/[0.05]">
+            <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-wider text-white/25">Name</th>
+            <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-wider text-white/25">Status</th>
+            <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-wider text-white/25">Created</th>
+            <th className="px-5 py-3" />
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((p) => (
+            <tr
+              key={p.id}
+              className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+            >
+              <td className="px-5 py-3">
+                <div className="text-[13px] font-medium text-white">{p.name}</div>
+                {p.description && (
+                  <div className="text-[11px] text-white/30 mt-0.5 truncate max-w-[200px]">{p.description}</div>
+                )}
+              </td>
+
+              <td className="px-5 py-3">
+                <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${statusConfig[p.status]}`}>
+                  {p.status}
+                </span>
+              </td>
+
+              <td className="px-5 py-3 text-[12px] text-white/30">
+                {p.createdAt}
+              </td>
+
+              <td className="px-5 py-3">
+                <div className="flex items-center justify-end gap-2">
+                  {onOpen && (
+                    <button
+                      type="button"
+                      onClick={() => onOpen(p.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      type="button"
+                      onClick={() => onDelete(p.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }

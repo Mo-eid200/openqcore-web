@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenQCore Loader</title>
+  <style>
+    :root {
+      --bg-1: #06070a;
+      --bg-2: #0b0e14;
+      --panel: rgba(255, 255, 255, 0.05);
+      --panel-2: rgba(255, 255, 255, 0.025);
+      --border: rgba(255, 255, 255, 0.09);
+      --text: rgba(255, 255, 255, 0.92);
+      --muted: rgba(255, 255, 255, 0.52);
+      --gold: #ffd24a;
+      --gold-2: #ffbf3c;
+      --gold-glow: rgba(255, 210, 74, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 210, 74, 0.08), transparent 18%),
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.04), transparent 22%),
+        radial-gradient(circle at 80% 15%, rgba(255,255,255,0.03), transparent 20%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      z-index: 999999;
+    }
+
+    .oq-loader.oq-loader--compact {
+      position: relative;
+      width: 100%;
+      min-height: 70vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 24px;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 210, 74, 0.05), transparent 18%),
+        linear-gradient(180deg, rgba(6, 7, 10, 0.55) 0%, rgba(11, 14, 20, 0.38) 100%);
+      border-radius: 28px;
+    }
+
+    .oq-loader.oq-loader--compact .ambient,
+    .oq-loader.oq-loader--compact .grid {
+      position: absolute;
+      inset: 0;
+    }
+
+    .oq-loader.oq-loader--compact .card {
+      position: relative;
+      z-index: 2;
+      width: min(90vw, 400px);
+    }
+
+    .ambient {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ambient::before,
+    .ambient::after {
+      content: "";
+      position: absolute;
+      width: 42vw;
+      height: 42vw;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.16;
+      animation: floatGlow 10s ease-in-out infinite;
+    }
+
+    .ambient::before {
+      left: -8vw;
+      top: -10vh;
+      background: radial-gradient(circle, rgba(255,210,74,0.28), transparent 60%);
+    }
+
+    .ambient::after {
+      right: -10vw;
+      bottom: -14vh;
+      background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%);
+      animation-delay: -4s;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(circle at center, black 30%, transparent 85%);
+      -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 85%);
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      width: min(90vw, 400px);
+      padding: 24px 20px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.44),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 -1px 0 rgba(255,255,255,0.02);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.14),
+        rgba(255,210,74,0.16),
+        rgba(255,255,255,0.04)
+      );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255,255,255,0.03) 20%,
+        transparent 40%
+      );
+      transform: translateX(-120%);
+      animation: sheen 4.6s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.74);
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold-glow);
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      margin-bottom: 14px;
+    }
+
+    .logo-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 120px;
+      height: 120px;
+    }
+
+    .logo-wrap::before {
+      content: "";
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 210, 74, 0.22) 0%,
+        rgba(255, 210, 74, 0.10) 42%,
+        rgba(255, 210, 74, 0.03) 62%,
+        transparent 78%
+      );
+      filter: blur(10px);
+      animation: logoAura 2.8s ease-in-out infinite;
+    }
+
+    .core-logo {
+      position: relative;
+      z-index: 2;
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      filter:
+        drop-shadow(0 0 10px rgba(255, 210, 74, 0.32))
+        drop-shadow(0 0 22px rgba(255, 210, 74, 0.14));
+      animation: logoPulse 2.2s ease-in-out infinite;
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.44);
+      margin-bottom: 8px;
+    }
+
+    .title {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 320px;
+      margin: 0 auto 18px;
+    }
+
+    .progress-shell {
+      position: relative;
+      z-index: 1;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .progress {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .progress::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -32%;
+      width: 32%;
+      border-radius: inherit;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 210, 74, 0.28) 18%,
+        rgba(255, 210, 74, 0.88) 50%,
+        rgba(255, 210, 74, 0.28) 82%,
+        transparent 100%
+      );
+      box-shadow: 0 0 20px rgba(255,210,74,0.48);
+      animation: scan 1.55s ease-in-out infinite;
+    }
+
+    .progress::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.08) 50%,
+        transparent 100%
+      );
+      transform: translateX(-100%);
+      animation: sweep 2.3s linear infinite;
+      opacity: 0.5;
+    }
+
+    .meta {
+      position: relative;
+      z-index: 1;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold-glow);
+      animation: pulseDot 1.6s ease-in-out infinite;
+    }
+
+    .typing::after {
+      content: "";
+      animation: dots 1.4s steps(4, end) infinite;
+    }
+
+    .footer {
+      position: relative;
+      z-index: 1;
+      margin-top: 12px;
+      text-align: center;
+      font-size: 10px;
+      color: rgba(255,255,255,0.36);
+      letter-spacing: 0.02em;
+    }
+
+    @keyframes scan {
+      0% { left: -32%; }
+      100% { left: 100%; }
+    }
+
+    @keyframes sweep {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(180%); }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% {
+        transform: scale(0.9);
+        opacity: 0.65;
+      }
+      50% {
+        transform: scale(1.25);
+        opacity: 1;
+      }
+    }
+
+    @keyframes floatGlow {
+      0%, 100% {
+        transform: translateY(0) translateX(0);
+      }
+      50% {
+        transform: translateY(18px) translateX(10px);
+      }
+    }
+
+    @keyframes sheen {
+      0% {
+        transform: translateX(-120%);
+      }
+      100% {
+        transform: translateX(140%);
+      }
+    }
+
+    @keyframes logoPulse {
+      0%, 100% {
+        transform: scale(0.96);
+        opacity: 0.92;
+      }
+      50% {
+        transform: scale(1.06);
+        opacity: 1;
+      }
+    }
+
+    @keyframes logoAura {
+      0%, 100% {
+        transform: scale(0.92);
+        opacity: 0.55;
+      }
+      50% {
+        transform: scale(1.08);
+        opacity: 0.95;
+      }
+    }
+
+    @keyframes dots {
+      0%   { content: ""; }
+      25%  { content: "."; }
+      50%  { content: ".."; }
+      75%  { content: "..."; }
+      100% { content: ""; }
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        width: min(92vw, 360px);
+        padding: 22px 16px 16px;
+        border-radius: 20px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+
+      .subtitle {
+        font-size: 11px;
+      }
+
+      .logo-wrap {
+        width: 92px;
+        height: 92px;
+      }
+
+      .logo-wrap::before {
+        width: 84px;
+        height: 84px;
+      }
+
+      .core-logo {
+        width: 64px;
+        height: 64px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loader-overlay">
+    <div class="ambient"></div>
+    <div class="grid"></div>
+
+    <div class="card">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        OpenQCore Runtime Active
+      </div>
+
+      <div class="hero">
+        <div class="logo-wrap">
+          <img src="../engines/corelogo.png" alt="OpenQCore logo" class="core-logo" />
+        </div>
+      </div>
+
+      <div class="brand">OpenQCore</div>
+      <div class="title">Initializing intelligent workspace</div>
+      <div class="subtitle">
+        Loading context, synchronizing modules, and preparing the OpenQCore environment for your session.
+      </div>
+
+      <div class="progress-shell">
+        <div class="progress"></div>
+
+        <div class="meta">
+          <div class="status typing">Syncing platform context</div>
+          <div>Secure environment</div>
+        </div>
+      </div>
+
+      <div class="footer">Please wait while OpenQCore becomes ready</div>
+    </div>
+  </div>
+</body>
+</html>

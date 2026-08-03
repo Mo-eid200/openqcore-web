@@ -4,19 +4,16 @@ import {
     createContext,
     useContext,
     useMemo,
-    useState,
 } from "react";
 
+import { usePathname } from "next/navigation";
+
 export type DashboardMode =
-    | "personal"
+    | "console"
     | "workspace";
 
 type DashboardContextType = {
     dashboardMode: DashboardMode;
-
-    setDashboardMode: (
-        mode: DashboardMode
-    ) => void;
 };
 
 const DashboardContext =
@@ -29,17 +26,18 @@ export function DashboardProvider({
 }: {
     children: React.ReactNode;
 }) {
-    const [
-        dashboardMode,
-        setDashboardMode,
-    ] = useState<DashboardMode>(
-        "workspace"
-    );
+
+    const pathname =
+        usePathname();
+
+    const dashboardMode: DashboardMode =
+        pathname.startsWith("/workspace")
+            ? "workspace"
+            : "console";
 
     const value = useMemo(
         () => ({
             dashboardMode,
-            setDashboardMode,
         }),
         [dashboardMode]
     );
@@ -54,6 +52,7 @@ export function DashboardProvider({
 }
 
 export function useDashboard() {
+
     const context =
         useContext(DashboardContext);
 

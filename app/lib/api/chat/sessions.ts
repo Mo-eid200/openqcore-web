@@ -228,28 +228,40 @@ export async function listSessions(): Promise<ChatSession[]> {
 export async function createSession(payload?: {
   title?: string;
   folder_id?: string | null;
+  kind?: "chat";
+  metadata?: Record<string, unknown>;
+  forcePersonalContext?: boolean;
 }): Promise<{ id: string }> {
   try {
     console.log("[createSession] Creating session...", payload);
 
-    const res = await qxtChatClient.post("/api/v1/sessions", {
-      title: payload?.title?.trim() || null,
-      folder_id: payload?.folder_id ?? null,
-    });
+    const res = await qxtChatClient.post(
+      "/api/v1/sessions",
+      {
+        title: payload?.title?.trim() || null,
+        folder_id: payload?.folder_id ?? null,
+        kind: payload?.kind ?? "chat",
+        metadata: payload?.metadata ?? {},
+      },
+      {
+        __forcePersonalContext: payload?.forcePersonalContext === true,
+      } as any
+    );
 
     const id = res.data?.id;
+
     if (!id || typeof id !== "string") {
       throw new Error("Invalid session ID in response");
     }
 
     console.log("[createSession] ✅ Created:", id);
+
     return { id };
   } catch (err) {
     console.error("[createSession] ❌ Failed:", err);
     throw err;
   }
 }
-
 /**
  * ✅ Get session messages - PRODUCTION READY
  * Handles voice messages properly with payload structure
@@ -439,18 +451,21 @@ export async function* streamChatMessage(
   sessionId: string,
   userMessage: string,
   model: string = "pulse",
-  requestId?: string
+  requestId?: string,
+  forcePersonalContext: boolean = false
 ): AsyncGenerator<string, void, unknown> {
   if (!sessionId) throw new Error("Session ID is required");
   if (!userMessage?.trim()) throw new Error("Message cannot be empty");
 
   const finalRequestId = requestId || crypto.randomUUID();
   const token = localStorage.getItem("qxt_access_token") || "";
-  const workspaceId = getWorkspaceId();
+  const workspaceId = forcePersonalContext ? "" : getWorkspaceId();
 
   try {
     console.log("[streamChatMessage] Starting stream...");
-
+    
+    console.log("API_BASE =", API_BASE);
+    console.log("URL =", `${API_BASE}/api/v1/chat/completions`);
     const response = await fetch(`${API_BASE}/api/v1/chat/completions`, {
       method: "POST",
       headers: {
@@ -459,6 +474,13 @@ export async function* streamChatMessage(
         ...(token
           ? { Authorization: `Bearer ${token}` }
           : {}),
+
+          ...(forcePersonalContext
+  ? {
+      "X-Space-Type": "personal",
+      "X-Scope-Type": "personal",
+    }
+  : {}),
 
         ...(workspaceId
           ? { "X-Company-ID": workspaceId }
@@ -479,8 +501,25 @@ export async function* streamChatMessage(
     });
 
     if (!response.ok) {
-      throw new Error(`Stream failed: ${response.status}`);
+  let message = `Stream failed: ${response.status}`;
+
+  try {
+    const errorData = await response.json();
+
+    if (typeof errorData?.detail === "string") {
+      message = errorData.detail;
+    } else if (errorData?.detail?.message) {
+      message = errorData.detail.message;
     }
+  } catch {
+    // Keep fallback message.
+  }
+
+  const error = new Error(message) as Error & { status?: number };
+  error.status = response.status;
+
+  throw error;
+}
 
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
@@ -521,8 +560,11 @@ export async function* streamChatMessage(
         }
       }
     }
-  } catch (err) {
-    console.error("[streamChatMessage] ❌ Failed:", err);
+  } catch (err: any) {
+    if (err?.status !== 429) {
+      console.error("[streamChatMessage] ❌ Failed:", err);
+    }
+
     throw err;
   }
 }

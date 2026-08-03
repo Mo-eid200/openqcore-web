@@ -1,62 +1,225 @@
 "use client";
-import React, { useState } from "react";
-import { StorageOverview } from "./StorageOverview";
-import { BucketCard } from "./BucketCard";
-import { StorageGrid } from "./StorageGrid";
-import { UploadStorageModal } from "./UploadStorageModal";
-import { UsageChart } from "./UsageChart";
-import { Bucket, File } from "./types";
 
-const DUMMY_BUCKETS: Bucket[] = [
-    { name: "knowledge-data", region: "us-east-1", files: 128, usage: "8.2GB", status: "active" },
-    { name: "uploads", region: "eu-west-1", files: 94, usage: "3.6GB", status: "active" },
-    { name: "vector-files", region: "us-central", files: 76, usage: "2.4GB", status: "active" }
-];
+import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createPortal } from "react-dom";
+import { HardDrive, Plus } from "lucide-react";
 
-const DUMMY_FILES: File[] = [
-    { id: "1", name: "vector-chunks-44.vec", type: "vec", size: "285MB", updated: "3m ago", bucket: "vector-files", status: "available" },
-    { id: "2", name: "knowledge-main.pdf", type: "pdf", size: "11.2MB", updated: "14m ago", bucket: "knowledge-data", status: "available" },
-    { id: "3", name: "upload-94.txt", type: "txt", size: "75KB", updated: "22m ago", bucket: "uploads", status: "processing" },
-    { id: "4", name: "archive-corrupted.vec", type: "vec", size: "5GB", updated: "1d ago", bucket: "vector-files", status: "error" }
-];
+import { StorageOverview }     from "./StorageOverview";
+import { StorageGrid }         from "./StorageGrid";
+import { UploadStorageModal }  from "./UploadStorageModal";
+import { UsageChart }          from "./UsageChart";
+
+import { useWorkspace } from "@/app/context/WorkspaceContext";
+import {
+  getWorkspaceStorage,
+  getStorageStats,
+  deleteStorageFile,
+  uploadWorkspaceFile,
+  formatBytes,
+  type StorageListResponse,
+  type WorkspaceFile,
+} from "@/app/lib/api/workspace/storage";
+
+// ─── Fade ─────────────────────────────────────────────────────────────────────
+
+function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  return (
+    <div className="animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function PageSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-24 rounded-2xl border border-white/[0.06] bg-white/[0.02] animate-pulse"
+            style={{ animationDelay: `${i * 60}ms` }} />
+        ))}
+      </div>
+      <div className="h-48 rounded-2xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
+      <div className="flex flex-col gap-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-14 rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse"
+            style={{ animationDelay: `${i * 40}ms` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StoragePage() {
-    const [showUpload, setShowUpload] = useState(false);
-    const [files, setFiles] = useState(DUMMY_FILES);
+  const { activeWorkspace } = useWorkspace();
+  const queryClient         = useQueryClient();
+  const [search,      setSearch]      = useState("");
+  const [kindFilter,  setKindFilter]  = useState("");
+  const [showUpload,  setShowUpload]  = useState(false);
+  const [uploadPct,   setUploadPct]   = useState(0);
+  const [mounted,     setMounted]     = React.useState(false);
 
-    const addFile = (file: any) => {
-        setFiles([
-            ...files,
-            {
-                ...file,
-                id: (Math.random() * 1e8).toFixed(0),
-                updated: "just now",
-                status: "processing"
-            }
-        ]);
-    };
+  React.useEffect(() => setMounted(true), []);
 
-    return (
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-8 pb-14">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white mb-1">Storage</h1>
-                <p className="text-slate-400 mb-4">
-                    Your workspace object storage. Upload, monitor, and manage files, vector data and buckets.
-                </p>
-                <button
-                    className="bg-gradient-to-r from-[#d4af37] to-[#ffe08c] text-[#161d2a] px-5 py-2 rounded-lg font-bold shadow hover:opacity-90 transition"
-                    onClick={() => setShowUpload(true)}
-                >
-                    + Upload File
-                </button>
-            </div>
-            <StorageOverview />
-            <div className="mb-7 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {DUMMY_BUCKETS.map(b => <BucketCard key={b.name} bucket={b} />)}
-            </div>
-            <UsageChart />
-            <StorageGrid files={files} />
-            <UploadStorageModal open={showUpload} onClose={() => setShowUpload(false)} onUpload={addFile} />
-        </div>
+  // ── Files query ────────────────────────────────────────────────────────────
+  const { data, isLoading } = useQuery({
+    queryKey:  ["workspace-storage", activeWorkspace?.id, kindFilter],
+    queryFn:   () => getWorkspaceStorage(activeWorkspace!.id, {
+      kind:  kindFilter || undefined,
+      limit: 50,
+    }),
+    enabled:   !!activeWorkspace?.id,
+    staleTime: 60_000,
+    gcTime:    5 * 60_000,
+    retry:     1,
+  });
+
+  // ── Stats query ────────────────────────────────────────────────────────────
+  const { data: stats } = useQuery({
+    queryKey:  ["workspace-storage-stats", activeWorkspace?.id],
+    queryFn:   () => getStorageStats(activeWorkspace!.id),
+    enabled:   !!activeWorkspace?.id,
+    staleTime: 60_000,
+  });
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  const { mutateAsync: doUpload, isPending: uploading } = useMutation({
+    mutationFn: (file: File) =>
+      uploadWorkspaceFile(activeWorkspace!.id, file, setUploadPct),
+    onSuccess: (uploaded) => {
+      queryClient.setQueryData(
+        ["workspace-storage", activeWorkspace?.id, kindFilter],
+        (old: StorageListResponse | undefined) => ({
+          ...old,
+          items:       [uploaded, ...(old?.items ?? [])],
+          total:       (old?.total ?? 0) + 1,
+          total_bytes: (old?.total_bytes ?? 0) + uploaded.bytes,
+        })
+      );
+      queryClient.invalidateQueries({ queryKey: ["workspace-storage-stats", activeWorkspace?.id] });
+      setShowUpload(false);
+      setUploadPct(0);
+    },
+  });
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  const { mutateAsync: doDelete } = useMutation({
+    mutationFn: (fileId: string) =>
+      deleteStorageFile(activeWorkspace!.id, fileId),
+    onSuccess: (_, fileId) => {
+      queryClient.setQueryData(
+        ["workspace-storage", activeWorkspace?.id, kindFilter],
+        (old: StorageListResponse | undefined) => {
+          const deleted = old?.items.find(f => f.id === fileId);
+          return {
+            ...old,
+            items:       (old?.items ?? []).filter(f => f.id !== fileId),
+            total:       Math.max(0, (old?.total ?? 1) - 1),
+            total_bytes: Math.max(0, (old?.total_bytes ?? 0) - (deleted?.bytes ?? 0)),
+          };
+        }
+      );
+      queryClient.invalidateQueries({ queryKey: ["workspace-storage-stats", activeWorkspace?.id] });
+    },
+  });
+
+  // ── Filter ─────────────────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    const q    = search.trim().toLowerCase();
+    const list = data?.items ?? [];
+    if (!q) return list;
+    return list.filter(f =>
+      f.filename?.toLowerCase().includes(q) ||
+      f.kind.toLowerCase().includes(q)
     );
+  }, [data?.items, search]);
+
+  // ── Stats display ──────────────────────────────────────────────────────────
+  const statsData = {
+    total_files: stats?.total_files ?? 0,
+    total_bytes: formatBytes(stats?.total_bytes ?? 0),
+    images:      formatBytes(stats?.by_kind?.image ?? 0),
+    documents:   formatBytes(stats?.by_kind?.document ?? 0),
+    videos:      formatBytes(stats?.by_kind?.video ?? 0),
+    other:       formatBytes(stats?.by_kind?.other ?? 0),
+  };
+
+  return (
+    <>
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 xl:px-10 py-10 flex flex-col gap-8">
+
+        {/* Header */}
+        <FadeIn delay={0}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 border border-red-500/20">
+                <HardDrive className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-white">Storage</h1>
+                <p className="text-sm text-white/40">Upload, monitor, and manage workspace files</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowUpload(true)}
+              className="flex items-center gap-2 h-9 px-4 rounded-xl bg-red-500 text-white text-[13px] font-semibold hover:bg-red-400 transition-all shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Upload File
+            </button>
+          </div>
+        </FadeIn>
+
+        {isLoading ? <PageSkeleton /> : (
+          <>
+            {/* Stats */}
+            <FadeIn delay={100}>
+              <StorageOverview stats={statsData} />
+            </FadeIn>
+
+            {/* Chart */}
+            <FadeIn delay={200}>
+              <UsageChart
+                byKind={stats?.by_kind ?? {}}
+                totalBytes={stats?.total_bytes ?? 0}
+              />
+            </FadeIn>
+
+            {/* Files */}
+            <FadeIn delay={300}>
+              <StorageGrid
+                files={filtered}
+                search={search}
+                onSearch={setSearch}
+                kindFilter={kindFilter}
+                onKindFilter={setKindFilter}
+                onDelete={async (id) => {
+                  if (!window.confirm("Delete this file?")) return;
+                  await doDelete(id);
+                }}
+              />
+            </FadeIn>
+          </>
+        )}
+      </div>
+
+      {/* Upload Modal */}
+      {mounted && createPortal(
+        <UploadStorageModal
+          open={showUpload}
+          loading={uploading}
+          progress={uploadPct}
+          onClose={() => { setShowUpload(false); setUploadPct(0); }}
+          onUpload={async (file) => { await doUpload(file); }}
+        />,
+        document.body
+      )}
+    </>
+  );
 }

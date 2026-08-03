@@ -1,717 +1,316 @@
 "use client";
 
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 
-import {
-    qxtApiClient,
-    getStoredContext,
-    setStoredContext,
-    clearStoredContext,
-    getStoredToken,
-} from "../lib/api/core/qxtClient";
+import { fetchBootstrap } from "../lib/api/auth/auth.api";
+import { useAgentRuntime } from "./AgentRuntimeContext";
+import { qxtApiClient, getStoredToken } from "../lib/api/core/qxtClient";
 
-/* =========================================================
-   TYPES
-========================================================= */
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type WorkspacePlan =
-    | "Free Plan"
-    | "Starter Plan"
-    | "Pro Plan"
-    | "Business Plan"
-    | "Enterprise Plan";
+  | "Free Plan"
+  | "Starter Plan"
+  | "Pro Plan"
+  | "Business Plan"
+  | "Enterprise Plan";
 
 export type WorkspaceRole =
-    | "owner"
-    | "admin"
-    | "developer"
-    | "member"
-    | "viewer";
+  | "owner"
+  | "admin"
+  | "developer"
+  | "member"
+  | "viewer";
 
 export type WorkspaceType =
-    | "Personal"
-    | "Team"
-    | "Enterprise";
-
-export type WorkspaceSubscriptionStatus =
-    | "active"
-    | "inactive"
-    | "trialing"
-    | "canceled"
-    | "past_due";
+  | "Personal"
+  | "Team"
+  | "Enterprise";
 
 export type Workspace = {
-    id: string;
-
-    /* =========================================
-       IDENTITY
-    ========================================= */
-
-    name: string;
-
-    slug?: string;
-
-    logo_url?: string | null;
-
-    description?: string | null;
-
-    /* =========================================
-       ACCESS
-    ========================================= */
-
-    role: WorkspaceRole;
-
-    type: WorkspaceType;
-
-    /* =========================================
-       BILLING
-    ========================================= */
-
-    plan: WorkspacePlan;
-
-    subscription_status:
-    WorkspaceSubscriptionStatus;
-
-    /* =========================================
-       USAGE
-    ========================================= */
-
-    balance: number;
-
-    seats: number;
-
-    projects_count: number;
-
-    members_count: number;
-
-    api_requests: number;
-
-    created_at?: string;
+  id: string;
+  name: string;
+  slug?: string;
+  logo_url?: string | null;
+  description?: string | null;
+  role: WorkspaceRole;
+  type: WorkspaceType;
+  // Display label, e.g. "Team Plan" — derived from plan_name below.
+  plan: WorkspacePlan;
+  // Numeric id from pricing_plans (billing_subscriptions.plan_id).
+  // This is what billing UIs (WorkspaceUpgradeModal) match against
+  // the pricing grid — `plan` alone can't do that (it's free-text).
+  plan_id: number | null;
+  balance: number;
+  seats: number;
+  projects_count: number;
+  members_count: number;
+  api_requests: number;
+  created_at?: string;
 };
 
 type CreateWorkspacePayload = {
-    name: string;
-    description?: string;
+  name: string;
+  description?: string;
 };
 
 type WorkspaceContextValue = {
-    loading: boolean;
-
-    initialized: boolean;
-
-    workspaces: Workspace[];
-
-    activeWorkspace: Workspace | null;
-
-    isWorkspaceMode: boolean;
-
-    hasWorkspaceSubscription: boolean;
-
-    refreshWorkspaces: () => Promise<void>;
-
-    switchWorkspace: (
-        workspaceId: string
-    ) => Promise<void>;
-
-    switchToPersonal: () => void;
-
-    createWorkspace: (
-        payload: CreateWorkspacePayload
-    ) => Promise<Workspace>;
-
-    removeWorkspace: (
-        workspaceId: string
-    ) => Promise<void>;
-
-    updateWorkspace: (
-        workspaceId: string,
-        payload: Partial<CreateWorkspacePayload>
-    ) => Promise<void>;
+  loading: boolean;
+  initialized: boolean;
+  workspaces: Workspace[];
+  activeWorkspace: Workspace | null;
+  isWorkspaceMode: boolean;
+  refreshWorkspaces: () => Promise<void>;
+  switchWorkspace: (workspaceId: string) => Promise<void>;
+  switchToPersonal: () => void;
+  createWorkspace: (payload: CreateWorkspacePayload) => Promise<Workspace>;
+  removeWorkspace: (workspaceId: string) => Promise<void>;
+  updateWorkspace: (workspaceId: string, payload: Partial<CreateWorkspacePayload>) => Promise<void>;
 };
 
-/* =========================================================
-   CONTEXT
-========================================================= */
+// ─── Context ──────────────────────────────────────────────────────────────────
 
-const WorkspaceContext =
-    createContext<WorkspaceContextValue | null>(
-        null
-    );
+const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
-/* =========================================================
-   HELPERS
-========================================================= */
+// ─── Normalize ────────────────────────────────────────────────────────────────
 
-function normalizeWorkspace(
-    raw: any
-): Workspace {
-    return {
-        /* =====================================
-           IDENTITY
-        ===================================== */
-
-        id: String(raw?.id ?? ""),
-
-        name:
-            raw?.name ||
-            "Untitled Workspace",
-
-        slug:
-            raw?.slug || undefined,
-
-        logo_url:
-            raw?.logo_url || null,
-
-        description:
-            raw?.description || null,
-
-        /* =====================================
-           ACCESS
-        ===================================== */
-
-        role:
-            raw?.role || "member",
-
-        type:
-            raw?.type || "Personal",
-
-        /* =====================================
-           BILLING
-        ===================================== */
-
-        plan:
-            raw?.plan || "Free Plan",
-
-        subscription_status:
-            raw?.subscription_status ||
-            "inactive",
-
-        /* =====================================
-           USAGE
-        ===================================== */
-
-        balance: Number(
-            raw?.balance || 0
-        ),
-
-        seats: Number(
-            raw?.seats || 1
-        ),
-
-        projects_count: Number(
-            raw?.projects_count || 0
-        ),
-
-        members_count: Number(
-            raw?.members_count || 1
-        ),
-
-        api_requests: Number(
-            raw?.api_requests || 0
-        ),
-
-        created_at:
-            raw?.created_at ||
-            undefined,
-    };
+// bootstrap returns `plan_name` (e.g. "workspace_free", "Team",
+// null-if-no-subscription) — not a ready-to-display "plan" string.
+// This turns that into the WorkspacePlan display label the UI wants,
+// same rule as displayPlanName() in WorkspaceUpgradeModal: no
+// subscription row (or a raw free-tier slug name) → "Free Plan".
+function toDisplayPlan(planName: string | null | undefined): WorkspacePlan {
+  if (!planName) return "Free Plan";
+  const lower = planName.toLowerCase();
+  if (lower.includes("free") || lower === "workspace_free") return "Free Plan";
+  if (lower.includes("enterprise")) return "Enterprise Plan";
+  if (lower.includes("business")) return "Business Plan";
+  if (lower.includes("pro")) return "Pro Plan";
+  if (lower.includes("team") || lower.includes("starter")) return "Starter Plan";
+  return "Free Plan";
 }
 
-/* =========================================================
-   PROVIDER
-========================================================= */
-
-export function WorkspaceProvider({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-
-    /* =====================================================
-       STATE
-    ===================================================== */
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [
-        initialized,
-        setInitialized,
-    ] = useState(false);
-
-    const [workspaces, setWorkspaces] =
-        useState<Workspace[]>([]);
-
-    const [
-        activeWorkspace,
-        setActiveWorkspace,
-    ] = useState<Workspace | null>(
-        null
-    );
-
-    /* =====================================================
-       FETCH WORKSPACES
-    ===================================================== */
-
-    const refreshWorkspaces =
-        useCallback(async () => {
-
-            try {
-                setLoading(true);
-
-                const token =
-                    getStoredToken();
-
-                /* =====================================
-                   NO TOKEN
-                ===================================== */
-
-                if (!token) {
-
-                    setWorkspaces([]);
-
-                    setActiveWorkspace(
-                        null
-                    );
-
-                    clearStoredContext();
-
-                    return;
-                }
-
-                /* =====================================
-                   API
-                ===================================== */
-
-                const res =
-                    await qxtApiClient.get(
-                        "/api/v1/workspaces"
-                    );
-
-                const raw =
-                    res.data?.items ||
-                    res.data?.workspaces ||
-                    [];
-
-                const normalized =
-                    Array.isArray(raw)
-                        ? raw.map(
-                            normalizeWorkspace
-                        )
-                        : [];
-
-                setWorkspaces(
-                    normalized
-                );
-
-                /* =====================================
-                   RESTORE STORED CONTEXT
-                ===================================== */
-
-                const stored =
-                    getStoredContext();
-
-                let nextActive:
-                    | Workspace
-                    | null = null;
-
-                if (
-                    stored?.workspaceId
-                ) {
-                    nextActive =
-                        normalized.find(
-                            (workspace) =>
-                                String(
-                                    workspace.id
-                                ) ===
-                                String(
-                                    stored.workspaceId
-                                )
-                        ) || null;
-                }
-
-                /* =====================================
-                   DEFAULT = PERSONAL MODE
-                ===================================== */
-
-                if (
-                    stored?.environment ===
-                    "workspace"
-                ) {
-
-                    if (
-                        !nextActive &&
-                        normalized.length > 0
-                    ) {
-                        nextActive =
-                            normalized[0];
-                    }
-
-                } else {
-
-                    nextActive = null;
-                }
-
-                setActiveWorkspace(
-                    nextActive
-                );
-
-                /* =====================================
-                   REPAIR STORAGE
-                ===================================== */
-
-                if (
-                    nextActive
-                ) {
-
-                    setStoredContext({
-                        workspaceId:
-                            nextActive.id,
-
-                        environment:
-                            "workspace",
-                    });
-
-                } else {
-
-                    setStoredContext({
-                        workspaceId:
-                            null,
-
-                        environment:
-                            "personal",
-                    });
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Failed loading workspaces",
-                    error
-                );
-
-                setWorkspaces([]);
-
-                setActiveWorkspace(
-                    null
-                );
-
-                clearStoredContext();
-
-            } finally {
-
-                setLoading(false);
-
-                setInitialized(true);
-            }
-        }, []);
-
-    /* =====================================================
-       SWITCH WORKSPACE
-    ===================================================== */
-
-    const switchWorkspace =
-        useCallback(
-            async (
-                workspaceId: string
-            ) => {
-
-                const workspace =
-                    workspaces.find(
-                        (w) =>
-                            String(
-                                w.id
-                            ) ===
-                            String(
-                                workspaceId
-                            )
-                    ) || null;
-
-                if (!workspace) {
-                    return;
-                }
-
-                setStoredContext({
-                    workspaceId:
-                        workspace.id,
-
-                    environment:
-                        "workspace",
-                });
-
-                setActiveWorkspace(
-                    workspace
-                );
-
-                try {
-
-                    await qxtApiClient.post(
-                        `/api/v1/workspaces/${workspace.id}/activate`
-                    );
-
-                } catch (error) {
-
-                    console.warn(
-                        "Workspace activation skipped",
-                        error
-                    );
-                }
-            },
-            [workspaces]
-        );
-
-    /* =====================================================
-       SWITCH TO PERSONAL
-    ===================================================== */
-
-    const switchToPersonal =
-        useCallback(() => {
-
-            setStoredContext({
-                workspaceId:
-                    null,
-
-                environment:
-                    "personal",
-            });
-
-            setActiveWorkspace(
-                null
-            );
-
-        }, []);
-
-    /* =====================================================
-       CREATE WORKSPACE
-    ===================================================== */
-
-    const createWorkspace =
-        useCallback(
-            async (
-                payload: CreateWorkspacePayload
-            ): Promise<Workspace> => {
-
-                const res =
-                    await qxtApiClient.post(
-                        "/api/v1/workspaces",
-                        payload
-                    );
-
-                const workspace =
-                    normalizeWorkspace(
-                        res.data
-                            ?.workspace ||
-                        res.data
-                    );
-
-                setWorkspaces(
-                    (prev) => [
-                        workspace,
-                        ...prev,
-                    ]
-                );
-
-                await switchWorkspace(
-                    workspace.id
-                );
-
-                return workspace;
-            },
-            [switchWorkspace]
-        );
-
-    /* =====================================================
-       UPDATE WORKSPACE
-    ===================================================== */
-
-    const updateWorkspace =
-        useCallback(
-            async (
-                workspaceId: string,
-                payload: Partial<CreateWorkspacePayload>
-            ) => {
-
-                const res =
-                    await qxtApiClient.patch(
-                        `/api/v1/workspaces/${workspaceId}`,
-                        payload
-                    );
-
-                const updated =
-                    normalizeWorkspace(
-                        res.data
-                            ?.workspace ||
-                        res.data
-                    );
-
-                setWorkspaces(
-                    (prev) =>
-                        prev.map(
-                            (workspace) =>
-                                workspace.id ===
-                                    updated.id
-                                    ? updated
-                                    : workspace
-                        )
-                );
-
-                setActiveWorkspace(
-                    (prev) =>
-                        prev?.id ===
-                            updated.id
-                            ? updated
-                            : prev
-                );
-            },
-            []
-        );
-
-    /* =====================================================
-       DELETE WORKSPACE
-    ===================================================== */
-
-    const removeWorkspace =
-        useCallback(
-            async (
-                workspaceId: string
-            ) => {
-
-                await qxtApiClient.delete(
-                    `/api/v1/workspaces/${workspaceId}`
-                );
-
-                const filtered =
-                    workspaces.filter(
-                        (workspace) =>
-                            workspace.id !==
-                            workspaceId
-                    );
-
-                setWorkspaces(
-                    filtered
-                );
-
-                if (
-                    activeWorkspace?.id ===
-                    workspaceId
-                ) {
-
-                    setActiveWorkspace(
-                        null
-                    );
-
-                    setStoredContext({
-                        workspaceId:
-                            null,
-
-                        environment:
-                            "personal",
-                    });
-                }
-            },
-            [
-                activeWorkspace,
-                workspaces,
-            ]
-        );
-
-    /* =====================================================
-       INITIAL LOAD
-    ===================================================== */
-
-    useEffect(() => {
-        refreshWorkspaces();
-    }, [refreshWorkspaces]);
-
-    /* =====================================================
-       COMPUTED
-    ===================================================== */
-
-    const isWorkspaceMode =
-        !!activeWorkspace;
-
-    const hasWorkspaceSubscription =
-        activeWorkspace?.subscription_status ===
-        "active";
-
-    /* =====================================================
-       CONTEXT VALUE
-    ===================================================== */
-
-    const value =
-        useMemo<WorkspaceContextValue>(
-            () => ({
-                loading,
-
-                initialized,
-
-                workspaces,
-
-                activeWorkspace,
-
-                isWorkspaceMode,
-
-                hasWorkspaceSubscription,
-
-                refreshWorkspaces,
-
-                switchWorkspace,
-
-                switchToPersonal,
-
-                createWorkspace,
-
-                removeWorkspace,
-
-                updateWorkspace,
-            }),
-            [
-                loading,
-                initialized,
-                workspaces,
-                activeWorkspace,
-                isWorkspaceMode,
-                hasWorkspaceSubscription,
-                refreshWorkspaces,
-                switchWorkspace,
-                switchToPersonal,
-                createWorkspace,
-                removeWorkspace,
-                updateWorkspace,
-            ]
-        );
-
-    return (
-        <WorkspaceContext.Provider
-            value={value}
-        >
-            {children}
-        </WorkspaceContext.Provider>
-    );
+function normalizeWorkspace(raw: any): Workspace {
+  return {
+    id:             String(raw?.id ?? ""),
+    name:           raw?.name        || "Untitled Workspace",
+    slug:           raw?.slug        || undefined,
+    logo_url:       raw?.logo_url    || null,
+    description:    raw?.description || null,
+    role:           raw?.role        || "member",
+    type:           raw?.type        || "Personal",
+    plan:           toDisplayPlan(raw?.plan_name ?? raw?.plan),
+    plan_id:        raw?.plan_id !== undefined && raw?.plan_id !== null ? Number(raw.plan_id) : null,
+    balance:        Number(raw?.balance        || 0),
+    seats:          Number(raw?.seat_limit ?? raw?.seats ?? 1),
+    projects_count: Number(raw?.projects_count || 0),
+    members_count:  Number(raw?.members_count  || 1),
+    api_requests:   Number(raw?.api_requests   || 0),
+    created_at:     raw?.created_at  || undefined,
+  };
 }
 
-/* =========================================================
-   HOOK
-========================================================= */
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function useWorkspace() {
+export function WorkspaceProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const {
+    spaceType,
+    activeWorkspaceId,
+    switchToWorkspace,
+    switchToPersonal: switchRuntimeToPersonal,
+  } = useAgentRuntime();
 
-    const ctx =
-        useContext(
-            WorkspaceContext
-        );
+  const [loading,         setLoading]         = useState(true);
+  const [initialized,     setInitialized]     = useState(false);
+  const [workspaces,      setWorkspaces]      = useState<Workspace[]>([]);
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
 
-    if (!ctx) {
-        throw new Error(
-            "useWorkspace must be used within WorkspaceProvider"
-        );
+  // ── refreshWorkspaces ───────────────────────────────────────────────────
+
+  const refreshWorkspaces = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+
+      const token = getStoredToken();
+      if (!token) {
+        setWorkspaces([]);
+        setActiveWorkspace(null);
+        return;
+      }
+
+      const bootstrap = await fetchBootstrap();
+      if (!bootstrap) {
+        setWorkspaces([]);
+        setActiveWorkspace(null);
+        return;
+      }
+
+      const raw        = bootstrap.workspaces ?? [];
+      const normalized = Array.isArray(raw) ? raw.map(normalizeWorkspace) : [];
+
+      setWorkspaces(normalized);
+
+      if (spaceType !== "workspace") {
+        setActiveWorkspace(null);
+        return;
+      }
+
+      if (activeWorkspaceId) {
+        const matched = normalized.find(w => w.id === activeWorkspaceId) || null;
+
+        if (matched) {
+          setActiveWorkspace(matched);
+        } else if (normalized.length > 0) {
+          const fallback = normalized[0];
+          setActiveWorkspace(fallback);
+          switchToWorkspace(fallback.id);
+        } else {
+          setActiveWorkspace(null);
+          switchRuntimeToPersonal();
+        }
+        return;
+      }
+
+      setActiveWorkspace(null);
+
+    } catch (error) {
+      console.error("❌ Failed loading workspaces", error);
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+    } finally {
+      setLoading(false);
+      setInitialized(true);
+    }
+  }, [spaceType, activeWorkspaceId, switchToWorkspace, switchRuntimeToPersonal]);
+
+  // ── switchWorkspace ─────────────────────────────────────────────────────
+
+  const switchWorkspace = useCallback(async (workspaceId: string): Promise<void> => {
+    try {
+      await qxtApiClient.post(`/api/v1/workspaces/${workspaceId}/activate`);
+      switchToWorkspace(workspaceId);
+      await refreshWorkspaces();
+    } catch (error) {
+      console.warn("[Workspace] Activation failed", error);
+    }
+  }, [switchToWorkspace, refreshWorkspaces]);
+
+  // ── switchToPersonal ────────────────────────────────────────────────────
+
+  const switchToPersonal = useCallback((): void => {
+    setActiveWorkspace(null);
+    switchRuntimeToPersonal();
+  }, [switchRuntimeToPersonal]);
+
+  // ── createWorkspace ─────────────────────────────────────────────────────
+
+  const createWorkspace = useCallback(async (payload: CreateWorkspacePayload): Promise<Workspace> => {
+    const response  = await qxtApiClient.post("/api/v1/workspaces", payload);
+    const workspace = normalizeWorkspace(response.data?.workspace || response.data);
+
+    setWorkspaces(prev => [workspace, ...prev]);
+    await switchWorkspace(workspace.id);
+
+    return workspace;
+  }, [switchWorkspace]);
+
+  // ── updateWorkspace ─────────────────────────────────────────────────────
+
+  const updateWorkspace = useCallback(async (
+    workspaceId: string,
+    payload: Partial<CreateWorkspacePayload>
+  ): Promise<void> => {
+    const response = await qxtApiClient.patch(`/api/v1/workspaces/${workspaceId}`, payload);
+    const updated  = normalizeWorkspace(response.data?.workspace || response.data);
+
+    setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
+    setActiveWorkspace(prev => prev?.id === updated.id ? updated : prev);
+  }, []);
+
+  // ── removeWorkspace ─────────────────────────────────────────────────────
+
+  const removeWorkspace = useCallback(async (workspaceId: string): Promise<void> => {
+    await qxtApiClient.delete(`/api/v1/workspaces/${workspaceId}`);
+
+    setWorkspaces(prev => prev.filter(w => w.id !== workspaceId));
+
+    if (activeWorkspace?.id === workspaceId) {
+      setActiveWorkspace(null);
+      switchRuntimeToPersonal();
+    }
+  }, [workspaces, activeWorkspace, switchRuntimeToPersonal]);
+
+  // ── Effects ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+  refreshWorkspaces().catch(error => {
+    console.error("❌ Workspace bootstrap failed", error);
+  });
+}, []);
+
+  useEffect(() => {
+    if (spaceType !== "workspace") {
+      setActiveWorkspace(null);
+      return;
     }
 
-    return ctx;
+    if (!activeWorkspaceId) {
+      setActiveWorkspace(null);
+      return;
+    }
+
+    const matched = workspaces.find(w => String(w.id) === String(activeWorkspaceId)) || null;
+    setActiveWorkspace(matched);
+  }, [spaceType, activeWorkspaceId, workspaces]);
+
+  // ── Value ────────────────────────────────────────────────────────────────
+
+  const isWorkspaceMode = spaceType === "workspace" && !!activeWorkspace;
+
+  const value = useMemo<WorkspaceContextValue>(() => ({
+    loading,
+    initialized,
+    workspaces,
+    activeWorkspace,
+    isWorkspaceMode,
+    refreshWorkspaces,
+    switchWorkspace,
+    switchToPersonal,
+    createWorkspace,
+    removeWorkspace,
+    updateWorkspace,
+  }), [
+    loading,
+    initialized,
+    workspaces,
+    activeWorkspace,
+    isWorkspaceMode,
+    refreshWorkspaces,
+    switchWorkspace,
+    switchToPersonal,
+    createWorkspace,
+    removeWorkspace,
+    updateWorkspace,
+  ]);
+
+  return (
+    <WorkspaceContext.Provider value={value}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useWorkspace(): WorkspaceContextValue {
+  const context = useContext(WorkspaceContext);
+  if (!context) throw new Error("useWorkspace must be used within WorkspaceProvider");
+  return context;
 }

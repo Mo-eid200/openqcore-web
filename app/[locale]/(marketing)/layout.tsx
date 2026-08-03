@@ -1,5 +1,6 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import PageTransition from "./components/PageTransition";
 
 export default function MarketingLayout({
   children,
@@ -11,7 +12,7 @@ export default function MarketingLayout({
       <Header />
 
       <main className="flex-1 w-full noise">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
 
       <Footer />

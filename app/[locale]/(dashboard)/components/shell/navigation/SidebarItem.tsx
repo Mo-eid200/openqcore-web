@@ -28,14 +28,14 @@ export default function SidebarItem({
         dashboardMode,
     } = useDashboard();
 
-    const isPersonal =
-        dashboardMode === "personal";
+    const isConsole =
+        dashboardMode === "console";
 
     const isActive =
         pathname === href ||
         pathname.startsWith(`${href}/`);
 
-    const accent = isPersonal
+    const accent = isConsole
         ? {
             container: `
                 bg-gradient-to-r

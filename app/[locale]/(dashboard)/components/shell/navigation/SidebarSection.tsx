@@ -28,8 +28,8 @@ export default function SidebarSection({
     const { dashboardMode } =
         useDashboard();
 
-    const isPersonal =
-        dashboardMode === "personal";
+    const isConsole =
+        dashboardMode === "console";
 
     return (
         <div className="mb-7">
@@ -50,7 +50,7 @@ export default function SidebarSection({
                         transition-colors
                         duration-300
 
-                        ${isPersonal
+                        ${isConsole
                             ? "text-amber-500/65"
                             : "text-cyan-500/60"
                         }

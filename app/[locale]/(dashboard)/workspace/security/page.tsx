@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { SecurityOverview } from "./SecurityOverview";
 import { ActiveSessions } from "./ActiveSessions";
@@ -7,21 +8,55 @@ import { AccessLogs } from "./AccessLogs";
 import { ThreatAlerts } from "./ThreatAlerts";
 import { MFASettings } from "./MFASettings";
 
+function FadeIn({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <div className="animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
 export default function SecurityPage() {
-    return (
-        <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 pt-8 pb-14 flex flex-col gap-10">
-            <div className="mb-2">
-                <h1 className="text-2xl font-bold text-white mb-1">Security</h1>
-                <p className="text-slate-400 mb-2">
-                    Sessions, logs, API security measures, alerts and authentication.
-                </p>
-            </div>
-            <SecurityOverview />
-            <ActiveSessions />
-            <ApiSecurity />
-            <AccessLogs />
-            <ThreatAlerts />
-            <MFASettings />
+  return (
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 pb-14 pt-8 sm:px-6">
+      <FadeIn delay={0}>
+        <div className="mb-2">
+          <h1 className="mb-1 text-2xl font-bold text-white">Security</h1>
+          <p className="mb-2 text-slate-400">
+            Sessions, logs, API security measures, alerts and authentication.
+          </p>
         </div>
-    );
+      </FadeIn>
+
+      <FadeIn delay={80}>
+        <SecurityOverview />
+      </FadeIn>
+
+      <FadeIn delay={140}>
+        <ActiveSessions />
+      </FadeIn>
+
+      <FadeIn delay={200}>
+        <ApiSecurity />
+      </FadeIn>
+
+      <FadeIn delay={260}>
+        <AccessLogs />
+      </FadeIn>
+
+      <FadeIn delay={320}>
+        <ThreatAlerts />
+      </FadeIn>
+
+      <FadeIn delay={380}>
+        <MFASettings />
+      </FadeIn>
+    </div>
+  );
 }

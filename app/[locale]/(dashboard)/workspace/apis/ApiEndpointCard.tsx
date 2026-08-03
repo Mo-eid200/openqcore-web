@@ -1,41 +1,70 @@
 import React from "react";
-import { Badge } from "../../components/ui/Badge";
 import { Copy } from "lucide-react";
 
 type Endpoint = {
-    method: "POST" | "GET" | "PUT" | "DELETE";
-    path: string;
-    description: string;
-    status?: "stable" | "beta" | "deprecated";
+  method:  "POST" | "GET" | "PUT" | "DELETE";
+  path:    string;
+  description: string;
+  status?: "stable" | "beta" | "deprecated";
+};
+
+const methodConfig = {
+  POST:   "bg-blue-500/10 border-blue-400/20 text-blue-300",
+  GET:    "bg-emerald-500/10 border-emerald-400/20 text-emerald-300",
+  PUT:    "bg-amber-500/10 border-amber-400/20 text-amber-300",
+  DELETE: "bg-red-500/10 border-red-400/20 text-red-300",
+};
+
+const statusConfig = {
+  stable:     "bg-emerald-500/10 border-emerald-400/20 text-emerald-300",
+  beta:       "bg-cyan-500/10 border-cyan-400/20 text-cyan-300",
+  deprecated: "bg-red-500/10 border-red-400/20 text-red-300",
 };
 
 export function ApiEndpointCard({ endpoint }: { endpoint: Endpoint }) {
-    return (
-        <div className="rounded-2xl border border-white/10 bg-[#1a2031]/90 px-6 py-5 mb-3 shadow group relative hover:shadow-lg">
-            <div className="flex items-center gap-2 mb-3">
-                <span className={`
-          font-mono text-xs inline-flex items-center px-2.5 py-1.5 rounded-lg 
-          ${endpoint.method === "POST" ? "bg-blue-500/10 text-blue-300"
-                        : endpoint.method === "GET" ? "bg-emerald-500/10 text-emerald-300"
-                            : "bg-slate-600/10 text-slate-300"}
+  return (
+    <div className="
+      relative flex flex-col gap-2.5 p-4
+      rounded-2xl border border-white/[0.06]
+      bg-[#0d0d10]/95 backdrop-blur-xl
+      hover:border-white/[0.10] transition-all
+      overflow-hidden group
+    ">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+      {/* Top row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`
+          px-2 py-0.5 rounded-lg border text-[10px] font-bold font-mono
+          ${methodConfig[endpoint.method]}
         `}>
-                    {endpoint.method}
-                </span>
-                <span className="font-mono text-[15px] text-white">{endpoint.path}</span>
-                {endpoint.status && (
-                    <Badge color={endpoint.status === "stable" ? "emerald"
-                        : endpoint.status === "beta" ? "cyan"
-                            : "danger"} className="ml-2">{endpoint.status}</Badge>
-                )}
-                <button
-                    className="ml-auto p-1 rounded hover:bg-[#ffe68c1a] transition"
-                    title="Copy"
-                    onClick={() => navigator.clipboard.writeText(endpoint.path)}
-                >
-                    <Copy className="w-4 h-4 text-[#d4af37]" />
-                </button>
-            </div>
-            <div className="text-slate-400 text-sm">{endpoint.description}</div>
-        </div>
-    );
+          {endpoint.method}
+        </span>
+
+        <code className="text-[13px] font-mono text-white flex-1 truncate">
+          {endpoint.path}
+        </code>
+
+        {endpoint.status && (
+          <span className={`
+            px-2 py-0.5 rounded-full border text-[10px] font-medium
+            ${statusConfig[endpoint.status]}
+          `}>
+            {endpoint.status}
+          </span>
+        )}
+
+        <button
+          type="button"
+          onClick={() => navigator.clipboard.writeText(endpoint.path)}
+          className="opacity-0 group-hover:opacity-100 flex h-6 w-6 items-center justify-center rounded-lg text-white/25 hover:text-white hover:bg-white/[0.06] transition-all"
+        >
+          <Copy className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Description */}
+      <p className="text-[12px] text-white/35">{endpoint.description}</p>
+    </div>
+  );
 }

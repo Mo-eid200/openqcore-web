@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useRef, useState, } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, } from "framer-motion";
-import { Check, Crown, Loader2, Sparkles, X, } from "lucide-react";
+import { Check, Crown, Loader2, Sparkles, X, ArrowDownCircle, } from "lucide-react";
 import { createPortal } from "react-dom";
+import { getPlans } from "@/app/lib/api/console/billing";
+
 
 /* =========================================================
    TYPES
@@ -43,13 +45,17 @@ interface Props {
 
   onUpgrade: (
     planId: number,
-    billing: "monthly" | "yearly"
+    billing: "monthly" | "yearly",
+    accountType: "personal" | "workspace"
   ) => Promise<void> | void;
 
   currentPlanId?: number;
 
   lang?: "en" | "ar";
+  defaultAccountType?: "personal" | "workspace";
+  lockAccountType?: boolean;
 }
+
 
 /* =========================================================
    HELPERS
@@ -68,7 +74,9 @@ export function UpgradeModal({
   onClose,
   onUpgrade,
   currentPlanId,
-}: Props) {
+  defaultAccountType = "personal",
+  lockAccountType = false,
+}: Props): React.ReactNode {
   const mountedRef = useRef(false);
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -76,10 +84,7 @@ export function UpgradeModal({
   const [selectedId, setSelectedId] =
     useState<number | null>(null);
 
-  const [accountType, setAccountType] =
-    useState<"personal" | "workspace">(
-      "personal"
-    );
+  const [accountType, setAccountType] = useState<"personal" | "workspace">(defaultAccountType);
 
   const [billingCycle, setBillingCycle] =
     useState<"monthly" | "yearly">(
@@ -98,16 +103,22 @@ export function UpgradeModal({
 
   useEffect(() => {
     if (!open) return;
+    mountedRef.current = true;
 
-    const previousOverflow =
-      document.body.style.overflow;
+    async function loadPlans() {
+      try {
+        setLoadingPlans(true);
+        const data = await getPlans();
+        if (mountedRef.current) setPlans(data as any);
+      } catch (error) {
+        console.error("Failed loading plans", error);
+      } finally {
+        if (mountedRef.current) setLoadingPlans(false);
+      }
+    }
 
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow =
-        previousOverflow;
-    };
+    loadPlans();
+    return () => { mountedRef.current = false; };
   }, [open]);
 
   /* =====================================================
@@ -245,6 +256,13 @@ export function UpgradeModal({
     }
   }, [filteredPlans, selectedId]);
 
+  useEffect(() => {
+  if (open) {
+    setAccountType(defaultAccountType);
+    setSelectedId(null);
+  }
+}, [open, defaultAccountType]);
+
   /* =====================================================
      EARLY RETURN
   ===================================================== */
@@ -262,6 +280,11 @@ export function UpgradeModal({
       (plan) => plan.id === selectedId
     );
 
+  const currentPlan =
+    filteredPlans.find(
+      (plan) => plan.id === currentPlanId
+    );
+
   const isEnterprise =
     selectedPlan?.name.toLowerCase() ===
     "enterprise";
@@ -273,6 +296,23 @@ export function UpgradeModal({
       0
       : plan.monthly_price ?? 0;
   }
+
+  // 🔥 NEW — determines whether the selected plan is more or less
+  // expensive than the current one, so the button can honestly say
+  // "Upgrade" vs "Downgrade" instead of always saying "Upgrade Plan"
+  // regardless of direction. Falls back to "switch" when there's no
+  // current plan to compare against (e.g. first-time subscribe from
+  // Free) or both plans cost the same.
+  const planDirection: "upgrade" | "downgrade" | "switch" = (() => {
+    if (!selectedPlan || !currentPlan) return "switch";
+    const currentPrice = currentPlan.monthly_price ?? 0;
+    const newPrice = getPrice(selectedPlan);
+    if (newPrice > currentPrice) return "upgrade";
+    if (newPrice < currentPrice) return "downgrade";
+    return "switch";
+  })();
+
+  const isDowngrade = planDirection === "downgrade";
 
   /* =====================================================
      ACTIONS
@@ -296,7 +336,8 @@ export function UpgradeModal({
 
       await onUpgrade(
         selectedPlan.id,
-        billingCycle
+        billingCycle,
+        accountType
       );
     } finally {
       setLoading(false);
@@ -458,7 +499,7 @@ export function UpgradeModal({
                     "
                   >
                     <Image
-                      src="/opq-logo.png"
+                      src="/oqc-logo.png"
                       alt="OpenQCore"
                       fill
                       priority
@@ -511,59 +552,30 @@ export function UpgradeModal({
   "
                 >
                   {/* PLAN TYPE */}
-                  <div
-                    className="
-                      flex
-                      items-center
-
-                      rounded-xl
-
-                      border border-white/[0.08]
-
-                      bg-white/[0.03]
-
-                      p-[3px]
-                    "
-                  >
-                    {[
-                      {
-                        key: "personal",
-                        label: "Personal",
-                      },
-                      {
-                        key: "workspace",
-                        label: "Company",
-                      },
-                    ].map((type) => (
-                      <button
-                        key={type.key}
-                        onClick={() =>
-                          setAccountType(
-                            type.key as
-                            | "personal"
-                            | "workspace"
-                          )
-                        }
-                        className={`
-                          px-4 py-2
-                          rounded-lg
-                          text-[13px]
-                          font-medium
-
-                          transition-all
-                          duration-200
-
-                          ${accountType ===
-                            type.key
-                            ? "bg-[#d4af37] text-black shadow-[0_10px_30px_rgba(212,175,55,0.25)]"
-                            : "text-white/60 hover:text-white"
-                          }
-                        `}
-                      >
-                        {type.label}
-                      </button>
-                    ))}
-                  </div>
+                  {lockAccountType ? (
+  <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-[13px] font-medium text-white/70">
+    {accountType === "workspace" ? "Workspace" : "Personal"}
+  </div>
+) : (
+  <div className="flex items-center rounded-xl border border-white/[0.08] bg-white/[0.03] p-[3px]">
+    {[
+      { key: "personal", label: "Personal" },
+      { key: "workspace", label: "Workspace" },
+    ].map((type) => (
+      <button
+        key={type.key}
+        onClick={() => setAccountType(type.key as "personal" | "workspace")}
+        className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+          accountType === type.key
+            ? "bg-[#d4af37] text-black shadow-[0_10px_30px_rgba(212,175,55,0.25)]"
+            : "text-white/60 hover:text-white"
+        }`}
+      >
+        {type.label}
+      </button>
+    ))}
+  </div>
+)}
 
                   {/* BILLING */}
                   <div
@@ -1102,13 +1114,24 @@ export function UpgradeModal({
                   gap-4
                 "
               >
-                <div
-                  className="
-                    text-sm
-                    text-white/45
-                  "
-                >
-                  © OpenQCore AI 2026
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="
+                      text-sm
+                      text-white/45
+                    "
+                  >
+                    © OpenQCore AI 2026
+                  </div>
+
+                  {/* 🔥 NEW — downgrade notice, shown only when the
+                      selected plan is cheaper than the current one */}
+                  {isDowngrade && selectedPlan?.id !== currentPlanId && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
+                      <ArrowDownCircle className="w-3 h-3" />
+                      You'll keep {currentPlan?.name}'s features until your next renewal
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1120,7 +1143,7 @@ export function UpgradeModal({
                     selectedPlan?.monthly_price ===
                     0
                   }
-                  className="
+                  className={`
                     inline-flex
                     items-center
                     justify-center
@@ -1131,14 +1154,10 @@ export function UpgradeModal({
 
                     rounded-2xl
 
-                    bg-[#d4af37]
-
                     px-6
 
                     text-sm
                     font-semibold
-
-                    text-black
 
                     transition-all
                     duration-200
@@ -1147,7 +1166,12 @@ export function UpgradeModal({
 
                     disabled:cursor-not-allowed
                     disabled:opacity-40
-                  "
+
+                    ${isDowngrade
+                      ? "bg-white/10 text-white border border-white/15"
+                      : "bg-[#d4af37] text-black"
+                    }
+                  `}
                 >
                   {loading && (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1161,7 +1185,9 @@ export function UpgradeModal({
                       ? "Free Plan"
                       : isEnterprise
                         ? "Contact Sales"
-                        : "Upgrade Plan"}
+                        : isDowngrade
+                          ? "Downgrade Plan"
+                          : "Upgrade Plan"}
                 </button>
               </div>
             </div>
