@@ -265,7 +265,9 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
       process.env.NEXT_PUBLIC_QXT_API_BASE_URL ||
       "http://localhost:8000";
 
-    const returnTo = `${window.location.origin}/auth/callback`;
+    const returnTo =
+      process.env.NEXT_PUBLIC_FRONTEND_CALLBACK_URL ||
+      "https://openqcore.com/auth/callback";
 
     const paths = {
       google: "/api/v1/auth/oauth/google/start",
