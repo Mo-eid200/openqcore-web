@@ -327,7 +327,14 @@ export default function LiveAISection() {
         }
       }
 
-      replaceLastAssistant(fullResponse);
+      if (!fullResponse.trim()) {
+        replaceLastAssistant(
+          "I searched for that but couldn't generate a clear answer. Could you try rephrasing your question?",
+          "error"
+        );
+      } else {
+        replaceLastAssistant(fullResponse);
+      }
       scrollToBottom();
     } catch (err: any) {
       const isDailyLimit =
