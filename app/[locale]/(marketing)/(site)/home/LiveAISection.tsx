@@ -29,9 +29,8 @@ type ChatMessage = {
 /* ─────────────────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────────────────── */
-
 const wrap = "mx-auto w-full max-w-[880px] px-5 sm:px-6";
-const DEMO_MODEL = "pulse.core.flow";
+const DEMO_MODEL = "pulse.core.swift";
 
 // 🔧 NEW: suggested prompts -- reduces "blank page" hesitation and
 // gives visitors an instant, concrete sense of what the product can
@@ -208,9 +207,10 @@ const MessageBubble = React.memo(function MessageBubble({
           {t("assistant_name")}
         </div>
 
-        {message.content ? <MarkdownText content={message.content} /> : <TypingIndicator />}
-          {message.content ? message.content : <TypingIndicator />}
+        <div className="text-[14px] leading-7 text-slate-200">
+          {message.content ? <MarkdownText content={message.content} /> : <TypingIndicator />}
         </div>
+      </div>
     </motion.div>
   );
 });
