@@ -4,6 +4,7 @@ import {
 
 export interface ConsoleOverviewStats {
     tokens_total: number;
+    qxt_remaining: number;
     requests_total: number;
     models_used: number;
     chat_sessions: number;

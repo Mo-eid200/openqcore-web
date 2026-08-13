@@ -227,7 +227,6 @@ function GenerationsContent() {
     <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-3 py-8 sm:px-6 xl:px-10">
       <FadeIn delay={0}>
         <GenerationToolbar
-          onCreate={() => setShowModal(true)}
           total={items.length}
         />
       </FadeIn>

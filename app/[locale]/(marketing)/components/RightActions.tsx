@@ -223,8 +223,6 @@ export default function RightActions() {
                 <div className="p-2 border-b border-white/10">
                   <Link
                     href={DASHBOARD_ROUTES.console}
-                    onClick={(e) => e.preventDefault()}
-                    aria-disabled="true"
                     className="flex items-center justify-between rounded-2xl px-3 py-3 text-[13px] text-slate-300 transition-all duration-200 hover:bg-white/[0.04] hover:text-white"
                   >
                     <span>{t("console_dashboard")}</span>
@@ -235,9 +233,9 @@ export default function RightActions() {
                     <button
                       type="button"
                       onClick={async () => {
-                        // if (!workspaces.length) return;
-                        // await switchWorkspace(workspaces[0].id);
-                        // router.push(DASHBOARD_ROUTES.workspace);
+                        if (!workspaces.length) return;
+                        await switchWorkspace(workspaces[0].id);
+                        router.push(DASHBOARD_ROUTES.workspace);
                       }}
                       className="w-full flex items-center justify-between rounded-2xl px-3 py-3 text-[13px] text-slate-300 transition-all duration-200 hover:bg-white/[0.04] hover:text-white"
                     >
@@ -262,8 +260,8 @@ export default function RightActions() {
                         key={workspace.id}
                         type="button"
                         onClick={async () => {
-                          //await switchWorkspace(workspace.id);
-                          //router.replace("/workspace/overview");
+                          await switchWorkspace(workspace.id);
+                          router.replace("/workspace/overview");
                         }}
                         className="w-full flex items-center justify-between rounded-2xl px-3 py-3 text-[13px] text-slate-300 transition-all duration-200 hover:bg-white/[0.04] hover:text-white"
                       >

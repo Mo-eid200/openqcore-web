@@ -4,7 +4,7 @@ export interface GenerationItem {
   prompt:      string;
   result:      string | null;
   model:       string | null;
-  provider:    string | null;
+  sequence:    number;
   temperature: number | null;
   status:      "pending" | "success" | "failed";
   tokens_used: number | null;

@@ -152,6 +152,7 @@ const WORKSPACE_NAV: NavSection[] = [
       { label: "Agents", href: "/workspace/agents", icon: Bot },
       { label: "Knowledge", href: "/workspace/knowledge", icon: BookOpen },
       { label: "Analytics", href: "/workspace/analytics", icon: BarChart3 },
+      { label: "Voice", href: "/workspace/voice", icon: Mic },
     ],
   },
   {

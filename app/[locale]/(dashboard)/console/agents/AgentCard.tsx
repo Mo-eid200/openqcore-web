@@ -107,6 +107,7 @@ export default function AgentCard({
     onEdit,
     onDelete,
     onChat,
+    onOpenDetails,
 }: Props) {
     const Icon =
         resolveIcon(
@@ -116,7 +117,7 @@ export default function AgentCard({
     const [showLinker, setShowLinker] = useState(false);
 
     const chatBase =
-        process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3000";
+        process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3001";
 
     return (
         <div
@@ -208,9 +209,7 @@ export default function AgentCard({
                     className="
                         flex
                         h-9
-                        w-9
-
-                        items-center
+                        w-9 items-center
                         justify-center
 
                         rounded-xl
@@ -330,7 +329,6 @@ export default function AgentCard({
                         flex
                         h-9
                         w-9
-
                         items-center
                         justify-center
 
@@ -362,488 +360,469 @@ export default function AgentCard({
 
             </div>
 
-            {/* HEADER */}
-
+            {/* 🔧 FIX: everything below (header through footer) is now
+                wrapped in a single clickable region that calls
+                onOpenDetails(agent) — this is the ONLY path anywhere
+                in the UI that reaches AgentDetailsPage
+                (/console/agents/[agentId] with its Overview/Knowledge/
+                API tabs). Before this, that prop was declared in the
+                Props type but never destructured or wired to anything,
+                so the page was fully built but completely unreachable.
+                Kept as a separate sibling from the ACTIONS overlay
+                above (which still works independently, no event-
+                bubbling conflict, no stopPropagation needed). */}
             <div
-                className="
-                    relative
-                    flex
-                    items-start
-                    gap-4
-                "
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenDetails?.(agent)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onOpenDetails?.(agent);
+                    }
+                }}
+                className="cursor-pointer outline-none"
             >
 
-                {/* ICON */}
+                {/* HEADER */}
 
                 <div
                     className="
                         relative
-
                         flex
-                        h-14
-                        w-14
-
-                        shrink-0
-
-                        items-center
-                        justify-center
-
-                        rounded-2xl
-
-                        border
-                        border-white/[0.05]
-
-                        bg-amber-300/[0.08]
-
-                        text-amber-200
-
-                        shadow-[0_10px_24px_rgba(0,0,0,0.18)]
+                        items-start
+                        gap-4
                     "
                 >
 
+                    {/* ICON */}
+
                     <div
-                        className="
-                            absolute
-                            inset-0
-
-                            rounded-2xl
-
-                            bg-gradient-to-br
-                            from-white/[0.03]
-                            to-transparent
-                        "
-                    />
-
-                    <Icon
                         className="
                             relative
 
-                            h-6
-                            w-6
-                        "
-                    />
-
-                </div>
-
-                {/* INFO */}
-
-                <div
-                    className="
-                        min-w-0
-                        flex-1
-
-                        pr-24
-                    "
-                >
-
-                    <div
-                        className="
                             flex
+                            h-14
+                            w-14
+
+                            shrink-0
+
                             items-center
-                            gap-2
+                            justify-center
+
+                            rounded-2xl
+
+                            border
+                            border-white/[0.05]
+
+                            bg-amber-300/[0.08]
+
+                            text-amber-200
+
+                            shadow-[0_10px_24px_rgba(0,0,0,0.18)]
                         "
                     >
 
-                        <h3
+                        <div
                             className="
-                                truncate
+                                absolute
+                                inset-0
 
-                                text-lg
-                                font-bold
+                                rounded-2xl
 
-                                tracking-tight
+                                bg-gradient-to-br
+                                from-white/[0.03]
+                                to-transparent
+                            "
+                        />
+
+                        <Icon
+                            className="
+                                relative
+
+                                h-6
+                                w-6
+                            "
+                        />
+
+                    </div>
+
+                    {/* INFO */}
+
+                    <div
+                        className="
+                            min-w-0
+                            flex-1
+
+                            pr-24
+                        "
+                    >
+                        <div
+                            className="
+                                flex
+                                items-center
+                                gap-2
+                            "
+                        >
+
+                            <h3
+                                className="
+                                    truncate
+
+                                    text-lg
+                                    font-bold
+
+                                    tracking-tight
+
+                                    text-white
+
+                                    transition-colors
+
+                                    group-hover:text-amber-100
+                                "
+                            >
+                                {agent.name}
+                            </h3>
+
+                            {
+                                agent.visibility === "public" && (
+                                    <div
+                                        className="
+                                            rounded-full
+
+                                            border
+                                            border-emerald-300/10
+
+                                            bg-emerald-300/[0.08]
+
+                                            px-2
+                                            py-0.5
+
+                                            text-[10px]
+                                            font-semibold
+
+                                            uppercase
+                                            tracking-wide
+
+                                            text-emerald-200
+                                        "
+                                    >
+                                        Public
+                                    </div>
+                                )
+                            }
+
+                            {/* Subtle "clickable card" affordance —
+                                fades in on hover alongside the name. */}
+                            <ChevronRight
+                                className="
+                                    h-4
+                                    w-4
+                                    shrink-0
+
+                                    text-white/0
+
+                                    transition-all
+                                    duration-200
+
+                                    group-hover:text-amber-200/60
+                                "
+                            />
+
+                        </div>
+
+                        <div
+                            className="
+                                mt-1
+
+                                flex
+                                items-center
+                                gap-2
+
+                                text-xs
+
+                                text-white/45
+                            "
+                        >
+
+                            <Zap
+                                className="
+                                    h-3.5
+                                    w-3.5
+                                    text-amber-200/80
+                                "
+                            />
+
+                            <span
+                                className="
+                                    truncate
+                                "
+                            >
+                                {agent.role}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* DESCRIPTION */}
+
+                <div
+                    className="
+                        mt-5
+
+                        min-h-[72px]
+
+                        text-sm
+                        leading-7
+
+                        text-white/58
+                    "
+                >
+                    {
+                        agent.description ||
+                        "No description provided for this AI agent."
+                    }
+                </div>
+
+                {/* TAGS */}
+
+                {
+                    agent.tags?.length > 0 && (
+                        <div
+                            className="
+                                mt-5
+
+                                flex
+                                flex-wrap
+
+                                gap-2
+                            "
+                        >
+                            {
+                                agent.tags
+                                    .slice(0, 5)
+                                    .map((tag) => (
+                                        <span
+                                            key={tag}
+                                            className="
+                                                rounded-full
+
+                                                border
+                                                border-white/[0.05]
+
+                                                bg-white/[0.03]
+
+                                                px-3
+                                                py-1
+
+                                                text-[11px]
+                                                font-medium
+
+                                                text-amber-200/90
+                                            "
+                                        >
+                                            #{tag}
+                                        </span>
+                                    ))
+                            }
+                        </div>
+                    )
+                }
+
+                {/* METRICS */}
+
+                <div
+                    className="
+                        mt-5
+
+                        grid
+                        grid-cols-2
+
+                        gap-3
+                    "
+                >
+
+                    {/* RUNS */}
+
+                    <div
+                        className="
+                            rounded-2xl
+
+                            border
+                            border-white/[0.05]
+
+                            bg-white/[0.02]
+
+                            p-3
+                        "
+                    >
+
+                        <div
+                            className="
+                                text-[10px]
+
+                                uppercase
+                                tracking-wide
+
+                                text-white/35
+                            "
+                        >
+                            Runs
+                        </div>
+
+                        <div
+                            className="
+                                mt-1
+
+                                text-sm
+                                font-semibold
 
                                 text-white
                             "
                         >
-                            {agent.name}
-                        </h3>
+                            {
+                                (
+                                    agent.runs || 0
+                                ).toLocaleString()
+                            }
+                        </div>
+
+                    </div>
+
+                    {/* TOKENS */}
+
+                    <div
+                        className="
+                            rounded-2xl
+
+                            border
+                            border-white/[0.05]
+
+                            bg-white/[0.02]
+
+                            p-3
+                        "
+                    >
+
+                        <div
+                            className="
+                                text-[10px]
+
+                                uppercase
+                                tracking-wide
+
+                                text-white/35
+                            "
+                        >
+                            Tokens
+                        </div>
+
+                        <div
+                            className="
+                                mt-1
+
+                                text-sm
+                                font-semibold
+
+                                text-white
+                            "
+                        >
+                            {
+                                (
+                                    agent.tokens || 0
+                                ).toLocaleString()
+                            }
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* FOOTER */}
+
+                <div
+                    className="
+                        mt-5
+
+                        flex
+                        items-center
+
+                        gap-3
+                    "
+                >
+
+                    {/* STATUS */}
+
+                    <AgentStatusBadge
+                        status={agent.status}
+                    />
+
+                    {/* MODEL */}
+
+                    {
+                        agent.model && (
+                            <div
+                                className="
+                                    rounded-full
+
+                                    border
+                                    border-white/[0.05]
+
+                                    bg-white/[0.03]
+
+                                    px-2.5
+                                    py-1
+
+                                    text-[10px]
+                                    font-medium
+
+                                    text-white/45
+                                "
+                            >
+                                {agent.model}
+                            </div>
+                        )
+                    }
+
+                    {/* DATE */}
+
+                    <div
+                        className="
+                            ml-auto
+
+                            inline-flex
+                            items-center
+
+                            gap-1.5
+
+                            text-[11px]
+
+                            text-white/35
+                        "
+                    >
+
+                        <CalendarClock
+                            className="
+                                h-3.5
+                                w-3.5
+                            "
+                        />
 
                         {
-                            agent.visibility === "public" && (
-                                <div
-                                    className="
-                                        rounded-full
-
-                                        border
-                                        border-emerald-300/10
-
-                                        bg-emerald-300/[0.08]
-
-                                        px-2
-                                        py-0.5
-
-                                        text-[10px]
-                                        font-semibold
-
-                                        uppercase
-                                        tracking-wide
-
-                                        text-emerald-200
-                                    "
-                                >
-                                    Public
-                                </div>
+                            formatDate(
+                                agent.updatedAt ||
+                                agent.createdAt
                             )
                         }
 
                     </div>
 
-                    <div
-                        className="
-                            mt-1
-
-                            flex
-                            items-center
-                            gap-2
-
-                            text-xs
-
-                            text-white/45
-                        "
-                    >
-
-                        <Zap
-                            className="
-                                h-3.5
-                                w-3.5
-                                text-amber-200/80
-                            "
-                        />
-
-                        <span
-                            className="
-                                truncate
-                            "
-                        >
-                            {agent.role}
-                        </span>
-
-                    </div>
-
                 </div>
 
             </div>
-
-            {/* DESCRIPTION */}
-
-            <div
-                className="
-                    mt-5
-
-                    min-h-[72px]
-
-                    text-sm
-                    leading-7
-
-                    text-white/58
-                "
-            >
-                {
-                    agent.description ||
-                    "No description provided for this AI agent."
-                }
-            </div>
-
-            {/* TAGS */}
-
-            {
-                agent.tags?.length > 0 && (
-                    <div
-                        className="
-                            mt-5
-
-                            flex
-                            flex-wrap
-
-                            gap-2
-                        "
-                    >
-                        {
-                            agent.tags
-                                .slice(0, 5)
-                                .map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="
-                                            rounded-full
-
-                                            border
-                                            border-white/[0.05]
-
-                                            bg-white/[0.03]
-
-                                            px-3
-                                            py-1
-
-                                            text-[11px]
-                                            font-medium
-
-                                            text-amber-200/90
-                                        "
-                                    >
-                                        #{tag}
-                                    </span>
-                                ))
-                        }
-                    </div>
-                )
-            }
-
-            {/* METRICS */}
-
-            <div
-                className="
-                    mt-5
-
-                    grid
-                    grid-cols-2
-
-                    gap-3
-                "
-            >
-
-                {/* RUNS */}
-
-                <div
-                    className="
-                        rounded-2xl
-
-                        border
-                        border-white/[0.05]
-
-                        bg-white/[0.02]
-
-                        p-3
-                    "
-                >
-
-                    <div
-                        className="
-                            text-[10px]
-
-                            uppercase
-                            tracking-wide
-
-                            text-white/35
-                        "
-                    >
-                        Runs
-                    </div>
-
-                    <div
-                        className="
-                            mt-1
-
-                            text-sm
-                            font-semibold
-
-                            text-white
-                        "
-                    >
-                        {
-                            (
-                                agent.runs || 0
-                            ).toLocaleString()
-                        }
-                    </div>
-
-                </div>
-
-                {/* TOKENS */}
-
-                <div
-                    className="
-                        rounded-2xl
-
-                        border
-                        border-white/[0.05]
-
-                        bg-white/[0.02]
-
-                        p-3
-                    "
-                >
-
-                    <div
-                        className="
-                            text-[10px]
-
-                            uppercase
-                            tracking-wide
-
-                            text-white/35
-                        "
-                    >
-                        Tokens
-                    </div>
-
-                    <div
-                        className="
-                            mt-1
-
-                            text-sm
-                            font-semibold
-
-                            text-white
-                        "
-                    >
-                        {
-                            (
-                                agent.tokens || 0
-                            ).toLocaleString()
-                        }
-                    </div>
-
-                </div>
-
-            </div>
-
-            {/* FOOTER */}
-
-            <div
-                className="
-                    mt-5
-
-                    flex
-                    items-center
-
-                    gap-3
-                "
-            >
-
-                {/* STATUS */}
-
-                <AgentStatusBadge
-                    status={agent.status}
-                />
-
-                {/* MODEL */}
-
-                {
-                    agent.model && (
-                        <div
-                            className="
-                                rounded-full
-
-                                border
-                                border-white/[0.05]
-
-                                bg-white/[0.03]
-
-                                px-2.5
-                                py-1
-
-                                text-[10px]
-                                font-medium
-
-                                text-white/45
-                            "
-                        >
-                            {agent.model}
-                        </div>
-                    )
-                }
-
-                {/* DATE */}
-
-                <div
-                    className="
-                        ml-auto
-
-                        inline-flex
-                        items-center
-
-                        gap-1.5
-
-                        text-[11px]
-
-                        text-white/35
-                    "
-                >
-
-                    <CalendarClock
-                        className="
-                            h-3.5
-                            w-3.5
-                        "
-                    />
-
-                    {
-                        formatDate(
-                            agent.updatedAt ||
-                            agent.createdAt
-                        )
-                    }
-
-                </div>
-
-            </div>
-
-            {/* BOTTOM ACTION */}
-
-            <button
-                type="button"
-                onClick={() => {
-                    if (onChat) {
-                        onChat(agent);
-                        return;
-                    }
-
-                    window.open(
-                        `${chatBase}/qxt-chat/agent/${agent.slug}`,
-                        "_blank"
-                    );
-                }}
-                className="
-                    mt-5
-
-                    inline-flex
-                    h-11
-                    w-full
-
-                    items-center
-                    justify-center
-
-                    gap-2
-
-                    rounded-2xl
-
-                    border
-                    border-white/[0.08]
-
-                    bg-white/[0.03]
-
-                    text-sm
-                    font-semibold
-
-                    text-white/80
-
-                    transition-all
-
-                    hover:border-amber-300/12
-                    hover:bg-amber-300/[0.08]
-                    hover:text-amber-200
-                "
-            >
-
-                <MessageSquare
-                    className="
-                        h-4
-                        w-4
-                    "
-                />
-
-                Open Agent Chat
-
-                <ChevronRight
-                    className="
-                        h-4
-                        w-4
-                    "
-                />
-
-            </button>
 
             <LinkKnowledgeModal
                 open={showLinker}

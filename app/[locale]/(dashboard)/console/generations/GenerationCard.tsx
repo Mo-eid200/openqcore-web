@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Clock,
   Zap,
+  Hash,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -46,8 +47,35 @@ function StatusBadge({
         text-[11px] font-semibold ${map[status]}
       `}
     >
-      <Icon className="h-3 w-3" />
+      {/* 🔧 Pending now pulses gently — a static clock icon read as
+          "stalled" rather than "actively working on it". */}
+      <Icon
+        className={`h-3 w-3 ${status === "pending" ? "animate-pulse" : ""}`}
+      />
       {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+// ─── Metadata pill (model / generation number) ───────────────────────────────
+
+function MetaPill({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className="
+        inline-flex items-center gap-1 rounded-full
+        border border-white/[0.05] bg-white/[0.03]
+        px-2 py-0.5 text-[10px] font-medium text-white/50
+      "
+    >
+      <Icon className="h-2.5 w-2.5 text-amber-200/70" />
+      {children}
     </span>
   );
 }
@@ -98,7 +126,6 @@ export default function GenerationCard({
         ${deleting ? "pointer-events-none opacity-50" : ""}
       `}
     >
-
       {/* Atmosphere */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute right-[-40px] top-[-50px] h-[120px] w-[120px] rounded-full bg-amber-300/[0.04] blur-[70px]" />
@@ -119,19 +146,23 @@ export default function GenerationCard({
             {item.title || "Untitled Generation"}
           </div>
 
-          <div className="mt-0.5 flex items-center gap-2">
+          {/* 🔧 Model + generation number as consistent pill badges
+              (was plain inline text) — only these two are ever shown,
+              per requirement: no provider, no other internal detail. */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {item.model && (
-              <span className="flex items-center gap-1 text-[10px] text-white/35">
-                <Zap className="h-3 w-3 text-amber-200/75" />
-                {item.model}
-              </span>
+              <MetaPill icon={Zap}>{item.model}</MetaPill>
             )}
 
-            {item.tokens_used && (
-              <span className="text-[10px] text-white/22">
+            {typeof item.sequence === "number" && (
+              <MetaPill icon={Hash}>Gen {item.sequence}</MetaPill>
+            )}
+
+            {item.tokens_used ? (
+              <span className="text-[10px] text-white/25">
                 {item.tokens_used.toLocaleString()} tokens
               </span>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -226,7 +257,8 @@ export default function GenerationCard({
 
       {/* ── Error ── */}
       {item.error_msg && (
-        <div className="relative mt-2 rounded-xl border border-red-300/10 bg-red-300/[0.05] px-3 py-2.5">
+        <div className="relative mt-2 flex items-start gap-2 rounded-xl border border-red-300/10 bg-red-300/[0.05] px-3 py-2.5">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-300/60" />
           <p className="text-[11px] leading-relaxed text-red-200/75">
             {item.error_msg}
           </p>

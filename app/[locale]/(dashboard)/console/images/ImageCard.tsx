@@ -5,7 +5,7 @@ import {
   ImageIcon,
   Download,
   Trash2,
-  ExternalLink,
+  Maximize2,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -76,6 +76,9 @@ type Props = {
   item: ImageItem;
   deleting?: boolean;
   onDelete?: (id: string) => void;
+  // 🔧 NEW: opens the in-app lightbox instead of navigating to a new
+  // browser tab. Wired from the page-level lightbox state.
+  onPreview?: (item: ImageItem) => void;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -84,17 +87,23 @@ export default function ImageCard({
   item,
   deleting,
   onDelete,
+  onPreview,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
   const hasImage =
     item.status === "completed" && item.output_url;
 
-  function handleCopyPrompt() {
+  function handleCopyPrompt(e: React.MouseEvent) {
+    e.stopPropagation();
     navigator.clipboard.writeText(item.prompt).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
+  }
+
+  function handlePreview() {
+    if (hasImage) onPreview?.(item);
   }
 
   return (
@@ -120,8 +129,13 @@ export default function ImageCard({
       {/* Top line */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/15 to-transparent" />
 
-      {/* ── Image ── */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-black/20">
+      {/* ── Image — clicking it opens the in-app lightbox ── */}
+      <div
+        onClick={handlePreview}
+        className={`relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-black/20 ${
+          hasImage ? "cursor-pointer" : ""
+        }`}
+      >
         {hasImage ? (
           <img
             src={item.output_url!}
@@ -145,19 +159,25 @@ export default function ImageCard({
               opacity-0 transition-opacity duration-200 group-hover:opacity-100
             "
           >
-            <a
-              href={item.output_url!}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* 🔧 REPLACED: was `<a target="_blank">` navigating to a
+                new browser tab — now opens the in-app lightbox,
+                matching qxt-chat's UX instead of leaving the app. */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePreview();
+              }}
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20"
-              title="Open full size"
+              title="Preview"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
 
             <a
               href={item.output_url!}
               download
+              onClick={(e) => e.stopPropagation()}
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20"
               title="Download"
             >
@@ -167,7 +187,10 @@ export default function ImageCard({
             {onDelete && (
               <button
                 type="button"
-                onClick={() => onDelete(item.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(item.id);
+                }}
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-400/[0.20] text-red-200/80 backdrop-blur-sm transition-all hover:bg-red-400/[0.28]"
                 title="Delete"
               >

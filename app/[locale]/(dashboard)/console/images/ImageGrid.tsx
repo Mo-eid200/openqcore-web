@@ -8,12 +8,16 @@ type Props = {
   items: ImageItem[];
   deletingId?: string | null;
   onDelete?: (id: string) => void;
+  // 🔧 NEW: threaded through to each ImageCard so clicking an image
+  // opens the page-level in-app lightbox.
+  onPreview?: (item: ImageItem) => void;
 };
 
 export default function ImageGrid({
   items,
   deletingId,
   onDelete,
+  onPreview,
 }: Props) {
   if (!items?.length) return null;
 
@@ -34,6 +38,7 @@ export default function ImageGrid({
           item={item}
           deleting={deletingId === item.id}
           onDelete={onDelete}
+          onPreview={onPreview}
         />
       ))}
     </section>

@@ -1,244 +1,388 @@
 "use client";
 
-import React, {
-  createContext, useCallback, useContext,
-  useEffect, useMemo, useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchChatModels } from "../lib/api/chat/models";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type ProductKey = "core" | "chat" | "code" | "research" | "vision" | "library";
+export type ProductKey = "chat" | "pulse" | "core" | "code" | "research" | "vision" | "library";
 
 export type PublicModelItem = {
-  object?:         string;
-  id:              string;
-  public_name:     string;
-  product_key:     string;
-  type:            string;
-  gen:             number;
-  status?:         string;
-  is_visible?:     boolean;
-  provider?:       string;
-  backend_model?:  string;
+  object?: string;
+  id: string;
+  public_name: string;
+  product_key: string;
+  type: string;
+  gen: number;
+  status?: string | null;
+  is_visible?: boolean;
+  provider?: string;
+  backend_model?: string;
   context_window?: number | null;
-  description?:    string | null;
-  config?:         Record<string, any>;
+  description?: string | null;
+  config?: Record<string, any>;
+  display_group?: string | null;
+  display_order?: number;
+  generation?: { gen: number; label: string };
 };
 
-export type SelectedModel = { id: string; gen: number };
+export type SelectedModel = {
+  id: string;
+  gen: number;
+};
+
+export type ModelGroup = {
+  groupKey: string;
+  models: PublicModelItem[];
+};
+
+// groups models by display_group (e.g. "core"), preserving display_order.
+// Models with no display_group are returned ungrouped, at the end.
+function groupModelsByDisplayGroup(models: PublicModelItem[]): ModelGroup[] {
+  const groups = new Map<string, PublicModelItem[]>();
+  const ungrouped: PublicModelItem[] = [];
+
+  for (const model of models) {
+    if (!model.display_group) {
+      ungrouped.push(model);
+      continue;
+    }
+    if (!groups.has(model.display_group)) {
+      groups.set(model.display_group, []);
+    }
+    groups.get(model.display_group)!.push(model);
+  }
+
+  const result: ModelGroup[] = [];
+  for (const [groupKey, groupModels] of groups) {
+    result.push({
+      groupKey,
+      models: groupModels.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
+    });
+  }
+
+  if (ungrouped.length > 0) {
+    result.push({ groupKey: "__ungrouped__", models: ungrouped });
+  }
+
+  return result;
+}
+
+type ModelsByProduct = Record<ProductKey, PublicModelItem[]>;
 
 type ModelsState = {
-  loading:         boolean;
-  error:           string | null;
-  models:          PublicModelItem[];
-  modelsByProduct: Record<ProductKey, PublicModelItem[]>;
-  selected:        SelectedModel | null;
-  selectModel:     (id: string, gen?: number) => void;
-  setGen:          (gen: number) => void;
-  refresh:         () => Promise<void>;
-  label:           string;
+  loading: boolean;
+  error: string | null;
+  models: PublicModelItem[];
+  modelsByProduct: ModelsByProduct;
+  groupedModels: ModelGroup[];
+  selected: SelectedModel | null;
+  selectModel: (id: string, gen?: number) => void;
+  setGen: (gen: number) => void;
+  refresh: (force?: boolean) => Promise<void>;
+  label: string;
 };
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const ModelsContext = createContext<ModelsState | null>(null);
+const LS_KEY = "qxt_selected_model_v2";
 
-const LS_KEY = "qxt_selected_model_v1";
-
-const EMPTY_BY_PRODUCT: Record<ProductKey, PublicModelItem[]> = {
-  core: [], chat: [], code: [], research: [], vision: [], library: [],
+const EMPTY_MODELS_MAP: ModelsByProduct = {
+  chat: [],
+  pulse: [],
+  core: [],
+  code: [],
+  research: [],
+  vision: [],
+  library: [],
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mapProductKey(backendKey: string): ProductKey | null {
-  if (backendKey === "pulse") return "chat";
-  if (["core", "code", "research", "vision", "library"].includes(backendKey)) {
+  if (backendKey === "pulse") {
+    return "chat";
+  }
+
+  const validKeys: ProductKey[] = ["chat", "pulse", "core", "code", "research", "vision", "library"];
+
+  if (validKeys.includes(backendKey as ProductKey)) {
     return backendKey as ProductKey;
   }
+
   return null;
 }
 
 function clampGen(gen: number): number {
-  return Math.max(1, Math.min(3, gen));
+  return Math.max(1, Math.min(999, Number(gen || 1)));
 }
 
-function safeParse<T>(s: string | null): T | null {
-  if (!s) return null;
-  try { return JSON.parse(s) as T; } catch { return null; }
-}
-
-function loadSavedSelection(productKey: ProductKey): SelectedModel | null {
-  if (typeof window === "undefined") return null;
-  const all = safeParse<Record<string, SelectedModel>>(localStorage.getItem(LS_KEY));
-  const v   = all?.[productKey];
-  if (!v?.id) return null;
-  return { id: String(v.id), gen: clampGen(Number(v.gen ?? 1)) };
-}
-
-function saveSelection(productKey: ProductKey, sel: SelectedModel | null): void {
-  if (typeof window === "undefined") return;
-  const all = safeParse<Record<string, SelectedModel>>(localStorage.getItem(LS_KEY)) || {};
-  if (!sel) {
-    delete all[productKey];
-  } else {
-    all[productKey] = { id: String(sel.id), gen: clampGen(Number(sel.gen ?? 1)) };
+function safeParse<T>(value: string | null): T | null {
+  if (!value) {
+    return null;
   }
-  localStorage.setItem(LS_KEY, JSON.stringify(all));
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+function loadSelection(productKey: ProductKey): SelectedModel | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
 
-const Ctx = createContext<ModelsState | null>(null);
+  const raw = localStorage.getItem(LS_KEY);
+  const parsed = safeParse<Partial<Record<ProductKey, SelectedModel>>>(raw);
+  const selected = parsed?.[productKey];
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+  if (!selected?.id) {
+    return null;
+  }
+
+  return {
+    id: String(selected.id),
+    gen: clampGen(selected.gen),
+  };
+}
+
+function saveSelection(productKey: ProductKey, selection: SelectedModel | null): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const raw = localStorage.getItem(LS_KEY);
+  const parsed = safeParse<Partial<Record<ProductKey, SelectedModel>>>(raw) || {};
+
+  if (!selection) {
+    delete parsed[productKey];
+  } else {
+    parsed[productKey] = {
+      id: selection.id,
+      gen: clampGen(selection.gen),
+    };
+  }
+
+  localStorage.setItem(LS_KEY, JSON.stringify(parsed));
+}
+
+function normalizeModel(raw: any): PublicModelItem {
+  return {
+    object: raw?.object || "model",
+    id: String(raw?.id || ""),
+    public_name: String(raw?.public_name || raw?.id || "Unknown"),
+    product_key: String(raw?.product_key || "chat"),
+    type: String(raw?.type || "chat"),
+    gen: clampGen(raw?.gen || 1),
+    status: raw?.status || null,
+    is_visible: raw?.is_visible !== false,
+    provider: raw?.provider || "unknown",
+    backend_model: raw?.backend_model || "unknown",
+    context_window: raw?.context_window || null,
+    description: raw?.description || null,
+    config: raw?.config || {},
+    display_group: raw?.display_group || null,
+    display_order: Number(raw?.display_order || 0),
+    generation: raw?.generation || undefined,
+  };
+}
+
+// Query key is scoped by the *backend* product key (pulse/core/code/...)
+// since that's what actually goes over the wire to fetchChatModels.
+function backendProductKeyFor(productKey: ProductKey): string {
+  return productKey === "chat" ? "pulse" : productKey;
+}
+
+function modelsQueryKey(productKey: ProductKey) {
+  return ["models", backendProductKeyFor(productKey)] as const;
+}
 
 export function ModelsProvider({
   children,
   productKey = "chat",
 }: {
-  children:    React.ReactNode;
+  children: React.ReactNode;
   productKey?: ProductKey;
-}): React.ReactElement {
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
-  const [models,   setModels]   = useState<PublicModelItem[]>([]);
-  const [selected, setSelected] = useState<SelectedModel | null>({ id: "pulse-core", gen: 1 });
+}) {
+  const queryClient = useQueryClient();
 
-  // ── modelsByProduct ────────────────────────────────────────────────────────
+  const [selected, setSelected] = useState<SelectedModel | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
-  const modelsByProduct = useMemo<Record<ProductKey, PublicModelItem[]>>(() => {
-    const out = { ...EMPTY_BY_PRODUCT } as Record<ProductKey, PublicModelItem[]>;
-    for (const m of models) {
-      const key = mapProductKey(m.product_key);
-      if (key) out[key] = [...(out[key] || []), m];
-    }
-    (Object.keys(out) as ProductKey[]).forEach((k) => {
-      out[k] = out[k].slice().sort((a, b) => a.public_name.localeCompare(b.public_name));
-    });
-    return out;
-  }, [models]);
-
-  // ── selectModel ───────────────────────────────────────────────────────────
-
-  const selectModel = useCallback((id: string, gen?: number): void => {
-    const m = models.find((x) => x.id === id);
-    if (!m) return;
-    const sel: SelectedModel = { id: m.id, gen: clampGen(typeof gen === "number" ? gen : m.gen ?? 1) };
-    setSelected(sel);
-    saveSelection(productKey, sel);
-  }, [models, productKey]);
-
-  // ── setGen ────────────────────────────────────────────────────────────────
-
-  const setGen = useCallback((gen: number): void => {
-    if (productKey === "chat") return;
-    setSelected((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, gen: clampGen(gen) };
-      saveSelection(productKey, next);
-      return next;
-    });
+  useEffect(() => {
+    setSelected(loadSelection(productKey));
+    setHydrated(true);
   }, [productKey]);
 
-  // ── label ─────────────────────────────────────────────────────────────────
+  // Models rarely change — this used to be a manual fetch +
+  // AbortController + setState dance in a `refresh()` callback. React
+  // Query now owns fetching/caching/cancellation; a long staleTime
+  // reflects how infrequently the model catalog actually changes,
+  // while `refresh(true)` below still lets any caller force a fresh
+  // fetch on demand (e.g. an admin just added a new model).
+  const query = useQuery({
+    queryKey: modelsQueryKey(productKey),
+    queryFn: async ({ signal }) => {
+      // 🔧 FIX: openqcore-web's fetchChatModels() only accepts 2
+      // arguments (no AbortSignal support, unlike qxt-chat's version)
+      // — dropped the third arg. `signal` is still destructured from
+      // React Query's queryFn context above in case a future update
+      // to fetchChatModels adds support and this needs re-wiring.
+      const response = await fetchChatModels(backendProductKeyFor(productKey), false);
+      return (response || []).map(normalizeModel);
+    },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+  });
 
-  const label = useMemo<string>(() => {
-    if (!selected) return "Select Model";
-    const m    = models.find((x) => x.id === selected.id);
-    const name = m?.public_name || (selected.id === "pulse-core" ? "Core" : selected.id);
-    return `${name} G${selected.gen}`;
-  }, [selected, models]);
+  const models = useMemo(() => query.data ?? [], [query.data]);
 
-  // ── refresh ───────────────────────────────────────────────────────────────
+  const groupedModels = useMemo(() => groupModelsByDisplayGroup(models), [models]);
+  const modelsByProduct = useMemo<ModelsByProduct>(() => {
+    const grouped: ModelsByProduct = { ...EMPTY_MODELS_MAP };
 
-  const refresh = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
+    for (const model of models) {
+      const key = mapProductKey(model.product_key);
 
-      const backendKey    = productKey === "chat" ? "pulse" : productKey;
-      const fetchedModels = await fetchChatModels(backendKey, false);
+      if (!key) {
+        continue;
+      }
 
-      if (!fetchedModels.length) {
-        setModels([]);
-        setError(`No models available for ${productKey}`);
+      grouped[key].push(model);
+    }
+
+    (Object.keys(grouped) as ProductKey[]).forEach((key) => {
+      grouped[key] = grouped[key]
+        .slice()
+        .sort((a, b) => (b.gen ?? 0) - (a.gen ?? 0) || a.public_name.localeCompare(b.public_name));
+    });
+
+    return grouped;
+  }, [models]);
+
+  // Reconciles the currently-selected model against whatever list just
+  // came back (kept as its own effect since React Query v5 dropped
+  // per-query onSuccess callbacks). Same logic as before: keep the
+  // current selection if still valid, else fall back to whatever's in
+  // localStorage, else the first available model.
+  useEffect(() => {
+    if (!models.length) return;
+
+    setSelected((current) => {
+      if (current && models.find((model) => model.id === current.id)) {
+        return current;
+      }
+
+      const stored = loadSelection(productKey);
+
+      if (stored && models.find((model) => model.id === stored.id)) {
+        saveSelection(productKey, stored);
+        return stored;
+      }
+
+      const first = models[0];
+
+      if (first) {
+        const next: SelectedModel = {
+          id: first.id,
+          gen: first.gen,
+        };
+        saveSelection(productKey, next);
+        return next;
+      }
+
+      return current;
+    });
+  }, [models, productKey]);
+
+  const selectModel = useCallback(
+    (id: string, gen?: number): void => {
+      const found = models.find((model: PublicModelItem) => model.id === id);
+
+      if (!found) {
         return;
       }
 
-      const mapped: PublicModelItem[] = fetchedModels.map((m: any) => ({
-        object:         m.object || "model",
-        id:             m.id,
-        public_name:    m.public_name,
-        product_key:    m.product_key,
-        type:           m.type,
-        gen:            Number(m.gen ?? 1),
-        status:         m.status,
-        is_visible:     m.is_visible,
-        provider:       m.provider       || "unknown",
-        backend_model:  m.backend_model  || "unknown",
-        context_window: m.context_window,
-        description:    m.description,
-        config:         m.config,
-      }));
+      const next: SelectedModel = {
+        id: found.id,
+        gen: clampGen(gen ?? found.gen ?? 1),
+      };
 
-      setModels(mapped);
+      setSelected(next);
+      saveSelection(productKey, next);
+    },
+    [models, productKey]
+  );
 
-      setSelected((current) => {
-        // 1. Keep current if still valid
-        if (current && mapped.find((m) => m.id === current.id)) return current;
-
-        // 2. pulse-core
-        const pulseCore = mapped.find((m) => m.id === "pulse-core");
-        if (pulseCore) {
-          const sel = { id: pulseCore.id, gen: pulseCore.gen ?? 1 };
-          saveSelection(productKey, sel);
-          return sel;
+  const setGen = useCallback(
+    (gen: number): void => {
+      setSelected((prev) => {
+        if (!prev) {
+          return prev;
         }
 
-        // 3. localStorage
-        const saved = loadSavedSelection(productKey);
-        if (saved && mapped.find((m) => m.id === saved.id)) {
-          saveSelection(productKey, saved);
-          return saved;
-        }
-
-        // 4. First available
-        if (mapped.length > 0) {
-          const first = { id: mapped[0].id, gen: clampGen(mapped[0].gen ?? 1) };
-          saveSelection(productKey, first);
-          return first;
-        }
-
-        return current;
+        const next = { ...prev, gen: clampGen(gen) };
+        saveSelection(productKey, next);
+        return next;
       });
+    },
+    [productKey]
+  );
 
-    } catch (err: any) {
-      if (err?.name === "AbortError") return;
-      const msg = err?.message || "Failed to load models";
-      if (!msg.includes("404")) setError(msg);
-    } finally {
-      setLoading(false);
+  const label = useMemo(() => {
+    if (!hydrated || !selected) {
+      return "Select Model";
     }
-  }, [productKey]);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+    const found = models.find((model: PublicModelItem) => model.id === selected.id);
+    const name = found?.public_name || selected.id;
+    const genLabel = found?.generation?.label || `G${selected.gen}`;
 
-  // ── value ─────────────────────────────────────────────────────────────────
+    return `${name} ${genLabel}`;
+  }, [hydrated, selected, models]);
 
-  const value = useMemo<ModelsState>(() => ({
-    loading, error, models, modelsByProduct,
-    selected, selectModel, setGen, refresh, label,
-  }), [loading, error, models, modelsByProduct, selected, selectModel, setGen, refresh, label]);
+  // Same external contract as before: `refresh()` re-fetches,
+  // `refresh(true)` forces a fresh fetch bypassing the cached/stale
+  // data (used to be done with a manual AbortController; now it's an
+  // explicit invalidate + refetch on the React Query cache).
+  const refresh = useCallback(
+    async (force = false): Promise<void> => {
+      if (force) {
+        await queryClient.invalidateQueries({ queryKey: modelsQueryKey(productKey) });
+      }
+      await query.refetch();
+    },
+    [queryClient, productKey, query.refetch]
+  );
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  const errorMessage = useMemo(() => {
+    if (!query.error) return null;
+    return (query.error as Error)?.message || "Failed to load models";
+  }, [query.error]);
+
+  const value = useMemo<ModelsState>(
+    () => ({
+      loading: query.isLoading,
+      error: errorMessage,
+      models,
+      modelsByProduct,
+      groupedModels,
+      selected,
+      selectModel,
+      setGen,
+      refresh,
+      label,
+    }),
+    [query.isLoading, errorMessage, models, modelsByProduct, groupedModels, selected, selectModel, setGen, refresh, label]
+  );
+
+  return <ModelsContext.Provider value={value}>{children}</ModelsContext.Provider>;
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useModels(): ModelsState {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("useModels() must be used within <ModelsProvider />");
-  return v;
+  const context = useContext(ModelsContext);
+
+  if (!context) {
+    throw new Error("useModels must be used within ModelsProvider");
+  }
+
+  return context;
 }

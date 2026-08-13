@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bot, Code2, Database, Sparkles } from "lucide-react";
+import { ArrowLeft, Bot, Code2, Database, MessageSquare, Sparkles } from "lucide-react";
 
 import { useWorkspace } from "@/app/context/WorkspaceContext";
 import { getWorkspaceAgent } from "@/app/lib/api/workspace/agents";
@@ -11,13 +11,15 @@ import { getWorkspaceAgent } from "@/app/lib/api/workspace/agents";
 import { OverviewTab } from "./OverviewTab";
 import { KnowledgeTab } from "./KnowledgeTab";
 import { ApiCodeTab } from "./ApiCodeTab";
+import { WorkspaceConversationsTab } from "./WorkspaceConversationsTab";
 
-type TabKey = "overview" | "knowledge" | "api";
+type TabKey = "overview" | "conversations" | "knowledge" | "api";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
-  { key: "overview",  label: "Overview",   icon: Sparkles },
-  { key: "knowledge", label: "Knowledge",  icon: Database },
-  { key: "api",       label: "API & Code", icon: Code2 },
+  { key: "overview",      label: "Overview",      icon: Sparkles },
+  { key: "conversations", label: "Conversations", icon: MessageSquare },
+  { key: "knowledge",     label: "Knowledge",     icon: Database },
+  { key: "api",           label: "API & Code",    icon: Code2 },
 ];
 
 export default function WorkspaceAgentDetailsPage() {
@@ -102,6 +104,12 @@ export default function WorkspaceAgentDetailsPage() {
 
       <div className="pb-10">
         {tab === "overview" && <OverviewTab agent={agent} />}
+        {tab === "conversations" && (
+          <WorkspaceConversationsTab
+            workspaceId={activeWorkspace!.id}
+            agentId={agent.id}
+          />
+        )}
         {tab === "knowledge" && (
           <KnowledgeTab workspaceId={activeWorkspace!.id} agentId={agent.id} agentName={agent.name} />
         )}

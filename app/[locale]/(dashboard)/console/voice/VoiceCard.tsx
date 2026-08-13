@@ -5,17 +5,17 @@ import {
   AudioLines,
   Play,
   Pause,
-  Trash2,
   CheckCircle2,
   Clock,
   AlertCircle,
   Loader2,
-  Download,
   FileText,
   Mic,
   Waves,
 } from "lucide-react";
 import type { VoiceItem } from "./types";
+import CardActionsMenu from "./CardActionsMenu";
+import ConfirmDialog from "./ConfirmDialog";
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 
@@ -142,6 +142,9 @@ export default function VoiceCard({
 }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
+  // 🔧 NEW: delete now goes through a real confirmation step -- was
+  // previously calling onDelete(item.id) directly on click.
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   function togglePlay() {
     if (!audioRef.current || !item.url) return;
@@ -228,37 +231,20 @@ export default function VoiceCard({
               </span>
             )}
 
-            {item.provider && (
-              <span className="flex items-center gap-1 text-[10px] text-white/22">
-                <AudioLines className="h-3 w-3 text-amber-300/65" />
-                {item.provider}
-              </span>
-            )}
+            {/* 🔧 NOTE: provider display intentionally omitted here
+                (matches the platform-wide decision to keep
+                Azure/OpenAI hidden from end users). */}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-all duration-200 group-hover:opacity-100">
-          {item.url && (
-            <a
-              href={item.url}
-              download
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition-all hover:bg-white/[0.06] hover:text-white/70"
-              title="Download"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </a>
-          )}
-
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(item.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-red-300/40 transition-all hover:bg-red-400/[0.08] hover:text-red-200"
-              title="Delete"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+        {/* 🔧 NEW: single actions dropdown menu, replacing the old
+            separate Download link + Delete button pair. */}
+        <div className="shrink-0 opacity-0 transition-all duration-200 group-hover:opacity-100">
+          {(item.url || onDelete) && (
+            <CardActionsMenu
+              downloadUrl={item.url}
+              onDelete={() => setConfirmOpen(true)}
+            />
           )}
         </div>
       </div>
@@ -303,6 +289,22 @@ export default function VoiceCard({
           })}
         </span>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete this voice clip?"
+        description={
+          item.title
+            ? `"${item.title}" will be permanently deleted. This cannot be undone.`
+            : "This voice clip will be permanently deleted. This cannot be undone."
+        }
+        confirmLabel="Delete"
+        onConfirm={async () => {
+          onDelete?.(item.id);
+          setConfirmOpen(false);
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

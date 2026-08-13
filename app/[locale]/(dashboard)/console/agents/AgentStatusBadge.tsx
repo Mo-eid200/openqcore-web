@@ -5,7 +5,7 @@ import React from "react";
 import {
     AlertTriangle,
     CheckCircle2,
-    Loader2,
+    Circle,
     PauseCircle,
 } from "lucide-react";
 
@@ -50,10 +50,18 @@ const STATUS: Record<
     // =====================================================
     // IDLE
     // =====================================================
+    //
+    // 🔧 FIX: was `Loader2` (a loading spinner — the same icon this
+    // codebase uses everywhere else to mean "in progress") plus an
+    // explicit `animate-spin` applied only for this status, making
+    // it spin continuously and look like the agent is perpetually
+    // loading rather than sitting idle. `Circle` (a plain static
+    // dot) correctly reads as "at rest, not currently doing
+    // anything" — no animation.
 
     idle: {
         label: "Idle",
-        icon: Loader2,
+        icon: Circle,
         className: `
             border-white/[0.08]
             bg-white/[0.04]
@@ -205,6 +213,10 @@ export default function AgentStatusBadge({
             }
 
             {/* ICON */}
+            {/* 🔧 FIX: removed the `status === "idle" ? "animate-spin"
+                : ""` class — no status icon should spin continuously;
+                the pulsing dot above already conveys "live/active"
+                for the active state. */}
 
             <Icon
                 className={`
@@ -212,12 +224,6 @@ export default function AgentStatusBadge({
                     w-3.5
 
                     ${current.iconClassName}
-
-                    ${
-                        status === "idle"
-                            ? "animate-spin"
-                            : ""
-                    }
                 `}
             />
 

@@ -11,6 +11,7 @@ import {
   Cpu,
   Database,
   FolderKanban,
+  MessageSquare,
   Sparkles,
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ import { getAgent } from "@/app/lib/api/console/agents";
 import { OverviewTab } from "./OverviewTab";
 import { KnowledgeTab } from "./KnowledgeTab";
 import { ApiCodeTab } from "./ApiCodeTab";
+import { ConversationsTab } from "./ConversationsTab";
 
 // ─── Icon resolver (same as AgentCard) ───────────────────────────────────────
 
@@ -36,12 +38,13 @@ function resolveIcon(icon?: string) {
 
 // ─── Tabs config ──────────────────────────────────────────────────────────────
 
-type TabKey = "overview" | "knowledge" | "api";
+type TabKey = "overview" | "knowledge" | "api" | "conversations";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
-  { key: "overview",  label: "Overview",   icon: Sparkles },
-  { key: "knowledge", label: "Knowledge",  icon: Database },
-  { key: "api",       label: "API & Code", icon: Code2 },
+  { key: "overview",      label: "Overview",      icon: Sparkles },
+  { key: "conversations", label: "Conversations", icon: MessageSquare },
+  { key: "knowledge",     label: "Knowledge",     icon: Database },
+  { key: "api",           label: "API & Code",    icon: Code2 },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -133,6 +136,9 @@ export default function AgentDetailsPage() {
       {/* Tab content */}
       <div className="pb-10">
         {tab === "overview" && <OverviewTab agent={agent} />}
+        {tab === "conversations" && (
+          <ConversationsTab agentId={agent.id} />
+        )}
         {tab === "knowledge" && <KnowledgeTab agentId={agent.id} agentName={agent.name} />}
         {tab === "api" && <ApiCodeTab agentId={agent.id} />}
       </div>

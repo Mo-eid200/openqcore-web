@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { Sparkles } from "lucide-react";
 
-import { ChatFooter } from "../../components/home/ChatFooter";
+import DemoChatFooter from "../../../(marketing)/components/home/DemoChatFooter";
 import WorkspaceModal from "../../components/AuthModal";
 import { useApp } from "../../../../context/AppContext";
 import {
@@ -23,19 +25,21 @@ type ChatMessage = {
   variant?: "normal" | "limit" | "error";
 };
 
-type SendData = {
-  text: string;
-  model: string;
-  isVoiceActive?: boolean;
-};
-
 /* ─────────────────────────────────────────────────────────
    Constants
 ───────────────────────────────────────────────────────── */
 
 const wrap = "mx-auto w-full max-w-[880px] px-5 sm:px-6";
-
 const DEMO_MODEL = "pulse.core.flow";
+
+// 🔧 NEW: suggested prompts -- reduces "blank page" hesitation and
+// gives visitors an instant, concrete sense of what the product can
+// do, rather than staring at an empty textbox.
+const SUGGESTED_PROMPTS = [
+  "Draft a go-to-market plan for a SaaS product",
+  "Explain a complex topic like I'm new to it",
+  "Write production-ready Python code",
+];
 
 /* ─────────────────────────────────────────────────────────
    Quark mark
@@ -78,10 +82,12 @@ function TypingIndicator() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   Message
+   Message — memoized: without this, EVERY prior message in the
+   conversation re-renders on every single streaming flush, not just
+   the one actually changing. Compounds with conversation length.
 ───────────────────────────────────────────────────────── */
 
-function MessageBubble({
+const MessageBubble = React.memo(function MessageBubble({
   message,
   t,
 }: {
@@ -94,12 +100,17 @@ function MessageBubble({
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="flex justify-end"
+      >
         <div
           className="
             max-w-[82%] rounded-[20px] rounded-br-[7px]
-            border border-[#4d7cff]/[0.16]
-            bg-[#16233a]/80
+            border border-white/[0.10]
+            bg-white/[0.06]
             px-4 py-2.5
             text-[14px] leading-6 text-slate-100
             shadow-[0_8px_28px_rgba(0,0,0,0.14)]
@@ -109,13 +120,18 @@ function MessageBubble({
         >
           {message.content}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (isLimit) {
     return (
-      <div className="flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="flex items-start gap-3"
+      >
         <QuarkMark />
 
         <div
@@ -145,13 +161,18 @@ function MessageBubble({
             {t("continue_in_qxt")}
           </Link>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex items-start gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="flex items-start gap-3"
+      >
         <QuarkMark />
 
         <div
@@ -165,12 +186,17 @@ function MessageBubble({
         >
           {message.content}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="flex items-start gap-3">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      className="flex items-start gap-3"
+    >
       <QuarkMark />
 
       <div className="min-w-0 max-w-[86%] pt-0.5">
@@ -182,9 +208,9 @@ function MessageBubble({
           {message.content ? message.content : <TypingIndicator />}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+});
 
 /* ─────────────────────────────────────────────────────────
    Live AI
@@ -198,14 +224,6 @@ export default function LiveAISection() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-
-  /*
-   * ChatFooter still expects these props.
-   * The marketing demo does not expose attachment controls,
-   * so they intentionally remain empty.
-   */
-  const [pendingImages, setPendingImages] = useState<any[]>([]);
-  const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
 
   const { user } = useApp();
 
@@ -235,32 +253,17 @@ export default function LiveAISection() {
     setMessages((prev) => {
       const copy = [...prev];
 
-      if (
-        copy.length > 0 &&
-        copy[copy.length - 1].role === "assistant"
-      ) {
-        copy[copy.length - 1] = {
-          role: "assistant",
-          content,
-          variant,
-        };
-
+      if (copy.length > 0 && copy[copy.length - 1].role === "assistant") {
+        copy[copy.length - 1] = { role: "assistant", content, variant };
         return copy;
       }
 
-      return [
-        ...copy,
-        {
-          role: "assistant",
-          content,
-          variant,
-        },
-      ];
+      return [...copy, { role: "assistant", content, variant }];
     });
   };
 
-  const handleSend = async (data: SendData): Promise<void> => {
-    const text = data.text?.trim();
+  const handleSend = async (rawText?: string): Promise<void> => {
+    const text = (rawText ?? input).trim();
 
     if (!text || loading) return;
 
@@ -271,40 +274,38 @@ export default function LiveAISection() {
 
     setLoading(true);
 
+    // 🔧 Optimistic UI: the user's own message (and a placeholder
+    // for the reply) appear IMMEDIATELY -- session creation (for a
+    // first-time visitor) now happens in the background afterward,
+    // instead of blocking the user's own message from even
+    // appearing on screen.
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: text, variant: "normal" },
+      { role: "assistant", content: "", variant: "normal" },
+    ]);
+    setInput("");
+    scrollToBottom();
+
     try {
       let sid = sessionId;
 
       if (!sid) {
         const session = await createSession({
           title: "OpenQCore Live AI Demo",
-          metadata: {
-            experience: "openqcore_marketing_demo",
-          },
+          metadata: { experience: "openqcore_marketing_demo" },
           forcePersonalContext: true,
         });
-
         sid = session.id;
         setSessionId(sid);
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "user",
-          content: text,
-          variant: "normal",
-        },
-        {
-          role: "assistant",
-          content: "",
-          variant: "normal",
-        },
-      ]);
-
-      setInput("");
-      scrollToBottom();
-
+      // 🔧 Throttled: at most one UI update + scroll every 60ms,
+      // instead of on every single streamed chunk (previously
+      // dozens-to-hundreds of re-renders per reply).
       let fullResponse = "";
+      let lastFlush = 0;
+      const FLUSH_INTERVAL_MS = 60;
 
       for await (const chunk of streamChatMessage(
         sid,
@@ -315,17 +316,21 @@ export default function LiveAISection() {
       )) {
         fullResponse += chunk;
 
-        replaceLastAssistant(fullResponse);
-        scrollToBottom();
+        const now = performance.now();
+        if (now - lastFlush >= FLUSH_INTERVAL_MS) {
+          replaceLastAssistant(fullResponse);
+          scrollToBottom();
+          lastFlush = now;
+        }
       }
+
+      replaceLastAssistant(fullResponse);
+      scrollToBottom();
     } catch (err: any) {
       const isDailyLimit =
         err?.status === 429 ||
-        String(err?.message || "")
-          .toLowerCase()
-          .includes("daily");
+        String(err?.message || "").toLowerCase().includes("daily");
 
-      // 429 is expected when the marketing demo quota is exhausted.
       if (!isDailyLimit) {
         console.error("[LiveAISection] Chat failed:", err);
       }
@@ -334,13 +339,6 @@ export default function LiveAISection() {
         ? t("daily_limit_message")
         : t("generic_error_message");
 
-      // 🔧 FIX: this branch previously built the assistant message with
-      // NO `variant` field at all, even when isDailyLimit was true. That
-      // meant MessageBubble's `isLimit` check (`variant === "limit"`)
-      // could never be true from this code path -- the gold-bordered
-      // "DAILY DEMO LIMIT" UI with the "Continue in QXT Chat" link was
-      // fully built but structurally unreachable. Now the variant is
-      // set correctly based on which error actually occurred.
       const variant: ChatMessage["variant"] = isDailyLimit ? "limit" : "error";
 
       setMessages((prev) => {
@@ -351,23 +349,11 @@ export default function LiveAISection() {
           copy[copy.length - 1].role === "assistant" &&
           !copy[copy.length - 1].content
         ) {
-          copy[copy.length - 1] = {
-            role: "assistant",
-            content: errorMessage,
-            variant,
-          };
-
+          copy[copy.length - 1] = { role: "assistant", content: errorMessage, variant };
           return copy;
         }
 
-        return [
-          ...copy,
-          {
-            role: "assistant",
-            content: errorMessage,
-            variant,
-          },
-        ];
+        return [...copy, { role: "assistant", content: errorMessage, variant }];
       });
     } finally {
       setLoading(false);
@@ -383,13 +369,13 @@ export default function LiveAISection() {
         pb-28 pt-14
       "
     >
-      {/* Ambient lighting */}
+      {/* Ambient lighting — neutral, no color tint */}
       <div
         aria-hidden
         className="
           pointer-events-none absolute left-1/2 top-24
           h-[420px] w-[760px] -translate-x-1/2
-          rounded-full bg-blue-500/[0.035] blur-[120px]
+          rounded-full bg-white/[0.025] blur-[120px]
         "
       />
 
@@ -425,13 +411,13 @@ export default function LiveAISection() {
           </p>
         </div>
 
-        {/* Chat shell */}
+        {/* Chat shell — single unified surface */}
         <div ref={chatRef} className="relative z-10">
           <div
             className="
               relative overflow-hidden rounded-[26px]
-              border border-white/[0.07]
-              bg-[#0b1018]/95
+              border border-white/[0.10]
+              bg-[#12141a]/95
               shadow-[0_28px_90px_rgba(0,0,0,0.32)]
               backdrop-blur-xl
             "
@@ -455,56 +441,61 @@ export default function LiveAISection() {
                   px-5 py-6 sm:px-6
                 "
               >
-                {messages.map((message, index) => (
-                  <MessageBubble
-                    key={index}
-                    message={message}
-                    t={t}
-                  />
-                ))}
+                <AnimatePresence initial={false}>
+                  {messages.map((message, index) => (
+                    <MessageBubble key={index} message={message} t={t} />
+                  ))}
+                </AnimatePresence>
 
                 <div ref={messagesEndRef} />
               </div>
             )}
 
-            {/* Composer */}
+            {/* Suggested prompts — only shown before the first message */}
+            {messages.length === 0 && (
+              <div className="flex flex-wrap gap-2 px-5 pt-5 sm:px-6">
+                {SUGGESTED_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => handleSend(prompt)}
+                    className="
+                      flex items-center gap-1.5 rounded-full border border-white/[0.10]
+                      bg-white/[0.03] px-3 py-1.5 text-[12px] text-white/55
+                      transition-all hover:border-white/[0.18] hover:bg-white/[0.06] hover:text-white/85
+                    "
+                  >
+                    <Sparkles className="h-3 w-3 text-white/30" />
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Composer — same surface as the rest of the card; the
+                border only appears on focus (focus-within), so there's
+                no permanent "second box" visually separating it from
+                the messages above it. */}
             <div
               className={`
-                relative px-3 pb-3 pt-3
-                ${
-                  messages.length > 0
-                    ? "border-t border-white/[0.055]"
-                    : ""
-                }
+                relative mx-3 mb-3 mt-4 rounded-2xl border border-transparent
+                px-4 py-3 transition-all duration-200
+                focus-within:border-white/[0.16] focus-within:bg-white/[0.02]
               `}
             >
-              <ChatFooter
+              <DemoChatFooter
                 input={input}
                 loading={loading}
-                lang="en"
-                darkMode={true}
                 placeholder={t("composer_placeholder")}
                 onChange={setInput}
-                onSend={handleSend}
+                onSend={() => handleSend()}
                 onInputFocus={handleInputFocus}
-                pendingImages={pendingImages}
-                setPendingImages={setPendingImages}
-                pendingDocuments={pendingDocuments}
-                setPendingDocuments={setPendingDocuments}
-                demoMode={true}
-                forceVoiceMode={false}
-                defaultModelId="quark"
               />
             </div>
           </div>
 
           {/* Demo note */}
-          <div
-            className="
-              mt-3 flex items-center justify-center gap-2
-              text-[10px] text-white/25
-            "
-          >
+          <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-white/25">
             <span className="h-0.5 w-0.5 rounded-full bg-white/25" />
             <span>{t("powered_by")}</span>
           </div>

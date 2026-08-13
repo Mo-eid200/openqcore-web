@@ -1,4 +1,5 @@
 "use client";
+import { Link } from "@/i18n/navigation";
 
 import React from "react";
 
@@ -241,7 +242,8 @@ export default function ConsoleOverviewHero({
                         "
                     >
 
-                        <button
+                        <Link
+                            href="/workspace/overview"
                             className="
                                 inline-flex
                                 items-center
@@ -267,9 +269,10 @@ export default function ConsoleOverviewHero({
                             "
                         >
                             Open Workspace
-                        </button>
+                        </Link>
 
-                        <button
+                        <Link
+                            href="/console/api-keys"
                             className="
                                 inline-flex
                                 items-center
@@ -298,7 +301,7 @@ export default function ConsoleOverviewHero({
                             "
                         >
                             View API Usage
-                        </button>
+                        </Link>
 
                     </div>
 
@@ -380,7 +383,6 @@ export default function ConsoleOverviewHero({
                                 text-amber-200/85
                             "
                         >
-
                             <ArrowUpRight
                                 className="
                                     h-4
@@ -392,10 +394,87 @@ export default function ConsoleOverviewHero({
 
                     </div>
 
+                    {/* QXT REMAINING — highlighted separately from
+                        the activity metrics below it, since this is
+                        the one number that's actionable (low balance
+                        means "go top up"), not just informational. */}
+                    {(() => {
+                        const qxtRemaining = stats?.qxt_remaining ?? 0;
+                        const isLow = qxtRemaining < 500;
+
+                        return (
+                            <div
+                                className={`
+                                    mt-5
+
+                                    rounded-xl
+
+                                    border
+                                    px-3.5
+                                    py-3
+
+                                    ${isLow
+                                        ? "border-red-400/20 bg-red-400/[0.06]"
+                                        : "border-amber-300/20 bg-amber-300/[0.06]"
+                                    }
+                                `}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span
+                                        className={`
+                                            text-[11px]
+                                            uppercase
+                                            tracking-[0.16em]
+                                            font-medium
+
+                                            ${isLow ? "text-red-300/85" : "text-amber-200/70"}
+                                        `}
+                                    >
+                                        QXT Remaining
+                                    </span>
+
+                                    {isLow && (
+                                        <span
+                                            className="
+                                                rounded-full
+                                                bg-red-400/15
+                                                px-2
+                                                py-0.5
+
+                                                text-[10px]
+                                                font-semibold
+                                                uppercase
+                                                tracking-wide
+
+                                                text-red-300
+                                            "
+                                        >
+                                            Low
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div
+                                    className={`
+                                        mt-1.5
+
+                                        text-2xl
+                                        font-bold
+                                        tracking-tight
+
+                                        ${isLow ? "text-red-100" : "text-white"}
+                                    `}
+                                >
+                                    {qxtRemaining.toLocaleString()}
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* METRICS */}
                     <div
                         className="
-                            mt-5
+                            mt-4
 
                             space-y-2.5
                         "

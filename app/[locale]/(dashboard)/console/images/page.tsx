@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import ImageToolbar from "./ImageToolbar";
 import ImageGrid from "./ImageGrid";
+import ImageLightbox from "./ImageLightbox";
 
 import OpenQCoreLoader from "../../components/ui/OpenQCoreLoader";
 
@@ -140,6 +141,11 @@ export default function PersonalImagePage() {
   const [deletingId, setDeletingId] =
     useState<string | null>(null);
 
+  // 🔧 NEW: page-level lightbox state — one instance for the whole
+  // grid, not one modal per card.
+  const [previewItem, setPreviewItem] =
+    useState<ImageItem | null>(null);
+
   // ── Query: images + stats معاً ───────────────────────────────────────────
 
   const {
@@ -256,9 +262,15 @@ export default function PersonalImagePage() {
             items={filtered}
             deletingId={deletingId}
             onDelete={handleDelete}
+            onPreview={setPreviewItem}
           />
         )}
       </FadeIn>
+
+      <ImageLightbox
+        item={previewItem}
+        onClose={() => setPreviewItem(null)}
+      />
     </div>
   );
 }
