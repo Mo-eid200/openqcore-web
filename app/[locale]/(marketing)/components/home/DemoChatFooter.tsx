@@ -14,6 +14,20 @@ type Props = {
   onInputFocus?: () => void;
 };
 
+// 🔧 NEW: expanded set of cycling suggestions for the typewriter
+// placeholder effect (was in the old ChatFooter.tsx, restored here
+// with more variety per request).
+const TYPED_SUGGESTIONS = [
+  "Ask Quarc about anything...",
+  "Draft a business plan in seconds...",
+  "Get feedback on your ideas...",
+  "Write and debug real code...",
+  "Improve your productivity...",
+  "Brainstorm your next project...",
+  "Summarize something complex...",
+  "Explore a new topic...",
+];
+
 export default function DemoChatFooter({
   input,
   loading,
@@ -25,10 +39,14 @@ export default function DemoChatFooter({
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [emojiPos, setEmojiPos] = useState<{ top: number; left: number } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [typedPlaceholder, setTypedPlaceholder] = useState("");
+  const [suggestionIdx, setSuggestionIdx] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const emojiPanelRef = useRef<HTMLDivElement>(null);
+  const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -39,6 +57,34 @@ export default function DemoChatFooter({
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [input]);
+
+  // 🔧 Typewriter effect — only runs while the field is empty and
+  // unfocused, matching the old ChatFooter's exact behavior. Stops
+  // immediately the moment the user types or focuses the field.
+  useEffect(() => {
+    if (input.trim() || isFocused) {
+      setTypedPlaceholder("");
+      if (pauseTimer.current) clearTimeout(pauseTimer.current);
+      return;
+    }
+
+    const phrase = TYPED_SUGGESTIONS[suggestionIdx];
+    let i = 0;
+    setTypedPlaceholder("");
+
+    const typing = setInterval(() => {
+      if (i < phrase.length) {
+        setTypedPlaceholder(phrase.slice(0, ++i));
+      } else {
+        clearInterval(typing);
+        pauseTimer.current = setTimeout(() => {
+          setSuggestionIdx((p) => (p + 1) % TYPED_SUGGESTIONS.length);
+        }, 2200);
+      }
+    }, 38);
+
+    return () => clearInterval(typing);
+  }, [suggestionIdx, input, isFocused]);
 
   // Close on outside click (checks both the button and the portaled panel)
   useEffect(() => {
@@ -61,15 +107,10 @@ export default function DemoChatFooter({
 
   const toggleEmoji = useCallback(() => {
     if (!emojiOpen && emojiBtnRef.current) {
-      // 🔧 Positioned from the button's REAL viewport coordinates,
-      // then rendered via portal straight to document.body -- this
-      // is what lets the panel escape the chat card's
-      // `overflow-hidden` entirely, instead of getting silently
-      // clipped by it.
       const rect = emojiBtnRef.current.getBoundingClientRect();
       setEmojiPos({
-        top: rect.top - 350, // panel height (~340px) + a small gap
-        left: Math.max(8, rect.right - 290), // 290 = panel width, right-aligned to the button
+        top: rect.top - 350,
+        left: Math.max(8, rect.right - 290),
       });
     }
     setEmojiOpen((v) => !v);
@@ -103,8 +144,12 @@ export default function DemoChatFooter({
         value={input}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        onFocus={() => onInputFocus?.()}
-        placeholder={placeholder}
+        onFocus={() => {
+          setIsFocused(true);
+          onInputFocus?.();
+        }}
+        onBlur={() => setIsFocused(false)}
+        placeholder={typedPlaceholder || placeholder}
         disabled={loading}
         className="
           min-h-[24px] w-full resize-none bg-transparent text-sm leading-relaxed
