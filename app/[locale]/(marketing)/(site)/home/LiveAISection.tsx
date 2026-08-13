@@ -39,6 +39,9 @@ const SUGGESTED_PROMPTS = [
   "Draft a go-to-market plan for a SaaS product",
   "Explain a complex topic like I'm new to it",
   "Write production-ready Python code",
+  "Summarize a business idea in one paragraph",
+  "Give me 5 creative marketing angles",
+  "Debug this error message for me",
 ];
 
 /* ─────────────────────────────────────────────────────────
