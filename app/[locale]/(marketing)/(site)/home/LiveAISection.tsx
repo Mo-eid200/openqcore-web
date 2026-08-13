@@ -30,7 +30,7 @@ type ChatMessage = {
    Constants
 ───────────────────────────────────────────────────────── */
 const wrap = "mx-auto w-full max-w-[880px] px-5 sm:px-6";
-const DEMO_MODEL = "pulse.core.swift";
+const DEMO_MODEL = "pulse.core.flow";
 
 // 🔧 NEW: suggested prompts -- reduces "blank page" hesitation and
 // gives visitors an instant, concrete sense of what the product can
