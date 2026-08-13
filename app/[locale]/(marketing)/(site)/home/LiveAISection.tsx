@@ -10,6 +10,7 @@ import { Sparkles } from "lucide-react";
 import DemoChatFooter from "../../../(marketing)/components/home/DemoChatFooter";
 import WorkspaceModal from "../../components/AuthModal";
 import { useApp } from "../../../../context/AppContext";
+import MarkdownText from "./MarkdownText";
 import {
   createSession,
   streamChatMessage,
@@ -207,10 +208,9 @@ const MessageBubble = React.memo(function MessageBubble({
           {t("assistant_name")}
         </div>
 
-        <div className="text-[14px] leading-7 text-slate-200">
+        {message.content ? <MarkdownText content={message.content} /> : <TypingIndicator />}
           {message.content ? message.content : <TypingIndicator />}
         </div>
-      </div>
     </motion.div>
   );
 });
