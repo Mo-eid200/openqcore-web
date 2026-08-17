@@ -11,12 +11,13 @@ import { CreateWorkspaceModal } from "../../../(marketing)/components/CreateWork
 export default function WorkspaceSwitcher() {
   const router = useRouter();
   const {
-    activeWorkspace,
-    workspaces,
-    switchWorkspace,
-    refreshWorkspaces,
-    createWorkspace,
-  } = useWorkspace();
+  activeWorkspace,
+  workspaces,
+  loading,
+  switchWorkspace,
+  refreshWorkspaces,
+  createWorkspace,
+} = useWorkspace();
 
   const [open,       setOpen]       = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -62,7 +63,15 @@ export default function WorkspaceSwitcher() {
   }
 
   // ── لو مفيش workspaces — زرار Create فقط ────────────────────────
-  if (workspaces.length === 0) {
+  if (loading) {
+  return (
+    <div className="px-3 pt-3">
+      <div className="h-[52px] w-full animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.03]" />
+    </div>
+  );
+}
+
+if (workspaces.length === 0) {
     return (
       <div className="px-3 pt-3">
         <button

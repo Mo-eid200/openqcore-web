@@ -31,8 +31,10 @@ import {
   Image as ImageIcon,
   Wand2,
   LifeBuoy,
+  Plus,
 } from "lucide-react";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
+import { CreateWorkspaceModal } from "../../../(marketing)/components/CreateWorkspaceModal";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -197,8 +199,9 @@ function Tooltip({ label, visible }: { label: string; visible: boolean }) {
 // ─── Workspace Selector ──────────────────────────────────────────────────────
 
 function WorkspaceSelector({ collapsed }: { collapsed: boolean }) {
-  const { workspaces, activeWorkspace, switchWorkspace } = useWorkspace();
+  const { workspaces, activeWorkspace, switchWorkspace, loading, createWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -214,7 +217,83 @@ function WorkspaceSelector({ collapsed }: { collapsed: boolean }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  if (!workspaces?.length) return null;
+  async function handleCreate(name: string) {
+    await createWorkspace({ name });
+    setCreateOpen(false);
+  }
+
+  // 🔧 FIX: was falling straight to the empty-state check below
+  // before `loading` even settled -- for a returning user WITH
+  // workspaces, this briefly rendered the "no workspaces" state
+  // (or, before the next fix, nothing at all) until the fetch
+  // resolved, which is exactly the "takes a while to appear" delay
+  // reported. Show a neutral skeleton while genuinely loading
+  // instead of guessing from a still-empty array.
+  if (loading) {
+    if (collapsed) {
+      return (
+        <div className="mb-1 flex justify-center px-1.5">
+          <div className="h-8 w-8 animate-pulse rounded-lg bg-white/[0.06]" />
+        </div>
+      );
+    }
+    return (
+      <div className="mb-2 px-2.5">
+        <div className="h-[46px] w-full animate-pulse rounded-2xl border border-white/[0.05] bg-white/[0.04]" />
+      </div>
+    );
+  }
+
+  // 🔧 FIX (the real bug): this used to be `if (!workspaces?.length)
+  // return null;` -- for any user with genuinely zero workspaces,
+  // this component rendered NOTHING at all, no create affordance,
+  // no message, just blank space under the "Workspaces" label above
+  // it. Now shows a proper create-workspace entry point instead.
+  if (!workspaces?.length) {
+    if (collapsed) {
+      return (
+        <div className="mb-1 flex justify-center px-1.5">
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            title="Create workspace"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-white/40 transition hover:bg-white/[0.10] hover:text-white/70"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <CreateWorkspaceModal
+            open={createOpen}
+            onClose={() => setCreateOpen(false)}
+            onCreate={handleCreate}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="mb-2 px-2.5">
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="flex w-full items-center gap-2.5 rounded-2xl border border-white/[0.05] bg-white/[0.04] px-3 py-2.5 text-left transition hover:bg-white/[0.06]"
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.10] text-white/50">
+            <Plus className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium text-white/70">Create workspace</div>
+            <div className="truncate text-[11px] text-white/30">No workspaces yet</div>
+          </div>
+        </button>
+
+        <CreateWorkspaceModal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          onCreate={handleCreate}
+        />
+      </div>
+    );
+  }
 
   const initial = (activeWorkspace?.name?.[0] || "W").toUpperCase();
 
@@ -285,9 +364,29 @@ function WorkspaceSelector({ collapsed }: { collapsed: boolean }) {
                 )}
               </button>
             ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setCreateOpen(true);
+              }}
+              className="flex w-full items-center gap-2 border-t border-white/[0.06] px-3 py-2.5 text-left text-sm text-white/50 transition hover:bg-white/[0.05] hover:text-white/80"
+            >
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.08]">
+                <Plus className="h-3 w-3" />
+              </div>
+              Create new workspace
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CreateWorkspaceModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreate}
+      />
     </div>
   );
 }
@@ -352,6 +451,7 @@ function NavLink({
     </Link>
   );
 }
+
 // ─── Main Sidebar ────────────────────────────────────────────────────────────
 
 export default function Sidebar() {
@@ -362,7 +462,7 @@ export default function Sidebar() {
   const collapsed = !open;
   const width = collapsed ? WIDTH_COLLAPSED : WIDTH_OPEN;
   const [collapsedLogoHovered, setCollapsedLogoHovered] = useState(false);
-    useEffect(() => {
+  useEffect(() => {
     if (collapsed) {
       setCollapsedLogoHovered(false);
     }
@@ -387,9 +487,9 @@ export default function Sidebar() {
   }
 
   function isActive(href: string) {
-  if (!pathname) return false;
-  return pathname === href || pathname.startsWith(href + "/");
-}
+    if (!pathname) return false;
+    return pathname === href || pathname.startsWith(href + "/");
+  }
 
   return (
     <>
@@ -415,8 +515,8 @@ export default function Sidebar() {
               <button
                 type="button"
                 onClick={() => {
-                setCollapsedLogoHovered(false);
-                toggle();
+                  setCollapsedLogoHovered(false);
+                  toggle();
                 }}
                 onMouseEnter={() => setCollapsedLogoHovered(true)}
                 onMouseLeave={() => setCollapsedLogoHovered(false)}
@@ -470,8 +570,8 @@ export default function Sidebar() {
                 <button
                   type="button"
                   onClick={() => {
-                  setCollapsedLogoHovered(false);
-                  toggle();
+                    setCollapsedLogoHovered(false);
+                    toggle();
                   }}
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-white/25 transition hover:bg-white/[0.06] hover:text-white/50"
                   aria-label="Close sidebar"
@@ -484,30 +584,30 @@ export default function Sidebar() {
 
           {/* Mode toggle */}
 
-{!collapsed && (
-  <div className="mb-3 shrink-0 px-2.5">
-    <div className="flex rounded-full bg-white/[0.04] p-1">
-      {(["console", "workspace"] as const).map((m) => {
-        const active = mode === m;
+          {!collapsed && (
+            <div className="mb-3 shrink-0 px-2.5">
+              <div className="flex rounded-full bg-white/[0.04] p-1">
+                {(["console", "workspace"] as const).map((m) => {
+                  const active = mode === m;
 
-        return (
-          <button
-            key={m}
-            type="button"
-            onClick={() => handleModeSwitch(m)}
-            className={`flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-              active
-                ? "bg-white/[0.12] text-white shadow-sm"
-                : "text-white/35 hover:text-white/60"
-            }`}
-          >
-            {m === "console" ? "Console" : "Workspace"}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-)}
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleModeSwitch(m)}
+                      className={`flex-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                        active
+                          ? "bg-white/[0.12] text-white shadow-sm"
+                          : "text-white/35 hover:text-white/60"
+                      }`}
+                    >
+                      {m === "console" ? "Console" : "Workspace"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Collapsed mode indicator */}
           {collapsed && (
@@ -530,18 +630,18 @@ export default function Sidebar() {
 
           {/* Workspace selector */}
           {/* Workspace section */}
-{mode === "workspace" && (
-  <>
-    {!collapsed && (
-      <div className="mb-2 px-3">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/25">
-          Workspaces
-        </div>
-      </div>
-    )}
-    <WorkspaceSelector collapsed={collapsed} />
-  </>
-)}
+          {mode === "workspace" && (
+            <>
+              {!collapsed && (
+                <div className="mb-2 px-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/25">
+                    Workspaces
+                  </div>
+                </div>
+              )}
+              <WorkspaceSelector collapsed={collapsed} />
+            </>
+          )}
 
           {/* Divider */}
           <div className={`${collapsed ? "mx-3" : "mx-4"} mb-2 border-t border-white/[0.06]`} />
