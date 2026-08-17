@@ -14,6 +14,7 @@ import MarkdownText from "./MarkdownText";
 import {
   createSession,
   streamChatMessage,
+  type StreamEvent,
 } from "../../../../lib/api/chat/sessions";
 
 /* ─────────────────────────────────────────────────────────
@@ -30,7 +31,7 @@ type ChatMessage = {
    Constants
 ───────────────────────────────────────────────────────── */
 const wrap = "mx-auto w-full max-w-[880px] px-5 sm:px-6";
-const DEMO_MODEL = "pulse.core.flow";
+const DEMO_MODEL = "pulse.core.swift";
 
 // 🔧 NEW: suggested prompts -- reduces "blank page" hesitation and
 // gives visitors an instant, concrete sense of what the product can
@@ -68,18 +69,29 @@ function QuarkMark() {
    Typing indicator
 ───────────────────────────────────────────────────────── */
 
-function TypingIndicator() {
+// 🔧 UPDATED: now accepts an optional statusText, shown next to the
+// pulsing dots ("Searching — "weather in Durrës""), driven by the
+// backend's real status-streaming events instead of being a purely
+// decorative animation.
+function TypingIndicator({ statusText }: { statusText?: string }) {
   return (
-    <div className="flex h-7 items-center gap-1.5">
-      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35" />
-      <span
-        className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35"
-        style={{ animationDelay: "140ms" }}
-      />
-      <span
-        className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35"
-        style={{ animationDelay: "280ms" }}
-      />
+    <div className="flex h-7 items-center gap-2">
+      <div className="flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35" />
+        <span
+          className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35"
+          style={{ animationDelay: "140ms" }}
+        />
+        <span
+          className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/35"
+          style={{ animationDelay: "280ms" }}
+        />
+      </div>
+      {statusText && (
+        <span className="text-[12px] text-white/40 transition-opacity duration-150">
+          {statusText}
+        </span>
+      )}
     </div>
   );
 }
@@ -93,9 +105,11 @@ function TypingIndicator() {
 const MessageBubble = React.memo(function MessageBubble({
   message,
   t,
+  statusText,
 }: {
   message: ChatMessage;
   t: ReturnType<typeof useTranslations>;
+  statusText?: string;
 }) {
   const isUser = message.role === "user";
   const isLimit = message.variant === "limit";
@@ -208,7 +222,11 @@ const MessageBubble = React.memo(function MessageBubble({
         </div>
 
         <div className="text-[14px] leading-7 text-slate-200">
-          {message.content ? <MarkdownText content={message.content} /> : <TypingIndicator />}
+          {message.content ? (
+            <MarkdownText content={message.content} />
+          ) : (
+            <TypingIndicator statusText={statusText} />
+          )}
         </div>
       </div>
     </motion.div>
@@ -227,6 +245,14 @@ export default function LiveAISection() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+
+  // 🔧 NEW: live status (stage + optional detail) for the reply
+  // currently being generated -- driven by the backend's real
+  // status-streaming events.
+  const [currentStatus, setCurrentStatus] = useState<{
+    stage: string;
+    detail?: string;
+  } | null>(null);
 
   const { user } = useApp();
 
@@ -276,6 +302,7 @@ export default function LiveAISection() {
     }
 
     setLoading(true);
+    setCurrentStatus(null);
 
     // 🔧 Optimistic UI: the user's own message (and a placeholder
     // for the reply) appear IMMEDIATELY -- session creation (for a
@@ -310,22 +337,34 @@ export default function LiveAISection() {
       let lastFlush = 0;
       const FLUSH_INTERVAL_MS = 60;
 
-      for await (const chunk of streamChatMessage(
+      for await (const event of streamChatMessage(
         sid,
         text,
         DEMO_MODEL,
         undefined,
         true
       )) {
-        fullResponse += chunk;
-
-        const now = performance.now();
-        if (now - lastFlush >= FLUSH_INTERVAL_MS) {
-          replaceLastAssistant(fullResponse);
-          scrollToBottom();
-          lastFlush = now;
+        if (event.type === "status") {
+          setCurrentStatus({ stage: event.stage, detail: event.detail });
+          continue;
         }
+
+        if (event.type === "content") {
+          fullResponse += event.text;
+
+          const now = performance.now();
+          if (now - lastFlush >= FLUSH_INTERVAL_MS) {
+            replaceLastAssistant(fullResponse);
+            scrollToBottom();
+            lastFlush = now;
+          }
+        }
+
+        // event.type === "images" -- unchanged from prior behavior,
+        // out of scope for this change.
       }
+
+      setCurrentStatus(null);
 
       if (!fullResponse.trim()) {
         replaceLastAssistant(
@@ -337,6 +376,8 @@ export default function LiveAISection() {
       }
       scrollToBottom();
     } catch (err: any) {
+      setCurrentStatus(null);
+
       const isDailyLimit =
         err?.status === 429 ||
         String(err?.message || "").toLowerCase().includes("daily");
@@ -452,9 +493,27 @@ export default function LiveAISection() {
                 "
               >
                 <AnimatePresence initial={false}>
-                  {messages.map((message, index) => (
-                    <MessageBubble key={index} message={message} t={t} />
-                  ))}
+                  {messages.map((message, index) => {
+                    const isLastAssistant =
+                      index === messages.length - 1 &&
+                      message.role === "assistant" &&
+                      !message.content;
+
+                    const statusLabel = currentStatus
+                      ? currentStatus.detail
+                        ? `${currentStatus.stage} — "${currentStatus.detail}"`
+                        : currentStatus.stage
+                      : undefined;
+
+                    return (
+                      <MessageBubble
+                        key={index}
+                        message={message}
+                        t={t}
+                        statusText={isLastAssistant ? statusLabel : undefined}
+                      />
+                    );
+                  })}
                 </AnimatePresence>
 
                 <div ref={messagesEndRef} />

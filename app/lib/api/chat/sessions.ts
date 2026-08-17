@@ -69,6 +69,11 @@ export type StreamChunk = {
   error?: string;
 };
 
+export type StreamEvent =
+  | { type: "content"; text: string }
+  | { type: "status"; stage: string; detail?: string }
+  | { type: "images"; urls: string[] };
+
 /* ======================================================
    HELPERS - Safe Array Picking
 ====================================================== */
@@ -453,35 +458,33 @@ export async function* streamChatMessage(
   model: string = "pulse",
   requestId?: string,
   forcePersonalContext: boolean = false
-): AsyncGenerator<string, void, unknown> {
+): AsyncGenerator<StreamEvent, void, unknown> {
   if (!sessionId) throw new Error("Session ID is required");
   if (!userMessage?.trim()) throw new Error("Message cannot be empty");
-
+ 
   const finalRequestId = requestId || crypto.randomUUID();
   const token = localStorage.getItem("qxt_access_token") || "";
   const workspaceId = forcePersonalContext ? "" : getWorkspaceId();
-
+ 
   try {
     console.log("[streamChatMessage] Starting stream...");
-    
-    console.log("API_BASE =", API_BASE);
-    console.log("URL =", `${API_BASE}/api/v1/chat/completions`);
+ 
     const response = await fetch(`${API_BASE}/api/v1/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-
+ 
         ...(token
           ? { Authorization: `Bearer ${token}` }
           : {}),
-
-          ...(forcePersonalContext
-  ? {
-      "X-Space-Type": "personal",
-      "X-Scope-Type": "personal",
-    }
-  : {}),
-
+ 
+        ...(forcePersonalContext
+          ? {
+              "X-Space-Type": "personal",
+              "X-Scope-Type": "personal",
+            }
+          : {}),
+ 
         ...(workspaceId
           ? { "X-Company-ID": workspaceId }
           : {}),
@@ -499,61 +502,74 @@ export async function* streamChatMessage(
         ],
       }),
     });
-
+ 
     if (!response.ok) {
-  let message = `Stream failed: ${response.status}`;
-
-  try {
-    const errorData = await response.json();
-
-    if (typeof errorData?.detail === "string") {
-      message = errorData.detail;
-    } else if (errorData?.detail?.message) {
-      message = errorData.detail.message;
+      let message = `Stream failed: ${response.status}`;
+ 
+      try {
+        const errorData = await response.json();
+ 
+        if (typeof errorData?.detail === "string") {
+          message = errorData.detail;
+        } else if (errorData?.detail?.message) {
+          message = errorData.detail.message;
+        }
+      } catch {
+        // Keep fallback message.
+      }
+ 
+      const error = new Error(message) as Error & { status?: number };
+      error.status = response.status;
+ 
+      throw error;
     }
-  } catch {
-    // Keep fallback message.
-  }
-
-  const error = new Error(message) as Error & { status?: number };
-  error.status = response.status;
-
-  throw error;
-}
-
+ 
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
-
+ 
     if (!reader) throw new Error("No stream reader");
-
+ 
     let buffer = "";
-
+ 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
+ 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
+ 
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
-
+ 
         const data = line.slice(6);
         if (data === "[DONE]") {
           console.log("[streamChatMessage] ✅ Stream completed");
           return;
         }
-
+ 
         try {
           const chunk = JSON.parse(data);
-
-          if (chunk.choices?.[0]?.delta?.content) {
-            yield chunk.choices[0].delta.content;
+          const delta = chunk.choices?.[0]?.delta;
+ 
+          // 🔧 NEW: status events (thinking/searching/analyzing/writing)
+          // -- yielded as their own structured event type, never mixed
+          // into the visible reply text.
+          if (delta?.status?.stage) {
+            yield {
+              type: "status",
+              stage: delta.status.stage,
+              detail: delta.status.detail,
+            };
+            continue;
           }
-
+ 
+          if (delta?.content) {
+            yield { type: "content", text: delta.content };
+          }
+ 
           if (chunk.images) {
-            yield `[IMAGES:${chunk.images.join(",")}]`;
+            yield { type: "images", urls: chunk.images };
           }
         } catch (e) {
           console.warn("[streamChatMessage] ⚠️ Parse error:", data);
@@ -564,7 +580,7 @@ export async function* streamChatMessage(
     if (err?.status !== 429) {
       console.error("[streamChatMessage] ❌ Failed:", err);
     }
-
+ 
     throw err;
   }
 }
