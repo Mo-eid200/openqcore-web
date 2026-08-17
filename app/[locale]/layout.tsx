@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Cairo } from "next/font/google";
 import "../globals.css";
 
+import { Suspense } from "react";
+import SessionExpiredNotice from "../../app/[locale]/(marketing)/components/SessionExpiredNotice";
+
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 
@@ -191,6 +194,9 @@ export default async function LocaleRootLayout({
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
+            <Suspense fallback={null}>
+              <SessionExpiredNotice />
+            </Suspense>
             <div className="relative min-h-screen">{children}</div>
           </Providers>
         </NextIntlClientProvider>

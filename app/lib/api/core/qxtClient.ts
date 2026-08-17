@@ -286,22 +286,22 @@ function attachAuthHeaders(
 
   const requestConfig = config as RetryableConfig;
 
-if (requestConfig.__forcePersonalContext) {
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  } else if (apiKey) {
-    config.headers["X-API-Key"] = apiKey;
+  if (requestConfig.__forcePersonalContext) {
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else if (apiKey) {
+      config.headers["X-API-Key"] = apiKey;
+    }
+
+    config.headers["X-Space-Type"] = "personal";
+    config.headers["X-Scope-Type"] = "personal";
+
+    delete config.headers["X-Workspace-ID"];
+    delete config.headers["X-Agent-ID"];
+    delete config.headers["X-Company-ID"];
+
+    return config;
   }
-
-  config.headers["X-Space-Type"] = "personal";
-  config.headers["X-Scope-Type"] = "personal";
-
-  delete config.headers["X-Workspace-ID"];
-  delete config.headers["X-Agent-ID"];
-  delete config.headers["X-Company-ID"];
-
-  return config;
-}
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -366,22 +366,56 @@ async function retryRequest(error: AxiosError): Promise<never> {
 }
 
 /* =========================================================
-   ERROR HANDLER  ← واحدة بس، صح
+   SESSION EXPIRY HANDLING
+   🔧 FIX: previously a clean logout only fired for 401s on TWO
+   specific endpoints (/auth/me, /auth/context). Any OTHER dashboard
+   API call returning 401 (e.g. after the token genuinely expired
+   while the tab was idle/asleep) fell through to the generic
+   "[API ERROR]" console.warn path below -- no cleanup, no redirect,
+   no message. The user's exact reported scenario (dashboard left
+   open, computer slept, comes back, page stays open with a silent
+   error instead of a clean logout) was this gap specifically.
+
+   Now ANY 401 from ANY endpoint triggers a clean logout + redirect,
+   using the SAME "/?param=value" convention already established
+   elsewhere in this codebase (see the OAuth callback page's
+   "/?auth_error=oauth" pattern) -- so no new routing convention is
+   introduced. `sessionExpiryHandled` guards against multiple
+   concurrent 401s (e.g. several dashboard widgets fetching at once)
+   triggering the redirect more than once.
+========================================================= */
+
+let sessionExpiryHandled = false;
+
+function handleSessionExpiry(): void {
+  if (sessionExpiryHandled) return;
+  sessionExpiryHandled = true;
+
+  logoutSideEffects();
+
+  if (typeof window === "undefined") return;
+
+  // Avoid a redirect loop if this somehow fires while already on the
+  // path that's about to be navigated to.
+  const alreadyFlagged = window.location.search.includes("session_expired=true");
+  if (alreadyFlagged) return;
+
+  window.location.href = "/?session_expired=true";
+}
+
+/* =========================================================
+   ERROR HANDLER
 ========================================================= */
 
 function handleError(error: AxiosError): Promise<never> {
   const status = error.response?.status;
   const url    = error.config?.url || "";
 
-  // 401 على auth endpoints فقط = logout
-  if (
-    status === 401 &&
-    (
-      url.includes("/api/v1/auth/me") ||
-      url.includes("/api/v1/auth/context")
-    )
-  ) {
-    logoutSideEffects();
+  // 🔧 FIX: ANY 401, from any endpoint, now means "session expired" --
+  // not just the two specific auth-check endpoints as before.
+  if (status === 401) {
+    handleSessionExpiry();
+    return Promise.reject(error);
   }
 
   // Timeout
@@ -398,10 +432,7 @@ function handleError(error: AxiosError): Promise<never> {
     return retryRequest(error);
   }
 
-  // كل الأخطاء التانية ما عدا 401 على /me
-  if (!(status === 401 && url.includes("/api/v1/auth/me"))) {
-    console.warn("[API ERROR]", { status, url, data: error.response?.data });
-  }
+  console.warn("[API ERROR]", { status, url, data: error.response?.data });
 
   return Promise.reject(error);
 }
@@ -429,6 +460,7 @@ for (const client of [qxtApiClient, qxtAuthClient, qxtChatClient]) {
 
 export function loginSideEffects(token: string): void {
   setStoredToken(token);
+  sessionExpiryHandled = false; // reset the guard on a fresh login
   // ✅ مش بنعمل reset للـ context - الـ workspace يتحمل بعدين
 }
 
