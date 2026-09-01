@@ -77,7 +77,7 @@ export default function Footer() {
       links: [
         {
           label: "ChatQXT",
-          href: "https://qxt.openqcore.com",
+          href: "https://chatqxt.com/",
           external: true,
         },
         {
@@ -272,7 +272,7 @@ export default function Footer() {
 
             {/* QXT CTA */}
             <a
-              href="https://qxt.openqcore.com"
+              href="https://chatqxt.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="

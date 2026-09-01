@@ -168,7 +168,7 @@ const MessageBubble = React.memo(function MessageBubble({
           </p>
 
           <Link
-            href="https://qxt.openqcore.com"
+            href="https://chatqxt.com/"
             className="
               mt-2.5 inline-flex text-[12px] font-medium
               text-[#d4af37] transition-colors
@@ -434,7 +434,7 @@ export default function LiveAISection() {
         {/* Heading */}
         <div className="relative z-10 mb-9 text-center">
           <Link
-            href="https://qxt.openqcore.com"
+            href="https://chatqxt.com/"
             className="group inline-flex items-center"
           >
             <Image
