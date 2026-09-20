@@ -235,6 +235,15 @@ export async function addPaymentMethod(): Promise<{ checkout_url: string }> {
 
 // ─── Console Billing Dashboard ─────────────────────────────────────────────
 
+// ✅ One row per calendar month (last 6 months) — replaces showing
+// every individual chat charge one by one, which had no monthly
+// context for the user to compare spend across months.
+export interface MonthlySummaryEntry {
+  month:   string;
+  charged: number;
+  used:    number;
+}
+
 export interface ConsoleBillingResponse {
   wallet: WalletInfo;
 
@@ -243,6 +252,8 @@ export interface ConsoleBillingResponse {
   plans: Plan[];
 
   transactions: Transaction[];
+
+  monthly_summary: MonthlySummaryEntry[];
 
   payment_methods: PaymentMethod[];
 

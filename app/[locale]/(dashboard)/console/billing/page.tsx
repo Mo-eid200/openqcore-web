@@ -15,7 +15,7 @@ import { PersonalUpgradeModal } from "../../../(marketing)/components/PersonalUp
 import PaymentMethods from "./PaymentMethods";
 import AddOnsCard from "./AddOnsCard";
 import AddOnsModal from "@/app/[locale]/(marketing)/components/AddOnsModal";
-import TransactionHistory from "./TransactionHistory";
+import MonthlySummary from "./MonthlySummary";
 import OpenQCoreLoader from "../../components/ui/OpenQCoreLoader";
 
 import { simulatePersonalUpgrade } from "@/app/lib/api/console/devSimulateUpgrade";
@@ -122,7 +122,7 @@ export default function BillingPage() {
   const wallet = billing?.wallet ?? null;
   const methods = billing?.payment_methods ?? [];
   const invoices = billing?.invoices ?? [];
-  const transactions = billing?.transactions ?? [];
+  const monthlySummary = billing?.monthly_summary ?? [];
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -437,7 +437,12 @@ export default function BillingPage() {
         />
       </FadeIn>
 
-      {/* 3. QX Power */}
+      {/* 3+3b. Subscription (left) and Add-ons (right) side by
+          side — two independent pools shown next to each other so
+          the user can compare "what's left in my plan" vs "what's
+          left in my top-ups" at a glance, instead of stacked
+          vertically. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <FadeIn delay={160}>
         <section
           className="
@@ -507,7 +512,11 @@ export default function BillingPage() {
                 </>
               )}
 
-              <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {/* ✅ Tokens Used removed — a lifetime-cumulative raw
+                  token count with no cycle boundary, unrelated to
+                  the QX-Power units shown everywhere else on this
+                  card, and confusing next to a monthly usage view. */}
+              <div className="mt-4 grid grid-cols-3 gap-4">
                 <div>
                   <div className="text-[10px] text-white/25">Used</div>
                   <div className="font-medium text-red-200">
@@ -528,13 +537,6 @@ export default function BillingPage() {
                     {monthlyLimit.toLocaleString()}
                   </div>
                 </div>
-
-                <div>
-                  <div className="text-[10px] text-white/25">Tokens Used</div>
-                  <div className="font-medium text-cyan-200">
-                    {tokensUsed.toLocaleString()}
-                  </div>
-                </div>
               </div>
 
               {wallet?.period_start && hasQuota && (
@@ -553,9 +555,6 @@ export default function BillingPage() {
         </section>
       </FadeIn>
 
-      {/* 3b. Add-ons — deliberately its own section, separate from
-          the subscription's QX Power card above, so the user can see
-          at a glance what's left in each pool independently. */}
       <FadeIn delay={190}>
         <AddOnsCard
           addonBalance={addonBalance}
@@ -563,6 +562,7 @@ export default function BillingPage() {
           onBuyClick={() => setShowAddOns(true)}
         />
       </FadeIn>
+      </div>
 
       {/* 4. Invoices */}
       {invoices.length > 0 && (
@@ -684,9 +684,9 @@ export default function BillingPage() {
       )}
 
       {/* 6. Transactions */}
-      {transactions.length > 0 && (
+      {monthlySummary.length > 0 && (
         <FadeIn delay={340}>
-          <TransactionHistory transactions={transactions} />
+          <MonthlySummary entries={monthlySummary} />
         </FadeIn>
       )}
 
