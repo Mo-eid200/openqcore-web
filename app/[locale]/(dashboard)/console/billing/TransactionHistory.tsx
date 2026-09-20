@@ -66,7 +66,21 @@ export default function TransactionHistory({
 
       <div className="relative divide-y divide-white/[0.04]">
         {transactions.map((tx) => {
-          const isCredit = tx.amount > 0;
+          // ✅ FIX: direction must come from transaction_type, not
+          // amount > 0 — 'capture' (chat usage) stores its cost as a
+          // POSITIVE magnitude in the DB (it's "how much was
+          // deducted", not a signed delta), so amount > 0 was
+          // incorrectly treating every usage charge as a credit
+          // (green, up-arrow) instead of a debit (red, down-arrow).
+          const isCredit = tx.transaction_type === "credit" || tx.transaction_type === "credit_addon";
+
+          const LABELS: Record<string, string> = {
+            credit: "Plan renewal",
+            credit_addon: "Add-on purchase",
+            capture: "Usage",
+            debit: "Charge",
+          };
+          const label = LABELS[tx.transaction_type] || tx.transaction_type.replace(/_/g, " ");
 
           return (
             <div
@@ -92,9 +106,7 @@ export default function TransactionHistory({
 
               <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-medium text-white/60">
-                  {tx.transaction_type
-                    .replace(/_/g, " ")
-                    .replace(/:/g, " → ")}
+                  {label}
                 </div>
 
                 <div className="mt-0.5 text-[10px] text-white/20">
@@ -114,7 +126,7 @@ export default function TransactionHistory({
                     : "text-red-200/75"
                 }`}
               >
-                {isCredit ? "+" : ""}
+                {isCredit ? "+" : "-"}
                 {tx.amount.toLocaleString()} QXP
               </div>
             </div>

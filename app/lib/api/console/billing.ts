@@ -33,6 +33,15 @@ export interface WalletInfo {
   period_start: string | null;
 
   tokens_used: number;
+
+  // ✅ Split balance — matches the backend's subscription_balance
+  // (resets each billing cycle, does not roll over) vs addon_balance
+  // (one-time top-ups, retained while the subscription stays active
+  // or for a 30-day grace period after it lapses — see
+  // UnifiedWalletService.ensure_addon_expiry's docstring).
+  subscription_balance: number;
+  addon_balance: number;
+  addon_expires_at: string | null;
 }
 
 export interface Transaction {
@@ -102,6 +111,39 @@ export async function createCheckout(
   const { data } = await qxtApiClient.post("/api/v1/billing/checkout", {
     plan_id:       planId,
     billing_cycle: billingCycle,
+    target_type:   targetType,
+    workspace_id:  workspaceId || null,
+  });
+  return data;
+}
+
+// ─── Add-ons (one-time Q-Power top-ups: Boost/Surge/Power/Max) ───────────────
+
+export interface AddonPack {
+  id:       number;
+  name:     string;
+  units:    number;
+  price:    number;
+  currency: string;
+}
+
+export async function getAddonPacks(): Promise<AddonPack[]> {
+  const { data } = await qxtApiClient.get("/api/v1/billing/addons");
+  return data.addons || [];
+}
+
+export interface AddonCheckoutResult {
+  checkout_url: string;
+  session_id:   string;
+}
+
+export async function createAddonCheckout(
+  addonPackId: number,
+  targetType = "user",
+  workspaceId?: string,
+): Promise<AddonCheckoutResult> {
+  const { data } = await qxtApiClient.post("/api/v1/billing/addons/checkout", {
+    addon_pack_id: addonPackId,
     target_type:   targetType,
     workspace_id:  workspaceId || null,
   });

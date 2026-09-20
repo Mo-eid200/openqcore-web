@@ -13,6 +13,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { PersonalUpgradeModal } from "../../../(marketing)/components/PersonalUpgradeModal";
 import PaymentMethods from "./PaymentMethods";
+import AddOnsCard from "./AddOnsCard";
+import AddOnsModal from "@/app/[locale]/(marketing)/components/AddOnsModal";
 import TransactionHistory from "./TransactionHistory";
 import OpenQCoreLoader from "../../components/ui/OpenQCoreLoader";
 
@@ -98,6 +100,7 @@ export default function BillingPage() {
   const queryClient = useQueryClient();
 
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showAddOns, setShowAddOns] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState<string | null>(null);
@@ -246,7 +249,15 @@ export default function BillingPage() {
   const hasScheduledDowngrade =
     !!sub?.scheduled_plan_name && !!sub?.scheduled_change_at;
 
-  const balance = wallet?.balance ?? 0;
+  // ✅ FIX: "balance" here now specifically means the SUBSCRIPTION
+  // balance (resets each cycle, does not roll over) — previously
+  // this read wallet.balance, the COMBINED subscription+addon total,
+  // which meant a purchased add-on balance inflated what looked like
+  // "how much of my monthly plan is left". Add-ons get their own
+  // AddOnsCard using wallet.addon_balance separately.
+  const balance = wallet?.subscription_balance ?? 0;
+  const addonBalance = wallet?.addon_balance ?? 0;
+  const addonExpiresAt = wallet?.addon_expires_at ?? null;
   const planName = sub?.plan_name || "Free";
   const hasQuota = (wallet?.monthly_credits ?? 0) > 0;
   const used = wallet?.consumed ?? 0;
@@ -542,6 +553,17 @@ export default function BillingPage() {
         </section>
       </FadeIn>
 
+      {/* 3b. Add-ons — deliberately its own section, separate from
+          the subscription's QX Power card above, so the user can see
+          at a glance what's left in each pool independently. */}
+      <FadeIn delay={190}>
+        <AddOnsCard
+          addonBalance={addonBalance}
+          addonExpiresAt={addonExpiresAt}
+          onBuyClick={() => setShowAddOns(true)}
+        />
+      </FadeIn>
+
       {/* 4. Invoices */}
       {invoices.length > 0 && (
         <FadeIn delay={220}>
@@ -673,6 +695,12 @@ export default function BillingPage() {
         onClose={() => setShowUpgrade(false)}
         onUpgrade={handleUpgrade}
         currentPlanId={sub?.plan_id ?? undefined}
+      />
+
+      <AddOnsModal
+        open={showAddOns}
+        onClose={() => setShowAddOns(false)}
+        targetType="user"
       />
     </div>
   );
