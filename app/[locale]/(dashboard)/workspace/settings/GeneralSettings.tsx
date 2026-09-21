@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, AlertTriangle, Loader2, Check } from "lucide-react";
+import { Building2, AlertTriangle, Loader2, Check, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
 
@@ -22,6 +22,34 @@ export function GeneralSettings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // ✅ Rename/delete are admin-only server-side (both endpoints call
+  // WorkspaceService.require_admin, see workspaces.py), but the page
+  // itself was reachable and rendered its forms for any member
+  // before this — a non-admin would only find out their action
+  // failed after submitting (a 403 from the backend). This gates the
+  // whole page's content on the client too, with a clear explanation
+  // instead of a confusing post-submit failure.
+  const isAdmin = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
+
+  if (activeWorkspace && !isAdmin) {
+    return (
+      <div className={cardCls}>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04]">
+            <ShieldAlert className="h-5 w-5 text-white/40" />
+          </div>
+          <div>
+            <div className="text-base font-semibold text-white">You're not an admin in this workspace</div>
+            <div className="mt-0.5 text-xs text-white/35">
+              Only the owner or an admin of "{activeWorkspace.name}" can change its name or delete it.
+              Ask a workspace admin if you need this changed.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Keep the field in sync if the active workspace changes (e.g.
   // switching workspaces while this page is open).
