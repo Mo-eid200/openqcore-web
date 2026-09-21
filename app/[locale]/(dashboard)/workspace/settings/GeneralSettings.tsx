@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, AlertTriangle, Loader2 } from "lucide-react";
+import { Building2, AlertTriangle, Loader2, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
 
@@ -13,7 +13,8 @@ const primaryBtnCls =
 
 export function GeneralSettings() {
   const router = useRouter();
-  const { activeWorkspace, updateWorkspace, removeWorkspace } = useWorkspace();
+  const { activeWorkspace, updateWorkspace, removeWorkspace, workspaces, switchWorkspace, switchToPersonal } = useWorkspace();
+  const [deleted, setDeleted] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -64,14 +65,29 @@ export function GeneralSettings() {
 
     setDeleteError(null);
     setDeleting(true);
+    const deletedId = activeWorkspace.id;
     try {
-      await removeWorkspace(activeWorkspace.id);
-      // ✅ removeWorkspace already clears activeWorkspace and
-      // switches the runtime back to personal (see WorkspaceContext),
-      // so redirecting to the console dashboard is the correct next
-      // stop rather than staying on a settings page for a workspace
-      // that no longer exists.
-      router.push("/console");
+      await removeWorkspace(deletedId);
+      setDeleted(true);
+
+      // ✅ No hard-coded "default workspace" — none exists in this
+      // system (confirmed: no is_default field anywhere in the
+      // backend, and no workspace is auto-created on signup). The
+      // industry-standard pattern (Slack/Notion/Linear) is simply:
+      // land on another workspace if the user has one, otherwise
+      // fall back to their personal space. removeWorkspace() already
+      // updated the `workspaces` list by the time this resolves.
+      const remaining = workspaces.filter((w) => w.id !== deletedId);
+
+      setTimeout(async () => {
+        if (remaining.length > 0) {
+          await switchWorkspace(remaining[0].id);
+          router.push("/workspace/overview");
+        } else {
+          switchToPersonal();
+          router.push("/console");
+        }
+      }, 2500);
     } catch (err: any) {
       setDeleteError(err?.response?.data?.error?.message || err?.message || "Couldn't delete workspace.");
       setDeleting(false);
@@ -140,12 +156,26 @@ export function GeneralSettings() {
       </form>
     </div>
 
+    {/* ✅ Deletion confirmation — shown for the ~2.5s redirect
+        delay in handleDelete(), replacing the Danger Zone card
+        entirely so the user isn't left staring at a now-defunct
+        "Delete" button while the redirect resolves. */}
+    {deleted && (
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] backdrop-blur-xl p-6 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/15">
+          <Check className="h-6 w-6 text-emerald-300" />
+        </div>
+        <div className="mt-3 text-sm font-medium text-emerald-200">Workspace deleted</div>
+        <p className="mt-1 text-xs text-emerald-300/50">Redirecting you now…</p>
+      </div>
+    )}
+
     {/* ✅ Danger Zone — visually separated (red border/glow) from the
         rest of the card above, since deleting a workspace is
         irreversible. Requires the admin to type the exact workspace
         name to confirm, matching GitHub's own repo-deletion pattern
         — the strongest realistic guard against an accidental click. */}
-    {activeWorkspace && (
+    {!deleted && activeWorkspace && (
       <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.03] backdrop-blur-xl p-5">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/15">
