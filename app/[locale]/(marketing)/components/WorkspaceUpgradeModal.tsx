@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { PaymentMarksRow } from "./PaymentMarks";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Crown, Loader2, Sparkles, X, ArrowDownCircle, Building2, Plus } from "lucide-react";
@@ -198,7 +199,13 @@ export function WorkspaceUpgradeModal({
         onClick={onClose}
         className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-xl p-4"
       >
-        <div className="relative min-h-[360px] flex items-center justify-center">
+        {/* ✅ min-h-full (not a fixed min-h-[360px]) so this
+            container spans the ENTIRE scrollable viewport height —
+            the old fixed value meant items-center only centered
+            within a 360px box, not the actual (much taller) pricing
+            cards content, which pinned the modal near the top
+            instead of vertically centering it. */}
+        <div className="relative min-h-full flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -447,7 +454,10 @@ export function WorkspaceUpgradeModal({
             <div className="border-t border-white/[0.06] bg-[#0a0506]/95 backdrop-blur-xl px-6 lg:px-8 py-5">
               <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
-                  <div className="text-sm text-white/45">© OpenQCore AI 2026</div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-white/45">© OpenQCore AI 2026</div>
+                    <PaymentMarksRow />
+                  </div>
                   {isDowngrade && (
                     <div className="flex items-center gap-1.5 text-[11px] text-red-300/80">
                       <ArrowDownCircle className="w-3 h-3" />
