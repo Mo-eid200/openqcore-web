@@ -5,6 +5,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Crown, Zap, RefreshCw, Sparkles, Users, Clock } from "lucide-react";
 
 import { WorkspaceUpgradeModal } from "../../../(marketing)/components/WorkspaceUpgradeModal";
+import AddOnsModal from "@/app/[locale]/(marketing)/components/AddOnsModal";
+import AddOnsCard from "./AddOnsCard";
+import MonthlySummary from "./MonthlySummary";
 import { useWorkspace } from "../../../../context/WorkspaceContext";
 import { simulateWorkspaceUpgrade } from "@/app/lib/api/workspace/devSimulateUpgrade";
 
@@ -44,14 +47,11 @@ export default function WorkspaceBillingPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showAddOns, setShowAddOns] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const billingKey = ["workspace-billing", activeWorkspace?.id];
 
-  // 🔧 Was a manual useState/useEffect load() with no caching — every
-  // visit to this page re-hit the (already heavy) billing endpoint
-  // from scratch. staleTime here means navigating away and back
-  // within 30s reuses the cached response instead of re-fetching.
   const {
     data: billing,
     isLoading: loading,
@@ -68,7 +68,7 @@ export default function WorkspaceBillingPage() {
   const sub = billing?.subscription ?? null;
   const wallet = billing?.wallet ?? null;
   const seats = billing?.seats ?? null;
-  const transactions = billing?.transactions ?? [];
+  const monthlySummary = billing?.monthly_summary ?? [];
 
   const load = useCallback(async () => {
     setError(null);
@@ -127,7 +127,7 @@ export default function WorkspaceBillingPage() {
 
   if (workspaceLoading || !activeWorkspace) {
     return (
-      <div className="relative w-full max-w-3xl mx-auto min-h-screen px-2 sm:px-6 xl:px-10 py-8">
+      <div className="relative w-full max-w-5xl mx-auto min-h-screen px-2 sm:px-6 xl:px-10 py-8">
         <PageSkeleton />
       </div>
     );
@@ -137,17 +137,22 @@ export default function WorkspaceBillingPage() {
   const isCancelPending = isPaid && !!sub?.renews_at && (sub as any)?.cancel_at_period_end;
   const hasScheduledDowngrade = !!(sub as any)?.scheduled_plan_name && !!(sub as any)?.scheduled_change_at;
 
-  const balance = wallet?.balance ?? 0;
+  // ✅ FIX: "balance" is now specifically the SUBSCRIPTION balance
+  // (resets each cycle, doesn't roll over) — previously this read
+  // wallet.balance, the combined subscription+addon total. Add-ons
+  // get their own AddOnsCard using wallet.addon_balance separately.
+  const balance = wallet?.subscription_balance ?? 0;
+  const addonBalance = wallet?.addon_balance ?? 0;
+  const addonExpiresAt = wallet?.addon_expires_at ?? null;
   const planName = sub?.plan_name || "Free";
   const hasQuota = (wallet?.monthly_credits ?? 0) > 0;
   const used = wallet?.consumed ?? 0;
   const remaining = wallet?.remaining ?? 0;
   const monthlyLimit = wallet?.monthly_credits ?? 0;
   const usagePercent = wallet?.usage_percent ?? 0;
-  const tokensUsed = wallet?.tokens_used ?? 0;
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto min-h-screen px-2 sm:px-6 xl:px-10 py-8 flex flex-col gap-5">
+    <div className="relative w-full max-w-5xl mx-auto min-h-screen px-2 sm:px-6 xl:px-10 py-8 flex flex-col gap-5">
       {/* Header */}
       <section className="flex flex-col gap-2 mb-2">
         <div className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-amber-300/70">
@@ -185,13 +190,13 @@ export default function WorkspaceBillingPage() {
         <>
           {/* Current Plan */}
           <StaggerIn index={0}>
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl p-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-[#0f1012]/92 shadow-[0_16px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex h-12 w-12 items-center justify-center rounded-xl border shrink-0 ${
                       isPaid
-                        ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
+                        ? "border-amber-300/12 bg-amber-300/[0.08] text-amber-300"
                         : "border-white/[0.06] bg-white/[0.03] text-white/30"
                     }`}
                   >
@@ -234,10 +239,10 @@ export default function WorkspaceBillingPage() {
             </div>
           </StaggerIn>
 
-          {/* Seats */}
+          {/* Seats — workspace-specific, no equivalent on the personal side */}
           {seats && (
             <StaggerIn index={1}>
-              <div className="rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl p-5">
+              <div className="rounded-2xl border border-white/[0.06] bg-[#0f1012]/92 shadow-[0_16px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl p-5">
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-cyan-300" />
                   <div>
@@ -255,101 +260,91 @@ export default function WorkspaceBillingPage() {
             </StaggerIn>
           )}
 
-          {/* QX Power Balance */}
-          <StaggerIn index={2}>
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl p-5">
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30 mb-1">QX Power</h3>
-                <p className="text-xs text-white/35">
-                  Shared by every member of this workspace. Consumed as the team uses AI services.
-                </p>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-5 w-5 text-amber-300" />
-                  <div>
-                    <div className="text-2xl font-bold text-white">{balance.toLocaleString()}</div>
-                    <div className="text-[10px] text-white/25">Current balance</div>
-                  </div>
+          {/* Subscription (left) and Add-ons (right) — side by side,
+              two independent pools so the team can compare "what's
+              left in the plan" vs "what's left in top-ups" at a
+              glance. */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <StaggerIn index={2}>
+              <div className="rounded-2xl border border-white/[0.06] bg-[#0f1012]/92 shadow-[0_16px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl p-5">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30 mb-1">QX Power</h3>
+                  <p className="text-xs text-white/35">
+                    Shared by every member of this workspace. Consumed as the team uses AI services.
+                  </p>
                 </div>
 
-                <div className="mt-5">
-                  {!hasQuota && (
-                    <div className="mb-5 rounded-xl border border-amber-500/10 bg-amber-500/[0.04] p-4">
-                      <div className="text-sm font-medium text-amber-300">Free Plan</div>
-                      <div className="mt-1 text-xs text-white/45">
-                        Upgrade to unlock monthly QXP credits, usage tracking and higher limits.
-                      </div>
+                <div className="mt-4 pt-4 border-t border-white/[0.05]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-300/10 bg-amber-300/[0.08]">
+                      <Zap className="h-5 w-5 text-amber-300" />
                     </div>
-                  )}
+                    <div>
+                      <div className="text-2xl font-bold text-white">{balance.toLocaleString()}</div>
+                      <div className="text-[10px] text-white/25">Current balance</div>
+                    </div>
+                  </div>
 
-                  {hasQuota && (
-                    <>
-                      <div className="flex justify-between text-[11px] text-white/40 mb-2">
-                        <span>Usage This Cycle</span>
-                        <span>{usagePercent}%</span>
+                  <div className="mt-5">
+                    {!hasQuota && (
+                      <div className="mb-5 rounded-xl border border-amber-300/10 bg-amber-300/[0.06] p-4">
+                        <div className="text-sm font-medium text-amber-200">Free Plan</div>
+                        <div className="mt-1 text-xs text-white/45">
+                          Upgrade to unlock monthly QXP credits, usage tracking and higher limits.
+                        </div>
                       </div>
-                      <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-700"
-                          style={{ width: `${usagePercent}%` }}
-                        />
-                      </div>
-                    </>
-                  )}
+                    )}
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    <div>
-                      <div className="text-[10px] text-white/25">Used</div>
-                      <div className="text-red-300 font-medium">{used.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-white/25">Remaining</div>
-                      <div className="text-amber-300 font-medium">{remaining.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-white/25">Monthly Limit</div>
-                      <div className="text-emerald-300 font-medium">{monthlyLimit.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-white/25">Tokens Used</div>
-                      <div className="text-cyan-300 font-medium">{tokensUsed.toLocaleString()}</div>
+                    {hasQuota && (
+                      <>
+                        <div className="flex justify-between text-[11px] text-white/40 mb-2">
+                          <span>Usage This Cycle</span>
+                          <span>{usagePercent}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-300 to-amber-200 transition-all duration-700"
+                            style={{ width: `${usagePercent}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* ✅ Tokens Used removed — lifetime-cumulative raw
+                        token count, unrelated to the QX-Power units
+                        shown elsewhere on this card. */}
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <div className="text-[10px] text-white/25">Used</div>
+                        <div className="text-red-200 font-medium">{used.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-white/25">Remaining</div>
+                        <div className="text-amber-200 font-medium">{remaining.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-white/25">Monthly Limit</div>
+                        <div className="text-emerald-200 font-medium">{monthlyLimit.toLocaleString()}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </StaggerIn>
+            </StaggerIn>
 
-          {/* Recent Transactions */}
-          {transactions.length > 0 && (
             <StaggerIn index={3}>
-              <div className="rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-white/[0.06]">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-white/30">
-                    Recent Transactions
-                  </h3>
-                </div>
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-white/[0.04]">
-                      <th className="px-5 py-3 text-[11px] font-medium text-white/25">Date</th>
-                      <th className="px-5 py-3 text-[11px] font-medium text-white/25">Type</th>
-                      <th className="px-5 py-3 text-[11px] font-medium text-white/25">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((tx) => (
-                      <tr key={tx.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                        <td className="px-5 py-3 text-xs text-white/50">{formatDate(tx.created_at)}</td>
-                        <td className="px-5 py-3 text-xs text-white/60 capitalize">{tx.transaction_type}</td>
-                        <td className="px-5 py-3 text-xs font-mono text-white/60">{tx.amount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AddOnsCard
+                addonBalance={addonBalance}
+                addonExpiresAt={addonExpiresAt}
+                onBuyClick={() => setShowAddOns(true)}
+              />
+            </StaggerIn>
+          </div>
+
+          {/* Monthly Summary — replaces the raw per-transaction table */}
+          {monthlySummary.length > 0 && (
+            <StaggerIn index={4}>
+              <MonthlySummary entries={monthlySummary} />
             </StaggerIn>
           )}
         </>
@@ -366,6 +361,13 @@ export default function WorkspaceBillingPage() {
           plan: ws.plan,
           planId: ws.plan_id,
         }))}
+      />
+
+      <AddOnsModal
+        open={showAddOns}
+        onClose={() => setShowAddOns(false)}
+        targetType="workspace"
+        workspaceId={activeWorkspace?.id}
       />
     </div>
   );

@@ -23,6 +23,19 @@ export interface WorkspaceWalletInfo {
   tokens_used: number;
   tokens_remaining: number;
   period_start: string | null;
+  // ✅ Split balance — matches the personal console billing endpoint's
+  // fields (see app/lib/api/console/billing.ts's WalletInfo).
+  subscription_balance: number;
+  addon_balance: number;
+  addon_expires_at: string | null;
+}
+
+// ✅ One row per calendar month (last 6 months) — matches
+// console/billing's MonthlySummaryEntry.
+export interface WorkspaceMonthlySummaryEntry {
+  month:   string;
+  charged: number;
+  used:    number;
 }
 
 // 🔥 NOTE: plan_id (and plan_name/status/billing_cycle/renews_at)
@@ -87,6 +100,7 @@ export interface WorkspaceBillingData {
   subscription: WorkspaceSubscription;
   seats: WorkspaceSeats;
   transactions: WorkspaceTransaction[];
+  monthly_summary: WorkspaceMonthlySummaryEntry[];
   payment_methods: unknown[];
   invoices: unknown[];
 }
