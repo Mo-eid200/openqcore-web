@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2 } from "lucide-react";
+import { Building2, AlertTriangle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
 
 const cardCls = "rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl p-5";
@@ -11,7 +12,11 @@ const primaryBtnCls =
   "inline-flex items-center justify-center gap-2 h-10 rounded-xl bg-red-500 px-5 text-sm font-semibold text-white transition-all hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-40";
 
 export function GeneralSettings() {
-  const { activeWorkspace, updateWorkspace } = useWorkspace();
+  const router = useRouter();
+  const { activeWorkspace, updateWorkspace, removeWorkspace } = useWorkspace();
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [name, setName] = useState(activeWorkspace?.name ?? "");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -50,7 +55,31 @@ export function GeneralSettings() {
     }
   }
 
+  async function handleDelete() {
+    if (!activeWorkspace) return;
+    if (deleteConfirmName.trim() !== activeWorkspace.name.trim()) {
+      setDeleteError("Workspace name doesn't match.");
+      return;
+    }
+
+    setDeleteError(null);
+    setDeleting(true);
+    try {
+      await removeWorkspace(activeWorkspace.id);
+      // ✅ removeWorkspace already clears activeWorkspace and
+      // switches the runtime back to personal (see WorkspaceContext),
+      // so redirecting to the console dashboard is the correct next
+      // stop rather than staying on a settings page for a workspace
+      // that no longer exists.
+      router.push("/console");
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.error?.message || err?.message || "Couldn't delete workspace.");
+      setDeleting(false);
+    }
+  }
+
   return (
+    <div className="flex flex-col gap-6">
     <div className={cardCls}>
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10">
@@ -109,6 +138,71 @@ export function GeneralSettings() {
           </button>
         </div>
       </form>
+    </div>
+
+    {/* ✅ Danger Zone — visually separated (red border/glow) from the
+        rest of the card above, since deleting a workspace is
+        irreversible. Requires the admin to type the exact workspace
+        name to confirm, matching GitHub's own repo-deletion pattern
+        — the strongest realistic guard against an accidental click. */}
+    {activeWorkspace && (
+      <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.03] backdrop-blur-xl p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/15">
+            <AlertTriangle className="h-5 w-5 text-red-400" />
+          </div>
+          <div>
+            <div className="text-base font-semibold text-red-200">Danger Zone</div>
+            <div className="text-xs text-red-300/50">Irreversible and destructive actions</div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-red-500/15 bg-red-500/[0.04] px-4 py-3.5">
+          <div className="text-sm font-medium text-white/85">
+            Delete "{activeWorkspace.name}"
+          </div>
+          <p className="mt-1.5 text-xs leading-relaxed text-white/45">
+            Are you sure you want to delete this workspace? All members, billing history,
+            Q-Power balance, projects, and any other data belonging to "{activeWorkspace.name}"
+            will be permanently deleted from the system. This action cannot be undone.
+          </p>
+
+          <div className="mt-4 flex max-w-sm flex-col gap-2">
+            <label className="text-xs font-medium text-white/40">
+              Type <span className="font-mono text-red-300">{activeWorkspace.name}</span> to confirm
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmName}
+              onChange={(e) => {
+                setDeleteConfirmName(e.target.value);
+                setDeleteError(null);
+              }}
+              placeholder={activeWorkspace.name}
+              className={inputCls}
+            />
+          </div>
+
+          {deleteError && (
+            <div className="mt-3 rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {deleteError}
+            </div>
+          )}
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting || deleteConfirmName.trim() !== activeWorkspace.name.trim()}
+              className={primaryBtnCls}
+            >
+              {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {deleting ? "Deleting…" : "Delete Workspace"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
