@@ -21,7 +21,6 @@ export const marketingRoutes: SeoRoute[] = [
   { path: "/platform/enterprise", priority: 0.90, changeFrequency: "weekly" },
 
   // Infrastructure
-  { path: "/infrastructure", priority: 0.90, changeFrequency: "weekly" },
   { path: "/infrastructure/runtime", priority: 0.85, changeFrequency: "weekly" },
   { path: "/infrastructure/pulse-engine", priority: 0.85, changeFrequency: "weekly" },
   { path: "/infrastructure/memory-systems", priority: 0.85, changeFrequency: "weekly" },

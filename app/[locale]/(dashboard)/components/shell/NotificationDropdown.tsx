@@ -104,10 +104,24 @@ export function NotificationDropdown({ open, onClose }: Props) {
     queryClient.invalidateQueries({ queryKey: ["notifications-unread-count"] });
   }
 
+  // Links come from the server; only same-site paths and http(s) URLs are
+  // followed, never javascript: or data: URLs.
+  function safeLink(link?: string | null): string | null {
+    if (!link) return null;
+    if (link.startsWith("/") && !link.startsWith("//")) return link;
+    try {
+      const u = new URL(link);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+    } catch {
+      return null;
+    }
+  }
+
   function handleClickNotification(n: Notification) {
     handleMarkRead(n);
-    if (n.link) {
-      window.location.href = n.link;
+    const target = safeLink(n.link);
+    if (target) {
+      window.location.href = target;
       onClose();
     }
   }

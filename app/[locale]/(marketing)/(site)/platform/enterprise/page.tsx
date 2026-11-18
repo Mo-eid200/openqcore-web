@@ -2,7 +2,8 @@ import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Enterprise — Govern AI Systems At Scale",
   description:
     "Govern teams, workspaces, and production AI systems at scale — with centralized control, granular permissions, and full operational visibility.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "Centralized governance for teams, workspaces, and production AI systems.",
     type: "website",
-    url: "https://openqcore.com/platform/enterprise",
-    images: [{ url: "/og-enterprise.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Govern+AI+Systems+At+Scale&kicker=Enterprise", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Centralized governance for teams, workspaces, and production AI systems."
   },
-  alternates: { canonical: "https://openqcore.com/platform/enterprise" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/enterprise") },
+    alternates: pageAlternates(locale, "/platform/enterprise"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

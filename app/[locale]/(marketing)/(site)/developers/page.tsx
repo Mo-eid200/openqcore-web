@@ -7,6 +7,7 @@ import {
   SecondaryCTA,
 } from "../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({
@@ -28,16 +29,10 @@ export async function generateMetadata({
       title: t("og_title"),
       description: t("og_description"),
       type: "website",
-      url: "https://openqcore.com/developers",
       siteName: "OpenQCore",
+      url: localizedUrl(locale, "/developers"),
     },
-    alternates: {
-      canonical: "https://openqcore.com/developers",
-      languages: {
-        en: "https://openqcore.com/en/developers",
-        ar: "https://openqcore.com/ar/developers",
-      },
-    },
+    alternates: pageAlternates(locale, "/developers"),
   };
 }
 

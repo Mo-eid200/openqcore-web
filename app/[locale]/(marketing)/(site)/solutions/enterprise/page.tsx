@@ -6,6 +6,7 @@ import {
   SecondaryCTA,
 } from "../../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = {
   params: Promise<{ locale: string }>;
 };
@@ -29,21 +30,15 @@ export async function generateMetadata({
       title: t("og_title"),
       description: t("og_description"),
       type: "website",
-      url: "https://openqcore.com/solutions/enterprise",
       siteName: "OpenQCore",
+      url: localizedUrl(locale, "/solutions/enterprise"),
     },
     twitter: {
       card: "summary_large_image",
       title: t("og_title"),
       description: t("og_description"),
     },
-    alternates: {
-      canonical: "https://openqcore.com/solutions/enterprise",
-      languages: {
-        en: "https://openqcore.com/en/solutions/enterprise",
-        ar: "https://openqcore.com/ar/solutions/enterprise",
-      },
-    },
+    alternates: pageAlternates(locale, "/solutions/enterprise"),
   };
 }
 

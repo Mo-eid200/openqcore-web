@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "Deployment & Enablement — How OpenQCore Works",
   description:
     "OpenQCore treats deployment as a controlled exposure of risk — progressive rollout, defined rollback paths, and team readiness before a release is considered complete.",
@@ -12,9 +13,8 @@ export const metadata: Metadata = {
     description:
       "Release is a decision, not an event: OpenQCore's evidence-based approach to deployment.",
     type: "website",
-    url: "https://openqcore.com/process/deployment-enablement",
     images: [
-      { url: "/og-deployment-enablement.png", width: 600, height: 630 }
+      { url: "/api/og?title=How+OpenQCore+Works&kicker=Deployment+%26+Enablement", width: 600, height: 630 }
     ]
   },
   twitter: {
@@ -23,10 +23,19 @@ export const metadata: Metadata = {
     description:
       "Release is a decision, not an event: OpenQCore's evidence-based approach to deployment."
   },
-  alternates: {
-    canonical: "https://openqcore.com/process/deployment-enablement"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/process/deployment-enablement") },
+    alternates: pageAlternates(locale, "/process/deployment-enablement"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process pages)

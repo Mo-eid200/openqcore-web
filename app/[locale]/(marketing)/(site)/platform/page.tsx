@@ -4,9 +4,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA, ArrowIcon } from "../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 /* ─── SEO ─────────────────────────────────────────────────────────────────── */
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
     title: "OpenQCore Platform — Unified Infrastructure for AI Systems",
     description:
         "OpenQCore Platform unifies orchestration, voice, agents, and infrastructure into a single operational layer for building intelligent software.",
@@ -15,8 +16,7 @@ export const metadata: Metadata = {
         description:
             "Unified infrastructure for orchestration, voice, agents, and multimodal AI systems.",
         type: "website",
-        url: "https://openqcore.com/platform",
-        images: [{ url: "/og-platform.png", width: 1200, height: 630 }],
+        images: [{ url: "/api/og?title=Unified+Infrastructure+for+AI+Systems&kicker=Platform", width: 1200, height: 630 }],
     },
     twitter: {
         card: "summary_large_image",
@@ -24,8 +24,19 @@ export const metadata: Metadata = {
         description:
             "Unified infrastructure for orchestration, voice, agents, and multimodal AI systems.",
     },
-    alternates: { canonical: "https://openqcore.com/platform" },
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform") },
+    alternates: pageAlternates(locale, "/platform"),
+  };
+}
+
 
 /* ─── Components ──────────────────────────────────────────────────────────── */
 

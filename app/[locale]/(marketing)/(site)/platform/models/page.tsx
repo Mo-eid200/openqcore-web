@@ -2,7 +2,8 @@ import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Models — Unified Multi-Model AI Runtime",
   description:
     "Access GPT, Claude, Gemini and other leading models through one unified runtime with intelligent routing, fallback, and cost optimization.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "One runtime. Every model. Intelligent routing across the world's leading AI systems.",
     type: "website",
-    url: "https://openqcore.com/platform/models",
-    images: [{ url: "/og-models.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Unified+Multi-Model+AI+Runtime&kicker=Models", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Unified access to GPT, Claude, Gemini and more — with intelligent routing built in."
   },
-  alternates: { canonical: "https://openqcore.com/platform/models" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/models") },
+    alternates: pageAlternates(locale, "/platform/models"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

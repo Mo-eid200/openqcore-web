@@ -7,6 +7,7 @@ import Footer from "../../(marketing)/components/Footer";
 
 import ImageWithLightbox from "../../(marketing)/components/common/ImageWithLightbox";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -19,8 +20,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: t("og_title"),
       description: t("og_description"),
-      type: "website"
-    }
+      type: "website",
+      url: localizedUrl(locale, "/changelog/pulse-engine"),
+    },
+    alternates: pageAlternates(locale, "/changelog/pulse-engine"),
   };
 }
 

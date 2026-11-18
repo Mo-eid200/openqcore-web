@@ -23,6 +23,7 @@ import { LinkKnowledgeModal } from "../components/shared/LinkKnowledgeModal";
 import type {
     Agent,
 } from "./types";
+import { CHAT_URL } from "@/app/lib/env";
 
 // =========================================================
 // ICON RESOLVER
@@ -117,7 +118,7 @@ export default function AgentCard({
     const [showLinker, setShowLinker] = useState(false);
 
     const chatBase =
-        process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3001";
+        CHAT_URL;
 
     return (
         <div
@@ -203,7 +204,8 @@ export default function AgentCard({
 
                         window.open(
                             `${chatBase}/qxt-chat/agent/${agent.slug}`,
-                            "_blank"
+                            "_blank",
+                            "noopener,noreferrer"
                         );
                     }}
                     className="

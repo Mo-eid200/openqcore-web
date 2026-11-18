@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "Monitoring & Optimization — How OpenQCore Works",
   description:
     "OpenQCore treats a live system as understood only once it is observed, measured, and continuously improved against evidence — closing the loop back into Research & Discovery.",
@@ -12,9 +13,8 @@ export const metadata: Metadata = {
     description:
       "Live software is not finished software: OpenQCore's evidence-based approach to monitoring and continuous improvement.",
     type: "website",
-    url: "https://openqcore.com/process/monitoring-optimization",
     images: [
-      { url: "/og-monitoring-optimization.png", width: 600, height: 630 }
+      { url: "/api/og?title=How+OpenQCore+Works&kicker=Monitoring+%26+Optimization", width: 600, height: 630 }
     ]
   },
   twitter: {
@@ -23,10 +23,19 @@ export const metadata: Metadata = {
     description:
       "Live software is not finished software: OpenQCore's evidence-based approach to monitoring and continuous improvement."
   },
-  alternates: {
-    canonical: "https://openqcore.com/process/monitoring-optimization"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/process/monitoring-optimization") },
+    alternates: pageAlternates(locale, "/process/monitoring-optimization"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process pages)

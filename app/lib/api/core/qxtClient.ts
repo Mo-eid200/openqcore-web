@@ -4,13 +4,13 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
+import { API_BASE_URL } from "@/app/lib/env";
+
 /* =========================================================
    CONFIG
 ========================================================= */
 
-export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_QXT_API_BASE_URL || "http://127.0.0.1:8000"
-).replace(/\/+$/, "");
+export { API_BASE_URL };
 
 const DEFAULT_TIMEOUT = 30_000;
 const RETRY_DELAY     = 1_200;

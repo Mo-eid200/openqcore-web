@@ -22,6 +22,7 @@ import {
   getAgents,
   updateAgent,
 } from "@/app/lib/api/console/agents";
+import { CHAT_URL } from "@/app/lib/env";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -425,8 +426,8 @@ export default function AgentsPage() {
             onDelete={handleDelete}
             onChat={(a) => {
               const chatBase =
-                process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3000";
-              window.open(`${chatBase}/qxt-chat/agent/${a.slug}`, "_blank");
+                CHAT_URL;
+              window.open(`${chatBase}/qxt-chat/agent/${a.slug}`, "_blank", "noopener,noreferrer");
             }}
             onOpenDetails={(a) =>
               router.push(`/console/agents/${a.id}`)

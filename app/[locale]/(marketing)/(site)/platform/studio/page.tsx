@@ -2,7 +2,8 @@ import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Studio — AI Workflow Builder & Agent Management Platform",
   description:
     "OpenQCore Studio is a unified AI Development Workspace for workflow design, agent orchestration, voice systems, and production AI operations.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "Build, orchestrate, and operate intelligent systems from one workspace.",
     type: "website",
-    url: "https://openqcore.com/platform/studio",
-    images: [{ url: "/og-studio.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=AI+Workflow+Builder+%26+Agent+Management+Platform&kicker=Studio", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Unified AI Workflow Builder, Agent Management Platform, and AI Orchestration Platform."
   },
-  alternates: { canonical: "https://openqcore.com/platform/studio" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/studio") },
+    alternates: pageAlternates(locale, "/platform/studio"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

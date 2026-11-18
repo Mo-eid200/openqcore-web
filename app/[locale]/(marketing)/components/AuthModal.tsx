@@ -13,6 +13,7 @@ import {
   getStoredWorkspace,
   setStoredContext,
 }                                                        from "../../../lib/api/core/qxtClient";
+import { API_BASE_URL, FRONTEND_CALLBACK_URL } from "@/app/lib/env";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -262,12 +263,10 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
     if (typeof window === "undefined") return;
 
     const baseURL =
-      process.env.NEXT_PUBLIC_QXT_API_BASE_URL ||
-      "http://localhost:8000";
+      API_BASE_URL;
 
     const returnTo =
-      process.env.NEXT_PUBLIC_FRONTEND_CALLBACK_URL ||
-      "https://openqcore.com/auth/callback";
+      FRONTEND_CALLBACK_URL;
 
     const paths = {
       google: "/api/v1/auth/oauth/google/start",

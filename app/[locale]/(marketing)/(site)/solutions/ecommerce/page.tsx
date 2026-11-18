@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title:
     "OpenQCore for Commerce — Intelligence for Every Commerce Decision",
   description:
@@ -14,8 +15,7 @@ export const metadata: Metadata = {
     description:
       "AI across the commerce lifecycle — connecting customers, products, transactions and operations.",
     type: "website",
-    url: "https://openqcore.com/solutions/ecommerce",
-    images: [{ url: "/og-ecommerce.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Intelligence+for+Every+Commerce+Decision&kicker=for+Commerce", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -23,10 +23,19 @@ export const metadata: Metadata = {
     description:
       "AI across the commerce lifecycle — connecting customers, products, transactions and operations."
   },
-  alternates: {
-    canonical: "https://openqcore.com/solutions/ecommerce"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/solutions/ecommerce") },
+    alternates: pageAlternates(locale, "/solutions/ecommerce"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to government/healthcare/finance/

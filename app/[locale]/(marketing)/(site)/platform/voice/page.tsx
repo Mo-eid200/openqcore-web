@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Voice — Realtime Voice AI Infrastructure",
   description:
     "OpenQCore Voice is low-latency voice AI infrastructure for natural conversations, streaming speech pipelines, and production-grade realtime orchestration.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "Build low-latency conversational experiences with production-ready realtime voice infrastructure.",
     type: "website",
-    url: "https://openqcore.com/platform/voice",
-    images: [{ url: "/og-voice.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Realtime+Voice+AI+Infrastructure&kicker=Voice", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Realtime voice AI infrastructure for streaming, orchestration, and natural interaction."
   },
-  alternates: { canonical: "https://openqcore.com/platform/voice" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/voice") },
+    alternates: pageAlternates(locale, "/platform/voice"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

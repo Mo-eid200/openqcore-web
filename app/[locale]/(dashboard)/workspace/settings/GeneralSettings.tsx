@@ -32,6 +32,17 @@ export function GeneralSettings() {
   // instead of a confusing post-submit failure.
   const isAdmin = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
 
+  // Hooks run before any early return (rules of hooks): this one used to
+  // sit after the non-admin return and crashed the page when the role or
+  // the active workspace changed while it was open.
+  // Keep the field in sync if the active workspace changes (e.g.
+  // switching workspaces while this page is open).
+  useEffect(() => {
+    setName(activeWorkspace?.name ?? "");
+    setSuccess(false);
+    setError(null);
+  }, [activeWorkspace?.id]);
+
   if (activeWorkspace && !isAdmin) {
     return (
       <div className={cardCls}>
@@ -50,14 +61,6 @@ export function GeneralSettings() {
       </div>
     );
   }
-
-  // Keep the field in sync if the active workspace changes (e.g.
-  // switching workspaces while this page is open).
-  useEffect(() => {
-    setName(activeWorkspace?.name ?? "");
-    setSuccess(false);
-    setError(null);
-  }, [activeWorkspace?.id]);
 
   const isDirty = name.trim() !== (activeWorkspace?.name ?? "").trim();
 

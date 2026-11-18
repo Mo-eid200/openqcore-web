@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Check, Copy, ExternalLink, KeyRound } from "lucide-react";
+import { API_BASE_URL } from "@/app/lib/env";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_QXT_API_BASE_URL || "https://api.openqcore.com";
+  API_BASE_URL;
 
 type Lang = "curl" | "python" | "javascript";
 

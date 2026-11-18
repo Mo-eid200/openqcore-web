@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "Development & Integration — How OpenQCore Works",
   description:
     "OpenQCore turns a tested specification into verified software — implementation traced to acceptance criteria, tested at every layer, and integrated against executable contracts before a deployment decision is made.",
@@ -12,9 +13,8 @@ export const metadata: Metadata = {
     description:
       "A specification becomes software: OpenQCore's evidence-based approach to development and integration.",
     type: "website",
-    url: "https://openqcore.com/process/development-integration",
     images: [
-      { url: "/og-development-integration.png", width: 600, height: 630 }
+      { url: "/api/og?title=How+OpenQCore+Works&kicker=Development+%26+Integration", width: 600, height: 630 }
     ]
   },
   twitter: {
@@ -23,10 +23,19 @@ export const metadata: Metadata = {
     description:
       "A specification becomes software: OpenQCore's evidence-based approach to development and integration."
   },
-  alternates: {
-    canonical: "https://openqcore.com/process/development-integration"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/process/development-integration") },
+    alternates: pageAlternates(locale, "/process/development-integration"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process pages)

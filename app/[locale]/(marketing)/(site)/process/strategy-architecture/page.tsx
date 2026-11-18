@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "Strategy & Architecture — How OpenQCore Works",
   description:
     "OpenQCore turns a validated problem into an engineered system direction — architecture emerges from requirements, constraints and measurable outcomes, not a list of preferred technologies.",
@@ -12,9 +13,8 @@ export const metadata: Metadata = {
     description:
       "From validated problem to engineered direction: OpenQCore's strategy and architecture methodology.",
     type: "website",
-    url: "https://openqcore.com/process/strategy-architecture",
     images: [
-      { url: "/og-strategy-architecture.png", width: 1200, height: 630 }
+      { url: "/api/og?title=How+OpenQCore+Works&kicker=Strategy+%26+Architecture", width: 1200, height: 630 }
     ]
   },
   twitter: {
@@ -23,10 +23,19 @@ export const metadata: Metadata = {
     description:
       "From validated problem to engineered direction: OpenQCore's strategy and architecture methodology."
   },
-  alternates: {
-    canonical: "https://openqcore.com/process/strategy-architecture"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/process/strategy-architecture") },
+    alternates: pageAlternates(locale, "/process/strategy-architecture"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process/solutions

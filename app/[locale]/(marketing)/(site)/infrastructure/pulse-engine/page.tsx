@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 export async function generateMetadata({
   params
 }: {
@@ -10,6 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "pulse_engine_page" });
+  const en = await getTranslations({ locale: "en", namespace: "pulse_engine_page" });   // the preview image renders Latin text only
 
   return {
     title: t("meta.title"),
@@ -36,21 +38,19 @@ export async function generateMetadata({
       title: t("meta.title"),
       description: t("meta.description"),
       type: "website",
-      url: "https://openqcore.com/infrastructure/pulse-engine",
-      images: [{ url: "/og-pulse-engine.png", width: 1200, height: 630 }]
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("meta.title"))}`, width: 1200, height: 630 }],
+      url: localizedUrl(locale, "/infrastructure/pulse-engine"),
     },
     twitter: {
       card: "summary_large_image",
       title: t("meta.title"),
       description: t("meta.description")
     },
-    alternates: {
-      canonical: "https://openqcore.com/infrastructure/pulse-engine"
-    },
     robots: {
       index: true,
       follow: true
-    }
+    },
+    alternates: pageAlternates(locale, "/infrastructure/pulse-engine"),
   };
 }
 

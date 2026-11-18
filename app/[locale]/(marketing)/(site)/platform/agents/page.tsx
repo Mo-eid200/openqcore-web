@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Agents — Intelligent Agent Platform",
   description:
     "Deploy adaptive agents with memory, tool invocation, orchestration logic, and production-aware execution patterns.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "Intelligent agent platform for production operations, orchestration, and reliable execution.",
     type: "website",
-    url: "https://openqcore.com/platform/agents",
-    images: [{ url: "/og-agents.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Intelligent+Agent+Platform&kicker=Agents", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Build and operate adaptive agents with memory, orchestration, and tool routing."
   },
-  alternates: { canonical: "https://openqcore.com/platform/agents" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/agents") },
+    alternates: pageAlternates(locale, "/platform/agents"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

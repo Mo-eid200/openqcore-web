@@ -11,6 +11,7 @@ import AgentCard from "./AgentCard";
 import type {
     Agent,
 } from "./types";
+import { CHAT_URL } from "@/app/lib/env";
 
 // =========================================================
 // TYPES
@@ -441,12 +442,12 @@ export default function AgentsGrid({
                                     // =========================================
 
                                     const chatBase =
-                                        process.env.NEXT_PUBLIC_CHAT_URL ||
-                                        "http://localhost:3000";
+                                        CHAT_URL;
 
                                     window.open(
                                         `${chatBase}/qxt-chat/agent/${agent.slug}`,
-                                        "_blank"
+                                        "_blank",
+                                        "noopener,noreferrer"
                                     );
                                 }}
                                 onOpenDetails={onOpenDetails}

@@ -104,10 +104,6 @@ export const metadata: Metadata = {
     },
   },
 
-  alternates: {
-    canonical: "https://openqcore.com",
-  },
-
   openGraph: {
     type: "website",
     url: "https://openqcore.com",

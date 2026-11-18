@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import Header from "../(marketing)/components/Header";
 import Footer from "../(marketing)/components/Footer";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -13,13 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t("title"),
     description: t("description"),
-    alternates: {
-      canonical: "https://openqcore.com/changelog",
-      languages: {
-        en: "https://openqcore.com/en/changelog",
-        ar: "https://openqcore.com/ar/changelog"
-      }
-    }
+    alternates: pageAlternates(locale, "/changelog"),
   };
 }
 

@@ -2,7 +2,8 @@ import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Analytics — Usage, Cost & Performance Intelligence",
   description:
     "Observe usage, cost, performance and operational intelligence across every model, agent, and workspace — in real time.",
@@ -11,8 +12,7 @@ export const metadata: Metadata = {
     description:
       "Real-time observability into usage, cost, and performance across your entire AI stack.",
     type: "website",
-    url: "https://openqcore.com/platform/analytics",
-    images: [{ url: "/og-analytics.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Usage%2C+Cost+%26+Performance+Intelligence&kicker=Analytics", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -20,8 +20,19 @@ export const metadata: Metadata = {
     description:
       "Real-time observability into usage, cost, and performance across your entire AI stack."
   },
-  alternates: { canonical: "https://openqcore.com/platform/analytics" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/analytics") },
+    alternates: pageAlternates(locale, "/platform/analytics"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

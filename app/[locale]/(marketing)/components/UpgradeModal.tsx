@@ -6,6 +6,7 @@ import { AnimatePresence, motion, } from "framer-motion";
 import { Check, Crown, Loader2, Sparkles, X, ArrowDownCircle, } from "lucide-react";
 import { createPortal } from "react-dom";
 import { getPlans } from "@/app/lib/api/console/billing";
+import { API_BASE_URL } from "@/app/lib/env";
 
 
 /* =========================================================
@@ -163,10 +164,7 @@ export function UpgradeModal({
         setLoadingPlans(true);
 
         const base =
-          process.env.NEXT_PUBLIC_QXT_API_BASE_URL?.replace(
-            /\/$/,
-            ""
-          ) || "http://127.0.0.1:8000";
+          API_BASE_URL;
 
         const res = await fetch(
           `${base}/api/v1/billing/plans`,

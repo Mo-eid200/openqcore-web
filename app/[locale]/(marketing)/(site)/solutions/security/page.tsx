@@ -6,6 +6,7 @@ import {
 } from "../../../components/common/CTAButtons";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = {
   params: Promise<{ locale: string }>;
 };
@@ -29,21 +30,15 @@ export async function generateMetadata({
       title: t("og_title"),
       description: t("og_description"),
       type: "website",
-      url: "https://openqcore.com/security",
       siteName: "OpenQCore",
+      url: localizedUrl(locale, "/solutions/security"),
     },
     twitter: {
       card: "summary_large_image",
       title: t("og_title"),
       description: t("og_description"),
     },
-    alternates: {
-      canonical: "https://openqcore.com/security",
-      languages: {
-        en: "https://openqcore.com/en/security",
-        ar: "https://openqcore.com/ar/security",
-      },
-    },
+    alternates: pageAlternates(locale, "/solutions/security"),
   };
 }
 

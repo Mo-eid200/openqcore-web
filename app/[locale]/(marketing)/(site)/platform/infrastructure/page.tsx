@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "OpenQCore Infrastructure — Pulse & Iris Engines for Advanced AI Systems",
   description:
     "OpenQCore Infrastructure powers orchestration, memory, multimodal runtime, and first-generation AI engines: Pulse for chat intelligence and Iris for image intelligence.",
@@ -24,17 +25,27 @@ export const metadata: Metadata = {
     description:
       "First-generation core engines for advanced AI systems, built on a production runtime architecture.",
     type: "website",
-    url: "https://openqcore.com/platform/infrastructure",
     siteName: "OpenQCore",
-    images: [{ url: "/og-infrastructure.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=Pulse+%26+Iris+Engines+for+Advanced+AI+Systems&kicker=Infrastructure", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
     title: "OpenQCore Infrastructure",
     description: "Pulse for chat, Iris for images, and a full production-grade AI stack."
   },
-  alternates: { canonical: "https://openqcore.com/platform/infrastructure" }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/platform/infrastructure") },
+    alternates: pageAlternates(locale, "/platform/infrastructure"),
+  };
+}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (

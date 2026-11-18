@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquare, Pin, Star, Loader2, User } from "lucide-react";
 
 import { qxtApiClient } from "@/app/lib/api/core/qxtClient";
+import { CHAT_URL } from "@/app/lib/env";
 
 interface WorkspaceAgentSession {
     id: string;
@@ -81,7 +82,7 @@ export function WorkspaceConversationsTab({
 
     // Same confirmed qxt-chat resume format as the personal tab —
     // just /qxt-chat?sid={id}, no agent-id path segment needed.
-    const chatBase = process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3001";
+    const chatBase = CHAT_URL;
 
     function buildResumeUrl(sessionId: string) {
         return `${chatBase}/qxt-chat?sid=${sessionId}`;

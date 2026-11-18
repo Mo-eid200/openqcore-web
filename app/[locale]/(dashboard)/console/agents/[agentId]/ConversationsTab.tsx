@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, MessageSquare, Pin, Star, Loader2 } from "lucide-react";
 
 import { getAgentSessions } from "@/app/lib/api/console/agent_sessions_api";
+import { CHAT_URL } from "@/app/lib/env";
 
 function formatDate(value: string) {
     if (!value) return "—";
@@ -36,7 +37,7 @@ export function ConversationsTab({
     // segment (the session itself already knows which agent it
     // belongs to, server-side) and the param is `sid`, not
     // `session_id`.
-    const chatBase = process.env.NEXT_PUBLIC_CHAT_URL || "http://localhost:3001";
+    const chatBase = CHAT_URL;
 
     function buildResumeUrl(sessionId: string) {
         return `${chatBase}/qxt-chat?sid=${sessionId}`;

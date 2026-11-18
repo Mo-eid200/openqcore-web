@@ -6,7 +6,8 @@ import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 
 
-export const metadata: Metadata = {
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+const baseMetadata: Metadata = {
   title: "Solution Design — How OpenQCore Works",
   description:
     "OpenQCore treats design as a testable hypothesis, not a finished answer — prototyping, testing and defining acceptance criteria before a single line of production code is written.",
@@ -15,8 +16,7 @@ export const metadata: Metadata = {
     description:
       "A specification is not a guess: OpenQCore's evidence-based approach to solution design.",
     type: "website",
-    url: "https://openqcore.com/process/solution-design",
-    images: [{ url: "/og-solution-design.png", width: 1200, height: 630 }]
+    images: [{ url: "/api/og?title=How+OpenQCore+Works&kicker=Solution+Design", width: 1200, height: 630 }]
   },
   twitter: {
     card: "summary_large_image",
@@ -24,10 +24,19 @@ export const metadata: Metadata = {
     description:
       "A specification is not a guess: OpenQCore's evidence-based approach to solution design."
   },
-  alternates: {
-    canonical: "https://openqcore.com/process/solution-design"
-  }
 };
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    ...baseMetadata,
+    openGraph: { ...baseMetadata.openGraph, url: localizedUrl(locale, "/process/solution-design") },
+    alternates: pageAlternates(locale, "/process/solution-design"),
+  };
+}
+
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process pages)

@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,16 +18,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("og_title"),
       description: t("og_description"),
       type: "website",
-      url: "https://openqcore.com/company/about",
-      siteName: "OpenQCore"
+      siteName: "OpenQCore",
+      url: localizedUrl(locale, "/company/about"),
     },
-    alternates: {
-      canonical: "https://openqcore.com/company/about",
-      languages: {
-        en: "https://openqcore.com/en/company/about",
-        ar: "https://openqcore.com/ar/company/about"
-      }
-    }
+    alternates: pageAlternates(locale, "/company/about"),
   };
 }
 

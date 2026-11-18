@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -16,16 +17,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: t("og_title"),
       description: t("og_description"),
       type: "website",
-      url: "https://openqcore.com/research/publications",
-      siteName: "OpenQCore"
+      siteName: "OpenQCore",
+      url: localizedUrl(locale, "/research/publications"),
     },
-    alternates: {
-      canonical: "https://openqcore.com/research/publications",
-      languages: {
-        en: "https://openqcore.com/en/research/publications",
-        ar: "https://openqcore.com/ar/research/publications"
-      }
-    }
+    alternates: pageAlternates(locale, "/research/publications"),
   };
 }
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
+import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 export async function generateMetadata({
   params
 }: {
@@ -10,6 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "memory_systems_page" });
+  const en = await getTranslations({ locale: "en", namespace: "memory_systems_page" });   // the preview image renders Latin text only
 
   return {
     title: t("meta.title"),
@@ -30,21 +32,19 @@ export async function generateMetadata({
       title: t("meta.title"),
       description: t("meta.description"),
       type: "website",
-      url: "https://openqcore.com/platform/memory-systems",
-      images: [{ url: "/og-memory-systems.png", width: 1200, height: 630 }]
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("meta.title"))}`, width: 1200, height: 630 }],
+      url: localizedUrl(locale, "/infrastructure/memory-systems"),
     },
     twitter: {
       card: "summary_large_image",
       title: t("meta.title"),
       description: t("meta.description")
     },
-    alternates: {
-      canonical: "https://openqcore.com/platform/memory-systems"
-    },
     robots: {
       index: true,
       follow: true
-    }
+    },
+    alternates: pageAlternates(locale, "/infrastructure/memory-systems"),
   };
 }
 
