@@ -1,5 +1,6 @@
 import { qxtChatClient } from "../core/qxtClient";
-import { API_BASE } from "../config";
+import { API_BASE } from "../config";
+import { asApiError } from "@/app/lib/errors";
 
 /* ======================================================
    TYPES
@@ -18,7 +19,7 @@ export type ChatMessage = {
     size?: number;
     mimeType?: string;
   }> | null;
-  payload?: Record<string, any> | null;
+  payload?: Record<string, unknown> | null;
   kind?: "text" | "image" | "video" | "document" | "audio" | "recording" | "upgrade";
   audioUrl?: string;
   created_at?: string | null;
@@ -40,8 +41,8 @@ export type ChatRequest = {
   session_id: string;
   request_id?: string;
   stream?: boolean;
-  tools?: any[];
-  tool_choice?: any;
+  tools?: Array<Record<string, unknown>>;
+  tool_choice?: string | Record<string, unknown>;
 };
 
 export type ChatResponse = {
@@ -53,7 +54,7 @@ export type ChatResponse = {
     files?: string[];
     videos?: string[];
   };
-  usage?: Record<string, any>;
+  usage?: Record<string, number | null | undefined>;
   meta?: {
     trace_id?: string;
     request_id?: string;
@@ -85,8 +86,34 @@ function getWorkspaceId(): string {
   );
 }
 
-function pickArray<T = any>(v: any): T[] {
-  return Array.isArray(v) ? v : [];
+// Message and session rows as the API may send them (normalised below).
+type RawDocument = { url?: string; file_url?: string; name?: string; filename?: string; size?: number; mime_type?: string };
+type RawMessage = {
+  id?: string | number;
+  role?: string;
+  content?: unknown;
+  images?: string[];
+  videos?: string[];
+  audioUrl?: string;
+  payload?: (Record<string, unknown> & {
+    images?: string[];
+    videos?: string[];
+    audio_url?: string;
+    documents?: RawDocument[];
+  }) | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  edited?: unknown;
+};
+type RawSession = { id?: string | number; title?: unknown; created_at?: string | null; last_message?: string | null; folder_id?: string | null };
+type RawList<T> = T[] | { messages?: T[]; sessions?: T[]; data?: T[]; items?: T[] } | null | undefined;
+
+function listFrom<T>(raw: RawList<T>, key: "messages" | "sessions"): T[] {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") {
+    return Array.isArray(raw[key]) ? raw[key]! : Array.isArray(raw.data) ? raw.data : Array.isArray(raw.items) ? raw.items : [];
+  }
+  return [];
 }
 
 /* ======================================================
@@ -101,28 +128,17 @@ function pickArray<T = any>(v: any): T[] {
  * - Object with data: { data: [...] }
  * - Nested payload structure
  */
-function normalizeMessages(raw: any): ChatMessage[] {
+function normalizeMessages(raw: RawList<RawMessage>): ChatMessage[] {
   try {
     // ✅ Step 1: Extract array from various formats
-    let messagesArray: any[] = [];
-
-    if (Array.isArray(raw)) {
-      // Direct array format
-      messagesArray = raw;
-    } else if (raw && typeof raw === "object") {
-      // Object format - try multiple keys
-      messagesArray =
-        Array.isArray(raw.messages) ? raw.messages :
-          Array.isArray(raw.data) ? raw.data :
-            Array.isArray(raw.items) ? raw.items : [];
-    }
+    const messagesArray = listFrom(raw, "messages");
 
     console.log(`[normalizeMessages] Processing ${messagesArray.length} messages`);
 
     // ✅ Step 2: Filter and normalize each message
     return messagesArray
-      .filter((m: any) => m && typeof m === "object" && (m.role || m.content))
-      .map((m: any) => {
+      .filter((m) => m && typeof m === "object" && (m.role || m.content))
+      .map((m) => {
         // Extract media from various payload structures
         const images = m.payload?.images || m.images || [];
         const videos = m.payload?.videos || m.videos || [];
@@ -130,7 +146,7 @@ function normalizeMessages(raw: any): ChatMessage[] {
 
         // Handle documents
         const documents = Array.isArray(m.payload?.documents)
-          ? m.payload.documents.map((d: any) => ({
+          ? m.payload.documents.map((d) => ({
             type: "document" as const,
             url: d.url || d.file_url || "",
             name: d.name || d.filename || "Document",
@@ -153,7 +169,7 @@ function normalizeMessages(raw: any): ChatMessage[] {
 
         return {
           id: m.id ? String(m.id) : undefined,
-          role: (m.role || "user") as "user" | "assistant" | "system",
+          role: (m.role || "user") as ChatMessage["role"],
           content: typeof m.content === "string" ? m.content : "",
           images: images.length > 0 ? images : null,
           videos: videos.length > 0 ? videos : null,
@@ -175,25 +191,15 @@ function normalizeMessages(raw: any): ChatMessage[] {
 /**
  * ✅ PRODUCTION: Normalize sessions from API response
  */
-function normalizeSessions(raw: any): ChatSession[] {
+function normalizeSessions(raw: RawList<RawSession>): ChatSession[] {
   try {
-    // Extract sessions array
-    let sessionsArray: any[] = [];
-
-    if (Array.isArray(raw)) {
-      sessionsArray = raw;
-    } else if (raw && typeof raw === "object") {
-      sessionsArray =
-        Array.isArray(raw.sessions) ? raw.sessions :
-          Array.isArray(raw.data) ? raw.data :
-            Array.isArray(raw.items) ? raw.items : [];
-    }
+    const sessionsArray = listFrom(raw, "sessions");
 
     console.log(`[normalizeSessions] Processing ${sessionsArray.length} sessions`);
 
     return sessionsArray
-      .filter((s: any) => s && typeof s === "object" && s.id)
-      .map((s: any) => ({
+      .filter((s) => s && typeof s === "object" && s.id)
+      .map((s) => ({
         id: String(s.id),
         title: typeof s.title === "string" ? s.title : null,
         created_at: s.created_at ?? null,
@@ -250,7 +256,7 @@ export async function createSession(payload?: {
       },
       {
         __forcePersonalContext: payload?.forcePersonalContext === true,
-      } as any
+      }
     );
 
     const id = res.data?.id;
@@ -293,7 +299,8 @@ export async function getSessionMessages(
     console.log(`[getSessionMessages] ✅ Normalized ${messages.length} messages`);
 
     return messages;
-  } catch (err: any) {
+  } catch (caught) {
+    const err = asApiError(caught);
     if (err?.response?.status === 404) {
       console.warn("[getSessionMessages] ⚠️ Session not found:", sessionId);
       return [];
@@ -439,7 +446,8 @@ export async function sendChatMessage(
       usage: res.data?.usage,
       meta: res.data?.meta,
     };
-  } catch (err: any) {
+  } catch (caught) {
+    const err = asApiError(caught);
     console.error("[sendChatMessage] ❌ Failed:", err);
     throw err;
   }
@@ -571,12 +579,13 @@ export async function* streamChatMessage(
           if (chunk.images) {
             yield { type: "images", urls: chunk.images };
           }
-        } catch (e) {
+        } catch {
           console.warn("[streamChatMessage] ⚠️ Parse error:", data);
         }
       }
     }
-  } catch (err: any) {
+  } catch (caught) {
+    const err = asApiError(caught);
     if (err?.status !== 429) {
       console.error("[streamChatMessage] ❌ Failed:", err);
     }

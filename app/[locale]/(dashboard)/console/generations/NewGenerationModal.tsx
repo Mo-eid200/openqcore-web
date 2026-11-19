@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -24,6 +24,7 @@ import {
 import { createGeneration } from "@/app/lib/api/console/generations";
 import { useModels, type PublicModelItem } from "@/app/context/ModelsContext";
 import type { GenerationItem } from "./types";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 // ─── Templates ────────────────────────────────────────────────────────────────
 
@@ -161,19 +162,20 @@ export default function NewGenerationModal({
 
   // ── Sync selected model ─────────────────────────────────────────────────────
 
-  useEffect(() => {
+  const [syncedSelection, setSyncedSelection] = useState(selected?.id);
+  if (selected?.id !== syncedSelection) {
+    setSyncedSelection(selected?.id);
     if (selected?.id) setModel(selected.id);
-  }, [selected?.id]);
+  }
 
   // ── Default-expand the group containing the current selection ──────────────
 
-  useEffect(() => {
-    if (expandedGroup || !groupedModels.length) return;
+  if (!expandedGroup && groupedModels.length) {
     const group = groupedModels.find((g) =>
       g.models.some((m) => m.id === model)
     );
     setExpandedGroup(group?.groupKey || groupedModels[0]?.groupKey || null);
-  }, [groupedModels, model, expandedGroup]);
+  }
 
   // ── Reset ───────────────────────────────────────────────────────────────────
 
@@ -226,40 +228,38 @@ export default function NewGenerationModal({
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!prompt.trim()) return;
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!prompt.trim()) return;
 
-      setError(null);
-      setLoading(true);
+    setError(null);
+    setLoading(true);
 
-      try {
-        const item = await createGeneration({
-          prompt: prompt.trim(),
-          title: title.trim() || undefined,
-          model,
-          temperature,
-          max_tokens: maxTokens,
-        });
+    try {
+      const item = await createGeneration({
+        prompt: prompt.trim(),
+        title: title.trim() || undefined,
+        model,
+        temperature,
+        max_tokens: maxTokens,
+      });
 
-        setDone(true);
-        setTimeout(() => {
-          onCreated(item);
-          handleClose();
-        }, 900);
-      } catch (err: any) {
-        setError(
-          err?.response?.data?.detail ||
-            err?.message ||
-            "Generation failed"
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [prompt, title, model, temperature, maxTokens, onCreated]
-  ); // eslint-disable-line
+      setDone(true);
+      setTimeout(() => {
+        onCreated(item);
+        handleClose();
+      }, 900);
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(
+        detailText(err) ||
+          err?.message ||
+          "Generation failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // ── Derived ───────────────────────────────────────────────────────────────
 

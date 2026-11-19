@@ -5,8 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion, } from "framer-motion";
 import { Check, Crown, Loader2, Sparkles, X, ArrowDownCircle, } from "lucide-react";
 import { createPortal } from "react-dom";
-import { getPlans } from "@/app/lib/api/console/billing";
-import { API_BASE_URL } from "@/app/lib/env";
+import { getPlans, type Plan as ApiPlan } from "@/app/lib/api/console/billing";
 
 
 /* =========================================================
@@ -20,7 +19,6 @@ interface Plan {
   monthly_price?: number;
   yearly_price?: number;
 
-  currency: string;
 
   monthly_credits: number;
   fair_use_qxt: number;
@@ -37,6 +35,24 @@ interface Plan {
 
   has_api: boolean;
   has_priority_queue: boolean;
+}
+
+// The API sends nullable numbers; the cards render numbers.
+function toPlan(p: ApiPlan): Plan {
+  return {
+    id: p.id,
+    name: p.name,
+    monthly_price: p.monthly_price ?? undefined,
+    yearly_price: p.yearly_price ?? undefined,
+    monthly_credits: p.monthly_credits ?? 0,
+    fair_use_qxt: p.fair_use_qxt ?? 0,
+    base_multiplier: p.base_multiplier,
+    plan_type: p.plan_type as Plan["plan_type"],
+    seat_limit: p.seat_limit ?? 0,
+    storage_gb: p.storage_gb ?? 0,
+    has_api: p.has_api,
+    has_priority_queue: p.has_priority_queue,
+  };
 }
 
 interface Props {
@@ -82,7 +98,7 @@ export function UpgradeModal({
 
   const [plans, setPlans] = useState<Plan[]>([]);
 
-  const [selectedId, setSelectedId] =
+  const [pickedId, setSelectedId] =
     useState<number | null>(null);
 
   const [accountType, setAccountType] = useState<"personal" | "workspace">(defaultAccountType);
@@ -110,7 +126,7 @@ export function UpgradeModal({
       try {
         setLoadingPlans(true);
         const data = await getPlans();
-        if (mountedRef.current) setPlans(data as any);
+        if (mountedRef.current) setPlans(data.map(toPlan));
       } catch (error) {
         console.error("Failed loading plans", error);
       } finally {
@@ -150,59 +166,6 @@ export function UpgradeModal({
     };
   }, [open, onClose]);
 
-  /* =====================================================
-     LOAD PLANS
-  ===================================================== */
-
-  useEffect(() => {
-    if (!open) return;
-
-    mountedRef.current = true;
-
-    async function loadPlans() {
-      try {
-        setLoadingPlans(true);
-
-        const base =
-          API_BASE_URL;
-
-        const res = await fetch(
-          `${base}/api/v1/billing/plans`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error(
-            "Failed loading plans"
-          );
-        }
-
-        const data = await res.json();
-
-        if (mountedRef.current) {
-          setPlans(data?.data ?? []);
-        }
-      } catch (error) {
-        console.error(
-          "Failed loading billing plans",
-          error
-        );
-      } finally {
-        if (mountedRef.current) {
-          setLoadingPlans(false);
-        }
-      }
-    }
-
-    loadPlans();
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [open]);
 
   /* =====================================================
      FILTERED PLANS
@@ -245,21 +208,21 @@ export function UpgradeModal({
      DEFAULT SELECT
   ===================================================== */
 
-  useEffect(() => {
-    if (
-      filteredPlans.length > 0 &&
-      !selectedId
-    ) {
-      setSelectedId(filteredPlans[0].id);
-    }
-  }, [filteredPlans, selectedId]);
+  // the cheapest plan of the current account type until the user picks one
+  const selectedId =
+    pickedId !== null && filteredPlans.some((plan) => plan.id === pickedId)
+      ? pickedId
+      : (filteredPlans[0]?.id ?? null);
 
-  useEffect(() => {
-  if (open) {
-    setAccountType(defaultAccountType);
-    setSelectedId(null);
+  // each opening starts from the default account type (adjusted while rendering)
+  const [resetFor, setResetFor] = useState({ open, defaultAccountType });
+  if (resetFor.open !== open || resetFor.defaultAccountType !== defaultAccountType) {
+    setResetFor({ open, defaultAccountType });
+    if (open) {
+      setAccountType(defaultAccountType);
+      setSelectedId(null);
+    }
   }
-}, [open, defaultAccountType]);
 
   /* =====================================================
      EARLY RETURN
@@ -1127,7 +1090,7 @@ export function UpgradeModal({
                   {isDowngrade && selectedPlan?.id !== currentPlanId && (
                     <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
                       <ArrowDownCircle className="w-3 h-3" />
-                      You'll keep {currentPlan?.name}'s features until your next renewal
+                      You&apos;ll keep {currentPlan?.name}&apos;s features until your next renewal
                     </div>
                   )}
                 </div>

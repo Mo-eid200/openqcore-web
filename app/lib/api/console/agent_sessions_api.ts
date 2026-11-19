@@ -2,6 +2,19 @@ import {
     qxtApiClient,
 } from "../core/qxtClient";
 
+// Session row as the API sends it (fields are normalised below).
+type RawSession = {
+  id?: string | number;
+  title?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  pinned?: boolean;
+  starred?: boolean;
+  user_id?: number | string;
+  user_name?: string | null;
+  user_email?: string;
+};
+
 export interface AgentSessionItem {
     id: string;
     title: string | null;
@@ -34,7 +47,7 @@ export async function getAgentSessions(
 
     return {
         items: Array.isArray(data?.items)
-            ? data.items.map((item: any) => ({
+            ? data.items.map((item: RawSession) => ({
                 id: String(item?.id ?? ""),
                 title: item?.title ?? null,
                 created_at: String(item?.created_at ?? ""),

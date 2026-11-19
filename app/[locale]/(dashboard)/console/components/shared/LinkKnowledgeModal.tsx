@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,10 +8,14 @@ import { X, Database, Bot, Check, Loader2 } from "lucide-react";
 
 import { getKnowledgeItems, getKnowledgeAgents, linkKnowledgeToAgent, unlinkKnowledgeFromAgent } from "@/app/lib/api/console/knowledge";
 import { getAgents, getAgentKnowledgeLinks, linkAgentToKnowledge, unlinkAgentFromKnowledge } from "@/app/lib/api/console/agents";
+import { useMounted } from "@/app/hooks/useMounted";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Mode = "agent" | "knowledge";
+
+// A row in the list: a knowledge item (agent mode) or an agent (knowledge mode).
+type LinkItem = { id: string; name?: string | null; title?: string | null; type?: string | null; role?: string | null };
 
 type Props = {
   open:       boolean;
@@ -34,8 +38,7 @@ export function LinkKnowledgeModal({
   const queryClient = useQueryClient();
   const isAgentMode = mode === "agent";
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useMounted();
 
   // ── Data to pick FROM (the "other side") ────────────────────────────────
   const { data: knowledgeData, isLoading: loadingKnowledge } = useQuery({
@@ -156,7 +159,7 @@ export function LinkKnowledgeModal({
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              {items.map((item: any) => {
+              {items.map((item: LinkItem) => {
                 const linked = linkedIds.includes(item.id);
                 const pending = pendingId === item.id;
 

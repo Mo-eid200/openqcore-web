@@ -1,6 +1,7 @@
 // app/lib/api/auth/password.api.ts
 
 import { qxtAuthClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 export interface PasswordStatus {
   has_password: boolean;
@@ -17,7 +18,7 @@ export interface ChangePasswordResult {
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 

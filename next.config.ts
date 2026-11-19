@@ -54,6 +54,9 @@ const noIndex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Debug logging (chat payloads, tokens in flight) stays out of production
+  // browsers; errors and warnings are kept.
+  compiler: isDev ? {} : { removeConsole: { exclude: ["error", "warn"] } },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

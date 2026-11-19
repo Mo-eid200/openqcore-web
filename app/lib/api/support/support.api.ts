@@ -1,6 +1,7 @@
 // app/lib/api/support/support.api.ts
 
 import { qxtApiClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 export type SupportDepartment = "general" | "billing" | "technical" | "sales" | "security";
 
@@ -16,7 +17,7 @@ export interface CreateTicketResult {
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 

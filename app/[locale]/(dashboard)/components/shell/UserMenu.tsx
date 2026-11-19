@@ -12,7 +12,7 @@ import { useApp }  from "../../../../context/AppContext";
 export default function UserMenu() {
   const router = useRouter();
   const { user, logout }  = useAuth();
-  const { plan, balance } = useApp();
+  const { plan } = useApp();
 
   const [open, setOpen] = useState(false);
   const menuRef         = useRef<HTMLDivElement>(null);
@@ -45,8 +45,8 @@ export default function UserMenu() {
   // ── Computed ────────────────────────────────────────────────────────────────
 
   const displayName =
-    (user as any)?.full_name ||
-    (user as any)?.display_name ||
+    user?.full_name ||
+    user?.display_name ||
     user?.email?.split("@")[0] ||
     "User";
 

@@ -181,7 +181,7 @@ export default function PersonalImagePage() {
     },
   });
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
   const stats = data?.stats ?? null;
 
   // ── Delete ────────────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ export default function PersonalImagePage() {
   const { mutateAsync: doDelete } = useMutation({
     mutationFn: deleteImage,
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["images"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["images"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).filter(
           (i: ImageItem) => i.id !== id

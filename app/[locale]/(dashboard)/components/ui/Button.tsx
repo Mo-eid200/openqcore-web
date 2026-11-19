@@ -9,9 +9,9 @@ export function Button({
     variant = "primary",
     ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-    let base =
+    const base =
         "inline-flex items-center justify-center font-semibold rounded-xl transition h-11 px-6 gap-2 select-none focus:ring-2 focus:ring-[#d4af37]/30 outline-none";
-    let color =
+    const color =
         variant === "primary"
             ? "bg-gradient-to-r from-[#d4af37] via-[#ffe68c] to-[#ffd25a] text-[#161d2a] border border-[#d4af37] shadow hover:opacity-90"
             : variant === "secondary"

@@ -23,6 +23,7 @@ import {
   updateAgent,
 } from "@/app/lib/api/console/agents";
 import { CHAT_URL } from "@/app/lib/env";
+import { readStorage } from "@/app/lib/storage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -141,24 +142,12 @@ export default function AgentsPage() {
   const [showCreate, setShowCreate] =
     useState(false);
 
+  // restored from the last visit (dashboard pages render only in the browser, after sign-in)
   const [search, setSearch] =
-    useState("");
+    useState(() => readStorage(SEARCH_STORAGE_KEY) ?? "");
 
   const [editingAgent, setEditingAgent] =
     useState<Agent | null>(null);
-
-  // ── Restore search from localStorage ───────────────────────────────────────
-
-  useEffect(() => {
-    const stored =
-      window.localStorage.getItem(
-        SEARCH_STORAGE_KEY
-      );
-
-    if (stored) {
-      setSearch(stored);
-    }
-  }, []);
 
   // ── Persist search to localStorage ─────────────────────────────────────────
 
@@ -183,7 +172,7 @@ export default function AgentsPage() {
     retry: 1,
   });
 
-  const agents = data?.items ?? [];
+  const agents = useMemo(() => data?.items ?? [], [data]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -193,7 +182,7 @@ export default function AgentsPage() {
   } = useMutation({
     mutationFn: createAgent,
     onSuccess: (created) => {
-      queryClient.setQueryData(["agents"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["agents"], (old) => old && ({
         ...old,
         items: [created, ...(old?.items ?? [])],
       }));
@@ -215,10 +204,10 @@ export default function AgentsPage() {
       data,
     }: {
       id: string;
-      data: any;
+      data: Parameters<typeof updateAgent>[1];
     }) => updateAgent(id, data),
     onSuccess: (updated) => {
-      queryClient.setQueryData(["agents"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["agents"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).map((a: Agent) =>
           a.id === updated.id ? updated : a
@@ -345,7 +334,7 @@ export default function AgentsPage() {
 
       await deleteAgent(agent.id);
 
-      queryClient.setQueryData(["agents"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["agents"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).filter(
           (a: Agent) => a.id !== agent.id

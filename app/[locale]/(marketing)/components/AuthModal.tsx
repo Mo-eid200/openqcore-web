@@ -13,7 +13,8 @@ import {
   getStoredWorkspace,
   setStoredContext,
 }                                                        from "../../../lib/api/core/qxtClient";
-import { API_BASE_URL, FRONTEND_CALLBACK_URL } from "@/app/lib/env";
+import { API_BASE_URL, FRONTEND_CALLBACK_URL } from "@/app/lib/env";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,7 +120,10 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
 
   // ── Reset on close ────────────────────────────────────────────────────────
 
-  useEffect(() => {
+  // adjusted while rendering, not in an effect
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (!open) {
       setSubmitting(false);
       setErrorMsg(null);
@@ -130,7 +134,7 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
       setMfaChallengeId(null);
       setMfaCode("");
     }
-  }, [open]);
+  }
 
   // ── Shared post-auth-success flow (used by both normal login and
   //    the MFA verify step) ────────────────────────────────────────
@@ -197,7 +201,8 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
 
       await finishLogin();
 
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       if (!isMounted.current) return;
 
       // Don't show this as a generic error — swap the form to the
@@ -210,7 +215,7 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
 
       setErrorMsg(
         err?.response?.data?.error?.message ||
-        err?.response?.data?.detail?.message ||
+        detailText(err) ||
         err?.message ||
         t("errors.auth_failed")
       );
@@ -237,11 +242,12 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
       setSubmitting(true);
       await verifyMfaLogin(mfaChallengeId, cleanCode);
       await finishLogin();
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       if (!isMounted.current) return;
       setErrorMsg(
         err?.response?.data?.error?.message ||
-        err?.response?.data?.detail?.message ||
+        detailText(err) ||
         err?.message ||
         t("errors.mfa_code_invalid")
       );

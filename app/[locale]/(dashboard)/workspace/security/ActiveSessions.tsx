@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Monitor,
@@ -17,7 +17,8 @@ import {
   revokeOtherSessions,
   revokeSession,
   type ActiveSessionItem,
-} from "@/app/lib/api/security/sessions";
+} from "@/app/lib/api/security/sessions";
+import { asApiError, errorMessage } from "@/app/lib/errors";
 
 // ─── Shared styles (aligned with MFASettings) ────────────────────────────────
 
@@ -141,33 +142,48 @@ export function ActiveSessions() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokingOthers, setRevokingOthers] = useState(false);
 
+  // Fetches and applies the list; every state change happens after the
+  // request, so the first load can run straight from the mount effect.
+  const fetchSessions = useCallback(async () => {
+    try {
+      const data = await getActiveSessions();
+      setSessions(data.items);
+      setError(null);
+    } catch (caught) {
+      setError(errorMessage(caught, "Failed to load active sessions."));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
   async function loadSessions(options?: { silent?: boolean }) {
-    const silent = options?.silent ?? false;
-
     setError(null);
-
-    if (silent) {
+    if (options?.silent) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
-
-    try {
-      const data = await getActiveSessions();
-      setSessions(data.items);
-    } catch (err: any) {
-      setError(err.message || "Failed to load active sessions.");
-    } finally {
-      if (silent) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    }
+    await fetchSessions();
   }
 
   useEffect(() => {
-    void loadSessions();
+    let alive = true;
+    getActiveSessions()
+      .then((data) => {
+        if (!alive) return;
+        setSessions(data.items);
+        setError(null);
+      })
+      .catch((caught) => {
+        if (alive) setError(errorMessage(caught, "Failed to load active sessions."));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const hasOtherActiveSessions = useMemo(() => {
@@ -181,7 +197,8 @@ export function ActiveSessions() {
     try {
       await revokeSession(sessionId);
       await loadSessions({ silent: true });
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err.message || "Failed to revoke session.");
     } finally {
       setRevokingId(null);
@@ -195,7 +212,8 @@ export function ActiveSessions() {
     try {
       await revokeOtherSessions();
       await loadSessions({ silent: true });
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err.message || "Failed to revoke other sessions.");
     } finally {
       setRevokingOthers(false);

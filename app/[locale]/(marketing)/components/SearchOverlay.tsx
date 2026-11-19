@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -86,12 +87,15 @@ export default function SearchOverlay({
     });
   }, [query, searchItems]);
 
-  const openResult = (item: SearchItem) => {
-    onClose();
-    setTimeout(() => {
-      router.push(item.href);
-    }, 120);
-  };
+  const openResult = useCallback(
+    (item: SearchItem) => {
+      onClose();
+      setTimeout(() => {
+        router.push(item.href);
+      }, 120);
+    },
+    [onClose, router],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -157,11 +161,25 @@ export default function SearchOverlay({
     query,
     filteredResults,
     activeIndex,
+    openResult,
   ]);
 
-  useEffect(() => {
+  // Adjusted while rendering, not in effects: a new query highlights the
+  // first result, and the typed placeholder starts over for each new
+  // suggestion and whenever it is hidden.
+  const [indexFor, setIndexFor] = useState(query);
+  if (indexFor !== query) {
+    setIndexFor(query);
     setActiveIndex(0);
-  }, [query]);
+  }
+
+  const [typedFor, setTypedFor] = useState(currentSuggestion);
+  if (typedFor !== currentSuggestion) {
+    setTypedFor(currentSuggestion);
+    setDisplayText("");
+  } else if ((!open || query) && displayText) {
+    setDisplayText("");
+  }
 
   useEffect(() => {
     if (!open || query) return;
@@ -169,8 +187,6 @@ export default function SearchOverlay({
     let timeout: number | null = null;
     let charIndex = 0;
     let current = "";
-
-    setDisplayText("");
 
     const type = () => {
       current += currentSuggestion[charIndex] ?? "";

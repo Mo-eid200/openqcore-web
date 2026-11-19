@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -35,7 +35,6 @@ export async function generateMetadata(
     alternates: pageAlternates(locale, "/solutions/education"),
   };
 }
-
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to government/healthcare/finance)

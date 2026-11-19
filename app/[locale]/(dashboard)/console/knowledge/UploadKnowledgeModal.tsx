@@ -16,6 +16,7 @@ import {
   createSnippet,
 } from "@/app/lib/api/console/knowledge";
 import type { KnowledgeItem } from "@/app/lib/api/console/knowledge";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,9 +145,10 @@ export default function UploadKnowledgeModal({
         onUpload(item);
         handleClose();
       }, 1200);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(
-        err?.response?.data?.detail ||
+        detailText(err) ||
           err?.message ||
           "Upload failed"
       );

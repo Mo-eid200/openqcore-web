@@ -1,26 +1,4 @@
-import {
-    LayoutGrid,
-    Activity,
-
-    Bot,
-    Database,
-    Sparkles,
-
-    Images,
-    Mic,
-
-    MessageSquare,
-
-    KeyRound,
-    BarChart3,
-
-    CreditCard,
-    Bell,
-    User,
-    Settings,
-    LifeBuoy,
-
-} from "lucide-react";
+import { LayoutGrid, Activity, Bot, Database, Sparkles, Images, Mic, KeyRound, BarChart3, CreditCard, User, Settings, LifeBuoy } from "lucide-react";
 
 export const CONSOLE_SIDEBAR = [
     // =========================================================
@@ -140,7 +118,6 @@ export const CONSOLE_SIDEBAR = [
                 label: "Billing",
                 icon: CreditCard,
             },
-
 
             {
                 href: "/console/settings",

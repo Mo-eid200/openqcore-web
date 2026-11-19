@@ -11,11 +11,8 @@ import DemoChatFooter from "../../../(marketing)/components/home/DemoChatFooter"
 import WorkspaceModal from "../../components/AuthModal";
 import { useApp } from "../../../../context/AppContext";
 import MarkdownText from "./MarkdownText";
-import {
-  createSession,
-  streamChatMessage,
-  type StreamEvent,
-} from "../../../../lib/api/chat/sessions";
+import { createSession, streamChatMessage } from "../../../../lib/api/chat/sessions";
+import { asApiError } from "@/app/lib/errors";
 
 /* ─────────────────────────────────────────────────────────
    Types
@@ -375,7 +372,8 @@ export default function LiveAISection() {
         replaceLastAssistant(fullResponse);
       }
       scrollToBottom();
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setCurrentStatus(null);
 
       const isDailyLimit =

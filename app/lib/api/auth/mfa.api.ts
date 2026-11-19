@@ -4,6 +4,7 @@
 // client auth.api.ts uses for everything under /auth/*).
 
 import { qxtAuthClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ export interface MfaDisablePayload {
 // verify..." instead of "That code is incorrect."
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 

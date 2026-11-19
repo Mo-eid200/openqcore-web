@@ -2,11 +2,12 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { X, Loader2, UserPlus, ChevronDown, Check, Zap, Users } from "lucide-react";
 
 import type { MemberRole } from "@/app/lib/api/workspace/members";
+import { readStorage } from "@/app/lib/storage";
 
 type InviteMemberModalProps = {
   open: boolean;
@@ -48,15 +49,18 @@ export function InviteMemberModal({
   const [role, setRole] = useState<Exclude<MemberRole, "owner">>("member");
   const [roleOpen, setRoleOpen] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    const stored = window.localStorage.getItem(LAST_ROLE_KEY);
-    if (stored === "admin" || stored === "member") setRole(stored);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) setEmail("");
-  }, [open]);
+  // On opening: the last role used; on closing: clear the address
+  // (adjusted while rendering, not in effects).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      const stored = readStorage(LAST_ROLE_KEY);
+      if (stored === "admin" || stored === "member") setRole(stored);
+    } else {
+      setEmail("");
+    }
+  }
 
   if (!open) return null;
 
@@ -99,7 +103,7 @@ export function InviteMemberModal({
               <Zap className="h-5 w-5 text-red-400" />
             </div>
             <p className="mt-4 text-sm font-medium text-white">
-              You've used all {seatsLimit} {seatsLimit === 1 ? "seat" : "seats"} on the Free plan
+              You&apos;ve used all {seatsLimit} {seatsLimit === 1 ? "seat" : "seats"} on the Free plan
             </p>
             <p className="mt-1.5 text-sm text-white/40">
               Upgrade to invite more people to this workspace.

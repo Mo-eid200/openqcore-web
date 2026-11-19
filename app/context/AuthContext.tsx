@@ -27,6 +27,7 @@ import {
 } from "../lib/api/auth/auth.api";
 
 import type { AuthUser, AuthContextValue } from "../lib/api/auth/auth.types";
+import { asApiError } from "@/app/lib/errors";
 
 // ─── MFA error type ───────────────────────────────────────────────────────────
 //
@@ -107,7 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(bootstrap.user);
         setLoadingUser(false);
 
-      } catch (error: any) {
+      } catch (caught) {
+        const error = asApiError(caught);
         if (cancelled || !mountedRef.current) return;
 
         if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -223,6 +225,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthFromToken,
       refreshMeAndKeys,
     }),
+    // The helpers use only refs, state setters and module functions, so
+    // the copies from the first render stay correct.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user, loadingUser]
   );
 

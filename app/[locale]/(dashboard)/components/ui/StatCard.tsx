@@ -11,7 +11,7 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, icon, trend, status, className = "", miniChart }: StatCardProps) {
-    let statusColor =
+    const statusColor =
         status === "up" ? "text-emerald-400" :
             status === "down" ? "text-rose-400" :
                 "text-slate-300";

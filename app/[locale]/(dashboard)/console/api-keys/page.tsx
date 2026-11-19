@@ -93,7 +93,7 @@ export default function ApiKeysPage() {
           active: k.active,
           created_at: k.created_at,
         })),
-        usageData: ((usageRes as any).daily || []) as DailyStat[],
+        usageData: (usageRes.daily || []) as DailyStat[],
       };
     },
     staleTime: 30_000,
@@ -108,7 +108,7 @@ export default function ApiKeysPage() {
   const { mutateAsync: doRevoke } = useMutation({
     mutationFn: disableApiKey,
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["api-keys"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["api-keys"], (old) => old && ({
         ...old,
         keys: (old?.keys ?? []).map((k: ApiKey) =>
           k.id === id ? { ...k, active: false } : k
@@ -227,7 +227,7 @@ export default function ApiKeysPage() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onCreated={(key) => {
-          queryClient.setQueryData(["api-keys"], (old: any) => ({
+          queryClient.setQueryData<typeof data>(["api-keys"], (old) => old && ({
             ...old,
             keys: [key, ...(old?.keys ?? [])],
           }));

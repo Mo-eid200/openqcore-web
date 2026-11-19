@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -35,7 +35,6 @@ export async function generateMetadata(
     alternates: pageAlternates(locale, "/solutions/healthcare"),
   };
 }
-
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to /solutions/government)
@@ -281,8 +280,6 @@ export default async function HealthcarePage({
   ];
 
   const autonomyLevels = ["assist", "analyze", "recommend", "execute"];
-
-  const interoperabilityStandards = ["fhir", "hl7", "dicom", "api"];
 
   const governanceKeys = [
     "data_protection",

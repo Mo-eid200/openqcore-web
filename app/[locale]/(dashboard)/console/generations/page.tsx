@@ -168,7 +168,7 @@ function GenerationsContent() {
   const { mutateAsync: doDelete } = useMutation({
     mutationFn: deleteGeneration,
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["generations"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["generations"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).filter(
           (i: GenerationItem) => i.id !== id
@@ -195,7 +195,7 @@ function GenerationsContent() {
   const { mutateAsync: doRerun } = useMutation({
     mutationFn: rerunGeneration,
     onSuccess: (newItem) => {
-      queryClient.setQueryData(["generations"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["generations"], (old) => old && ({
         ...old,
         items: [newItem, ...(old?.items ?? [])],
       }));
@@ -255,7 +255,7 @@ function GenerationsContent() {
         open={showModal}
         onClose={() => setShowModal(false)}
         onCreated={(item) => {
-          queryClient.setQueryData(["generations"], (old: any) => ({
+          queryClient.setQueryData<typeof data>(["generations"], (old) => old && ({
             ...old,
             items: [item, ...(old?.items ?? [])],
           }));

@@ -1,6 +1,7 @@
 // app/lib/api/auth/sessions.api.ts
 
 import { qxtAuthClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 export interface UserSession {
   id: string;
@@ -14,7 +15,7 @@ export interface UserSession {
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 

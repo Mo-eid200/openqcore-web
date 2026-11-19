@@ -2,7 +2,8 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { API_BASE } from "../lib/api/config";
-import { getStoredToken } from "../lib/api/core/qxtClient";
+import { getStoredToken } from "../lib/api/core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 type VoiceKind = "audio" | "recording" | "text" | "stream_update" | "audio_update";
 
@@ -49,7 +50,6 @@ export const useVoice = ({
     sessionId,
     onCompleteAction,
     onMessageAction,
-    onSessionCreatedAction,
     onStreamAction,
 }: Props) => {
     // ========================
@@ -166,7 +166,8 @@ export const useVoice = ({
 
             try {
                 await audio.play();
-            } catch (err: any) {
+            } catch (caught) {
+                const err = asApiError(caught);
                 if (err?.name === "NotAllowedError") {
                     setLiveStatus("🔊 Click anywhere to play audio");
                     const clickHandler = async () => {
@@ -246,7 +247,7 @@ export const useVoice = ({
 
             return meta;
         },
-        [API_BASE, abortWithTimeout, buildAuthHeaders, onMessageAction, resolvedModelId, sessionId]
+        [abortWithTimeout, buildAuthHeaders, onMessageAction, resolvedModelId, sessionId]
     );
 
     // ========================
@@ -293,7 +294,7 @@ export const useVoice = ({
 
             await playAudioResponse(res);
         },
-        [API_BASE, abortWithTimeout, buildAuthHeaders, playAudioResponse, resolvedModelId, sessionId]
+        [abortWithTimeout, buildAuthHeaders, playAudioResponse, resolvedModelId, sessionId]
     );
 
     // ========================
@@ -437,8 +438,9 @@ export const useVoice = ({
             }, 0);
         };
 
-        recorder.onerror = (event: any) => {
-            setError(`Recording error: ${event?.error || "Unknown"}`);
+        recorder.onerror = (event: Event) => {
+            const detail = (event as Event & { error?: { name?: string; message?: string } }).error;
+            setError(`Recording error: ${detail?.message || detail?.name || "Unknown"}`);
             setLiveStatus("");
         };
 
@@ -489,7 +491,7 @@ export const useVoice = ({
         } catch (err) {
             console.error("[VOICE] interruptVoice error:", err);
         }
-    }, [API_BASE, buildAuthHeaders, cleanupAudio, sessionId, onStreamAction]);
+    }, [buildAuthHeaders, cleanupAudio, sessionId, onStreamAction]);
 
     // ========================
     // 🧹 CLEANUP
@@ -512,13 +514,21 @@ export const useVoice = ({
         };
     }, [cleanupAudio, onStreamAction]);
 
+    // A new chat session starts with a clean voice state (adjusted while
+    // rendering); the effect below releases the recorder and audio.
+    const [stateFor, setStateFor] = useState(sessionId);
+    if (stateFor !== sessionId) {
+        setStateFor(sessionId);
+        if (sessionId) {
+            setIsRecording(false);
+            setIsProcessing(false);
+            setLiveStatus("");
+            setError(null);
+        }
+    }
+
     useEffect(() => {
         if (!sessionId) return;
-
-        setIsRecording(false);
-        setIsProcessing(false);
-        setLiveStatus("");
-        setError(null);
 
         chunksRef.current = [];
         turnIdRef.current = null;

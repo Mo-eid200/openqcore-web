@@ -11,15 +11,8 @@ import { UploadStorageModal }  from "./UploadStorageModal";
 import { UsageChart }          from "./UsageChart";
 
 import { useWorkspace } from "@/app/context/WorkspaceContext";
-import {
-  getWorkspaceStorage,
-  getStorageStats,
-  deleteStorageFile,
-  uploadWorkspaceFile,
-  formatBytes,
-  type StorageListResponse,
-  type WorkspaceFile,
-} from "@/app/lib/api/workspace/storage";
+import { getWorkspaceStorage, getStorageStats, deleteStorageFile, uploadWorkspaceFile, formatBytes, type StorageListResponse } from "@/app/lib/api/workspace/storage";
+import { useMounted } from "@/app/hooks/useMounted";
 
 // ─── Fade ─────────────────────────────────────────────────────────────────────
 
@@ -62,9 +55,8 @@ export default function StoragePage() {
   const [kindFilter,  setKindFilter]  = useState("");
   const [showUpload,  setShowUpload]  = useState(false);
   const [uploadPct,   setUploadPct]   = useState(0);
-  const [mounted,     setMounted]     = React.useState(false);
+  const mounted = useMounted();
 
-  React.useEffect(() => setMounted(true), []);
 
   // ── Files query ────────────────────────────────────────────────────────────
   const { data, isLoading } = useQuery({

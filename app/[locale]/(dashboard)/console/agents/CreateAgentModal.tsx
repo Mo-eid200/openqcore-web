@@ -180,8 +180,12 @@ export default function CreateAgentModal({
 
   // ── Prefill ────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!open) return;
+  // Fill the form whenever the modal opens or is given another agent
+  // (adjusted while rendering, not in an effect).
+  const [prefilled, setPrefilled] = useState<{ open: boolean; data: typeof initialData }>({ open: false, data: undefined });
+  if (prefilled.open !== open || prefilled.data !== initialData) {
+    setPrefilled({ open, data: initialData });
+    if (open) {
     setName(initialData?.name || "");
     setRole(initialData?.role || "");
     setDescription(initialData?.description || "");
@@ -193,7 +197,8 @@ export default function CreateAgentModal({
         ? initialData.temperature
         : 0.7
     );
-  }, [open, initialData]);
+    }
+  }
 
   // ── ESC ────────────────────────────────────────────────────────────────────
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Loader2, X, Zap } from "lucide-react";
 import { createPortal } from "react-dom";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 /* =========================================================
    TYPES
@@ -33,11 +34,18 @@ export function CreateWorkspaceModal({ open, onClose, onCreate }: Props): React.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /* RESET ON OPEN */
-  useEffect(() => {
+  /* RESET ON OPEN (adjusted while rendering) */
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setName("");
       setError(null);
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
       // Focus shortly after mount so the open animation isn't janky.
       const t = setTimeout(() => inputRef.current?.focus(), 80);
       return () => clearTimeout(t);
@@ -65,8 +73,9 @@ export function CreateWorkspaceModal({ open, onClose, onCreate }: Props): React.
       setLoading(true);
       setError(null);
       await onCreate(trimmedName);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail?.message || err?.message || "Failed to create workspace");
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(detailText(err) || err?.message || "Failed to create workspace");
       setLoading(false);
     }
     // No finally setLoading(false) on success — the caller closes
@@ -149,7 +158,7 @@ export function CreateWorkspaceModal({ open, onClose, onCreate }: Props): React.
                     Starts on the Free plan
                   </div>
                   <p className="mt-1 text-[11px] text-white/35">
-                    1 seat included. Upgrade anytime from this workspace's billing page once it's created.
+                    1 seat included. Upgrade anytime from this workspace&apos;s billing page once it&apos;s created.
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   X,
@@ -14,6 +14,7 @@ import {
 import { createSTT, createTTS } from "../../../../lib/api/workspace/voice";
 import type { NewVoiceModalProps } from "./types";
 import VoiceSelect from "./VoiceSelect";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 export default function NewVoiceModal({
   open,
@@ -35,15 +36,20 @@ export default function NewVoiceModal({
   const [done, setDone] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-
-    setActiveMode(mode);
-    setVoiceOptionId("");
-    setFile(null);
-    setError(null);
-    setDone(false);
-  }, [mode, open]);
+  // A fresh form each time the modal opens or switches mode
+  // (adjusted while rendering, not in an effect).
+  const [formKey, setFormKey] = useState<string | null>(null);
+  const wantKey = open ? mode : null;
+  if (wantKey !== formKey) {
+    setFormKey(wantKey);
+    if (open) {
+      setActiveMode(mode);
+      setVoiceOptionId("");
+      setFile(null);
+      setError(null);
+      setDone(false);
+    }
+  }
 
   const ttsOptions = useMemo(
     () =>
@@ -141,11 +147,12 @@ export default function NewVoiceModal({
         await onCreated();
         onClose();
       }, 700);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       console.error("Voice create failed:", err);
 
       setError(
-        err?.response?.data?.detail ||
+        detailText(err) ||
           err?.response?.data?.message ||
           err?.message ||
           "Failed to create voice job."

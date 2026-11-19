@@ -17,13 +17,17 @@ export default function SessionExpiredBanner() {
   // "مش سجل دخول أصلاً" و "عمل logout unexpectedly"
   const wasLoggedInRef = useRef(false);
 
+  // Signed in (again): hide the banner and forget an earlier dismissal.
+  if (!loadingUser && user && (visible || dismissed)) {
+    setVisible(false);
+    setDismissed(false);
+  }
+
   useEffect(() => {
     if (loadingUser) return;
 
     if (user) {
       wasLoggedInRef.current = true;
-      setVisible(false);
-      setDismissed(false);
       return;
     }
 
@@ -83,7 +87,7 @@ export default function SessionExpiredBanner() {
                 <div className="flex-1 min-w-0 pt-0.5">
                   <p className="text-sm font-semibold text-white">Session Expired</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-white/45">
-                    You've been signed out. Sign in again to continue where you left off.
+                    You&apos;ve been signed out. Sign in again to continue where you left off.
                   </p>
 
                   <button

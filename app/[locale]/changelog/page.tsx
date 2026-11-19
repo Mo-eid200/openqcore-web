@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import Header from "../(marketing)/components/Header";
 import Footer from "../(marketing)/components/Footer";
 
-import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
+import { pageAlternates } from "@/app/lib/seo/alternates";
 type PageProps = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -88,7 +88,6 @@ export default async function ChangelogPage({ params }: PageProps) {
             </div>
           </div>
         </section>
-
 
 
         {/* Entries */}

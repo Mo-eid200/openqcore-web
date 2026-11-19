@@ -160,7 +160,10 @@ export function AgentRuntimeProvider({
       persistRuntime(normalized);
     }, []);
 
+  // The runtime choice lives in localStorage, so it is read after
+  // hydration (the server and the first client render must match).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     hydrateFromStorage();
   }, [hydrateFromStorage]);
 

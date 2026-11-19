@@ -8,7 +8,7 @@ export type UploadResult = {
     bytes?: number;
     sha256?: string;
     filename?: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     upload_time_ms?: number;
     dedup?: boolean;
 };
@@ -36,7 +36,7 @@ export async function uploadFileRequest(
 
         xhr.onload = () => {
             const text = xhr.responseText || "";
-            let body: any = text;
+            let body: unknown = text;
 
             try {
                 body = text ? JSON.parse(text) : {};
@@ -44,7 +44,7 @@ export async function uploadFileRequest(
                 body = { raw: text };
             }
 
-            if (xhr.status >= 200 && xhr.status < 300) resolve(body);
+            if (xhr.status >= 200 && xhr.status < 300) resolve(body as UploadResult);
             else reject({ status: xhr.status, body });
         };
 

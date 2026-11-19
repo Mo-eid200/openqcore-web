@@ -5,12 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  Bot,
-  BrainCircuit,
   Code2,
-  Cpu,
   Database,
-  FolderKanban,
   MessageSquare,
   Sparkles,
 } from "lucide-react";
@@ -22,19 +18,9 @@ import { OverviewTab } from "./OverviewTab";
 import { KnowledgeTab } from "./KnowledgeTab";
 import { ApiCodeTab } from "./ApiCodeTab";
 import { ConversationsTab } from "./ConversationsTab";
+import { AgentIcon } from "@/app/[locale]/(dashboard)/components/ui/AgentIcon";
 
 // ─── Icon resolver (same as AgentCard) ───────────────────────────────────────
-
-function resolveIcon(icon?: string) {
-  switch (icon) {
-    case "sparkles": return Sparkles;
-    case "folder-kanban": return FolderKanban;
-    case "brain": return BrainCircuit;
-    case "bot": return Bot;
-    case "cpu":
-    default: return Cpu;
-  }
-}
 
 // ─── Tabs config ──────────────────────────────────────────────────────────────
 
@@ -87,8 +73,6 @@ export default function AgentDetailsPage() {
     );
   }
 
-  const Icon = resolveIcon(agent.icon);
-
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-3 py-8 sm:px-6 xl:px-10">
       {/* Back */}
@@ -103,7 +87,7 @@ export default function AgentDetailsPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/[0.05] bg-amber-300/[0.08] text-amber-200">
-          <Icon className="h-6 w-6" />
+          <AgentIcon icon={agent.icon} className="h-6 w-6" />
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold tracking-tight text-white">

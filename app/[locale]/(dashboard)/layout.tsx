@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import DashboardAuthGuard from "./DashboardAuthGuard";
 
@@ -14,27 +14,22 @@ import { useDashboard }    from "./components/shell/context/DashboardContext";
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(true);
+  const ref = useRef<HTMLDivElement>(null);
 
+  // Replays a short fade-in on every navigation without re-mounting the
+  // page (Web Animations API, so no extra render).
   useEffect(() => {
-    setVisible(false);
-    const t = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setVisible(true));
-    });
-    return () => cancelAnimationFrame(t);
+    ref.current?.animate(
+      [
+        { opacity: 0, transform: "translateY(8px)", filter: "blur(2px)" },
+        { opacity: 1, transform: "translateY(0)", filter: "blur(0)" },
+      ],
+      { duration: 200, easing: "ease-out" },
+    );
   }, [pathname]);
 
   return (
-    <div
-      className={`
-        min-h-full
-        transition-all duration-200 ease-out
-        ${visible
-          ? "opacity-100 translate-y-0 blur-0"
-          : "opacity-0 translate-y-2 blur-[2px]"
-        }
-      `}
-    >
+    <div ref={ref} className="min-h-full">
       {children}
     </div>
   );

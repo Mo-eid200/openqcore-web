@@ -1,5 +1,5 @@
 import React from "react";
-import { HardDrive, Files, FolderOpen, Clock } from "lucide-react";
+import { HardDrive, Files, FolderOpen } from "lucide-react";
 
 interface Props {
   stats: {

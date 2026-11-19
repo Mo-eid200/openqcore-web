@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X, Loader2 } from "lucide-react";
+import { useMounted } from "@/app/hooks/useMounted";
 
 type Props = {
   open: boolean;
@@ -21,10 +22,9 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;

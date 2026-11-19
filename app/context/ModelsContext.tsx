@@ -19,7 +19,7 @@ export type PublicModelItem = {
   backend_model?: string;
   context_window?: number | null;
   description?: string | null;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   display_group?: string | null;
   display_order?: number;
   generation?: { gen: number; label: string };
@@ -164,7 +164,7 @@ function saveSelection(productKey: ProductKey, selection: SelectedModel | null):
   localStorage.setItem(LS_KEY, JSON.stringify(parsed));
 }
 
-function normalizeModel(raw: any): PublicModelItem {
+function normalizeModel(raw: Partial<PublicModelItem>): PublicModelItem {
   return {
     object: raw?.object || "model",
     id: String(raw?.id || ""),
@@ -207,7 +207,10 @@ export function ModelsProvider({
   const [selected, setSelected] = useState<SelectedModel | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  // The saved choice lives in localStorage, so it is read after hydration
+  // (the server and the first client render must match).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected(loadSelection(productKey));
     setHydrated(true);
   }, [productKey]);
@@ -220,12 +223,8 @@ export function ModelsProvider({
   // fetch on demand (e.g. an admin just added a new model).
   const query = useQuery({
     queryKey: modelsQueryKey(productKey),
-    queryFn: async ({ signal }) => {
-      // 🔧 FIX: openqcore-web's fetchChatModels() only accepts 2
-      // arguments (no AbortSignal support, unlike qxt-chat's version)
-      // — dropped the third arg. `signal` is still destructured from
-      // React Query's queryFn context above in case a future update
-      // to fetchChatModels adds support and this needs re-wiring.
+    queryFn: async () => {
+      // fetchChatModels() takes no AbortSignal here (unlike qxt-chat's).
       const response = await fetchChatModels(backendProductKeyFor(productKey), false);
       return (response || []).map(normalizeModel);
     },
@@ -233,6 +232,7 @@ export function ModelsProvider({
     gcTime: 30 * 60_000,
   });
 
+  const { refetch } = query;
   const models = useMemo(() => query.data ?? [], [query.data]);
 
   const groupedModels = useMemo(() => groupModelsByDisplayGroup(models), [models]);
@@ -266,6 +266,8 @@ export function ModelsProvider({
   useEffect(() => {
     if (!models.length) return;
 
+    // runs after hydration for the same reason, and writes the fallback back to storage
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected((current) => {
       if (current && models.find((model) => model.id === current.id)) {
         return current;
@@ -348,9 +350,9 @@ export function ModelsProvider({
       if (force) {
         await queryClient.invalidateQueries({ queryKey: modelsQueryKey(productKey) });
       }
-      await query.refetch();
+      await refetch();
     },
-    [queryClient, productKey, query.refetch]
+    [queryClient, productKey, refetch]
   );
 
   const errorMessage = useMemo(() => {

@@ -160,7 +160,7 @@ export default function KnowledgePage() {
   const { mutateAsync: doDelete } = useMutation({
     mutationFn: deleteKnowledgeItem,
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["knowledge"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["knowledge"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).filter(
           (i: KnowledgeItem) => i.id !== id
@@ -225,7 +225,7 @@ export default function KnowledgePage() {
         open={showUpload}
         onClose={() => setShowUpload(false)}
         onUpload={(item) => {
-          queryClient.setQueryData(["knowledge"], (old: any) => ({
+          queryClient.setQueryData<typeof data>(["knowledge"], (old) => old && ({
             ...old,
             items: [item, ...(old?.items ?? [])],
           }));

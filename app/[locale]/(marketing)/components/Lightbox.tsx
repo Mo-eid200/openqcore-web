@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useMounted } from "@/app/hooks/useMounted";
 
 type Item = { src: string; alt: string };
 
@@ -16,9 +17,8 @@ export default function Lightbox({
   index: number | null;
   onClose: () => void;
 }) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

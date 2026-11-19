@@ -10,7 +10,8 @@ import {
 
 import { qxtApiClient } from "../lib/api/core/qxtClient";
 
-import { useWorkspace } from "../context/WorkspaceContext";
+import { useWorkspace } from "../context/WorkspaceContext";
+import { asApiError, detailText, errorStatus } from "@/app/lib/errors";
 
 /* =========================================================
    TYPES
@@ -77,25 +78,16 @@ export type BillingError = {
 ========================================================= */
 
 function parseError(
-    error: any,
+    caught: unknown,
     fallback: string
 ): BillingError {
-    const detail =
-        error?.response?.data?.detail;
+    const raw = asApiError(caught).response?.data?.detail;
+    const detail = typeof raw === "object" ? raw : undefined;
 
     return {
-        code:
-            detail?.code ||
-            "BILLING_ERROR",
-
-        message:
-            detail?.message ||
-            detail ||
-            fallback,
-
-        status:
-            error?.response?.status ||
-            500,
+        code: detail?.code || "BILLING_ERROR",
+        message: detailText(caught) || fallback,
+        status: errorStatus(caught) || 500,
     };
 }
 
@@ -476,15 +468,6 @@ export function useBilling(
             return "safe";
         }, [query.data]);
 
-    /* =====================================================
-       ERROR
-    ===================================================== */
-
-    const resolvedError =
-        query.error as
-        | BillingError
-        | Error
-        | null;
 
     /* =====================================================
        RETURN

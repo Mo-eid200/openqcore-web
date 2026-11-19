@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { User, BriefcaseBusiness } from "lucide-react";
+import Image from "next/image";
+import { User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import OverviewStats  from "./OverviewStats";
 import OverviewChart  from "./OverviewChart";
 import OverviewEvents from "./OverviewEvents";
 
-import { PageHeader }   from "../../components/ui/PageHeader";
 import { useDashboard } from "../../components/shell/context/DashboardContext";
 import { useWorkspace } from "../../../../context/WorkspaceContext";
 import { getWorkspaceOverview } from "../../../../lib/api/workspace/overview";
@@ -77,7 +77,7 @@ export default function OverviewPage() {
         <User className="w-5 h-5 text-black" />
       </div>
     ) : (
-      <img src="/icons/workspace.webp" alt="Workspace" className="w-32 h-32 object-contain" />
+      <Image src="/icons/workspace.webp" alt="Workspace" width={128} height={128} className="w-32 h-32 object-contain" />
     )}
     <div>
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">

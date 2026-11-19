@@ -97,15 +97,43 @@ function toDisplayPlan(planName: string | null | undefined): WorkspacePlan {
   return "Free Plan";
 }
 
-function normalizeWorkspace(raw: any): Workspace {
+const WORKSPACE_ROLES: readonly WorkspaceRole[] = ["owner", "admin", "developer", "member", "viewer"];
+const WORKSPACE_TYPES: readonly WorkspaceType[] = ["Personal", "Team", "Enterprise"];
+
+function oneOf<T extends string>(value: string | null | undefined, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
+
+// A workspace as /api/v1/bootstrap sends it (normalised below).
+type RawWorkspace = {
+  id?: string | number;
+  name?: string | null;
+  slug?: string | null;
+  logo_url?: string | null;
+  description?: string | null;
+  role?: string | null;
+  type?: string | null;
+  plan?: string | null;
+  plan_name?: string | null;
+  plan_id?: number | string | null;
+  balance?: number | string | null;
+  seat_limit?: number | null;
+  seats?: number | null;
+  projects_count?: number | null;
+  members_count?: number | null;
+  api_requests?: number | null;
+  created_at?: string | null;
+};
+
+function normalizeWorkspace(raw: RawWorkspace): Workspace {
   return {
     id:             String(raw?.id ?? ""),
     name:           raw?.name        || "Untitled Workspace",
     slug:           raw?.slug        || undefined,
     logo_url:       raw?.logo_url    || null,
     description:    raw?.description || null,
-    role:           raw?.role        || "member",
-    type:           raw?.type        || "Personal",
+    role:           oneOf(raw?.role, WORKSPACE_ROLES, "member"),
+    type:           oneOf(raw?.type, WORKSPACE_TYPES, "Personal"),
     plan:           toDisplayPlan(raw?.plan_name ?? raw?.plan),
     plan_id:        raw?.plan_id !== undefined && raw?.plan_id !== null ? Number(raw.plan_id) : null,
     balance:        Number(raw?.balance        || 0),
@@ -245,30 +273,35 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }): 
       setActiveWorkspace(null);
       switchRuntimeToPersonal();
     }
-  }, [workspaces, activeWorkspace, switchRuntimeToPersonal]);
+  }, [activeWorkspace, switchRuntimeToPersonal]);
 
   // ── Effects ─────────────────────────────────────────────────────────────
 
+  // Load the workspaces once on mount. The no-token path updates state
+  // before the first await, which is intended: it is a fetch on mount.
   useEffect(() => {
-  refreshWorkspaces().catch(error => {
-    console.error("❌ Workspace bootstrap failed", error);
-  });
-}, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refreshWorkspaces().catch(error => {
+      console.error("❌ Workspace bootstrap failed", error);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    if (spaceType !== "workspace") {
-      setActiveWorkspace(null);
-      return;
-    }
-
-    if (!activeWorkspaceId) {
-      setActiveWorkspace(null);
-      return;
-    }
-
-    const matched = workspaces.find(w => String(w.id) === String(activeWorkspaceId)) || null;
-    setActiveWorkspace(matched);
-  }, [spaceType, activeWorkspaceId, workspaces]);
+  // Follow the runtime's space and workspace choice, and the latest list
+  // (adjusted while rendering, not in an effect).
+  const [activeFor, setActiveFor] = useState({ spaceType, activeWorkspaceId, workspaces });
+  if (
+    activeFor.spaceType !== spaceType ||
+    activeFor.activeWorkspaceId !== activeWorkspaceId ||
+    activeFor.workspaces !== workspaces
+  ) {
+    setActiveFor({ spaceType, activeWorkspaceId, workspaces });
+    setActiveWorkspace(
+      spaceType === "workspace" && activeWorkspaceId
+        ? workspaces.find(w => String(w.id) === String(activeWorkspaceId)) || null
+        : null,
+    );
+  }
 
   // ── Value ────────────────────────────────────────────────────────────────
 

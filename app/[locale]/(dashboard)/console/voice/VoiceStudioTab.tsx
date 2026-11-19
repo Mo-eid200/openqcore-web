@@ -142,13 +142,13 @@ export default function VoiceStudioTab() {
     },
   });
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
   const stats = data?.stats ?? null;
 
   const { mutateAsync: doDelete } = useMutation({
     mutationFn: deleteVoiceJob,
     onSuccess: (_, id) => {
-      queryClient.setQueryData(["voice"], (old: any) => ({
+      queryClient.setQueryData<typeof data>(["voice"], (old) => old && ({
         ...old,
         items: (old?.items ?? []).filter((i: VoiceItem) => i.id !== id),
       }));
@@ -234,7 +234,7 @@ export default function VoiceStudioTab() {
         open={showModal}
         onClose={() => setShowModal(false)}
         onCreated={(item) => {
-          queryClient.setQueryData(["voice"], (old: any) => ({
+          queryClient.setQueryData<typeof data>(["voice"], (old) => old && ({
             ...old,
             items: [item, ...(old?.items ?? [])],
           }));

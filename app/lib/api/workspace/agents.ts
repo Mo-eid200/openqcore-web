@@ -154,9 +154,20 @@ export async function unlinkAgentFromKnowledge(
   );
 }
 
+type RawModel = {
+  id: string;
+  public_name: string;
+  product_key: string;
+  provider: string;
+  backend_model: string;
+  gen?: number;
+  gen_minor?: number;
+  generation?: { label?: string };
+};
+
 export async function getAvailableModels(): Promise<AvailableModel[]> {
   const res = await qxtApiClient.get("/api/v1/models/");
-  return (res.data?.data ?? []).map((m: any) => ({
+  return ((res.data?.data ?? []) as RawModel[]).map((m) => ({
     id:            m.id,
     public_name:   m.public_name,
     product_key:   m.product_key,

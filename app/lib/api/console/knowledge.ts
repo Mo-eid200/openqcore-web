@@ -102,11 +102,14 @@ export async function unlinkKnowledgeFromAgent(itemId: string, agentId: string):
   await qxtApiClient.delete(`${BASE}/${itemId}/agents/${agentId}`);
 }
 
+// A passage the answer was drawn from (shape set by the API).
+export type KnowledgeSource = Record<string, unknown> & { title?: string; url?: string; score?: number; text?: string };
+
 export async function askKnowledge(payload: {
   question: string;
   top_k?:   number;
   model?:   string;
-}): Promise<{ answer: string; sources: any[] }> {
+}): Promise<{ answer: string; sources: KnowledgeSource[] }> {
   const { data } = await qxtApiClient.post(`${BASE}/ask`, payload);
   return data;
 }

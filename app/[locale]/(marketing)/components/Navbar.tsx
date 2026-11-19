@@ -138,10 +138,6 @@ export default function Navbar({ items = [] }: NavbarProps) {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const [badgeTick, setBadgeTick] = useState(false);
-    const devPendingIds = useMemo(
-        () => new Set(["sdks", "playground", "integration-guides", "showcase", "developer-blog"]),
-        []
-    );
 
     const sectionMap = useMemo(() => {
         const mapped: Partial<Record<MenuKey, MarketingNavSection>> = {};

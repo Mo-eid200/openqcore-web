@@ -5,91 +5,21 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  LayoutDashboard,
-  Bot,
-  BookOpen,
-  KeyRound,
-  Server,
-  HardDrive,
-  BarChart3,
-  Users,
-  CreditCard,
-  Shield,
-  Settings,
-  Activity,
-  ChevronDown,
-  Check,
-  Sparkles,
-  MessageSquare,
-  Cpu,
-  Mic,
-  Bell,
-  FolderKanban,
-  Image as ImageIcon,
-  Wand2,
-  LifeBuoy,
-  Plus,
-} from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, LayoutDashboard, Bot, BookOpen, KeyRound, Server, HardDrive, BarChart3, Users, CreditCard, Shield, Settings, Activity, ChevronDown, Check, Mic, FolderKanban, Image as ImageIcon, Wand2, LifeBuoy, Plus } from "lucide-react";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
-import { CreateWorkspaceModal } from "../../../(marketing)/components/CreateWorkspaceModal";
+import { CreateWorkspaceModal } from "../../../(marketing)/components/CreateWorkspaceModal";
+import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_OPEN_WIDTH, setSidebarOpen, useSidebarOpen } from "./sidebarStore";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "oqc_sidebar_open";
-const SIDEBAR_EVENT = "oqc-sidebar-toggle";
-const WIDTH_OPEN = 240;
-const WIDTH_COLLAPSED = 60;
+const WIDTH_OPEN = SIDEBAR_OPEN_WIDTH;
+const WIDTH_COLLAPSED = SIDEBAR_COLLAPSED_WIDTH;
 
-// ─── Sidebar state (localStorage-backed) ─────────────────────────────────────
-
-function readSidebarOpen(): boolean {
-  if (typeof window === "undefined") return true;
-  return localStorage.getItem(STORAGE_KEY) !== "false";
-}
-
-function writeSidebarOpen(value: boolean) {
-  localStorage.setItem(STORAGE_KEY, String(value));
-  window.dispatchEvent(new CustomEvent(SIDEBAR_EVENT, { detail: value }));
-}
+// ─── Sidebar state (localStorage-backed, see sidebarStore.ts) ────────────────
 
 function useSidebarState() {
-  const [open, setOpen] = useState(true);
-
-  useEffect(() => {
-    setOpen(readSidebarOpen());
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === STORAGE_KEY) {
-        setOpen(e.newValue !== "false");
-      }
-    }
-
-    function handleSidebarToggle() {
-      setOpen(readSidebarOpen());
-    }
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(SIDEBAR_EVENT, handleSidebarToggle);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(SIDEBAR_EVENT, handleSidebarToggle);
-    };
-  }, []);
-
-  function setSidebarOpen(value: boolean) {
-    setOpen(value);
-    writeSidebarOpen(value);
-  }
-
-  function toggle() {
-    setSidebarOpen(!open);
-  }
-
-  return { open, toggle, setSidebarOpen };
+  const open = useSidebarOpen();
+  return { open, toggle: () => setSidebarOpen(!open), setSidebarOpen };
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -342,7 +272,7 @@ function WorkspaceSelector({ collapsed }: { collapsed: boolean }) {
             transition={{ duration: 0.12 }}
             className="absolute left-2.5 right-2.5 top-[calc(100%+6px)] z-50 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111113] shadow-2xl"
           >
-            {workspaces.map((ws: any) => (
+            {workspaces.map((ws) => (
               <button
                 key={ws.id}
                 type="button"
@@ -462,20 +392,24 @@ export default function Sidebar() {
   const collapsed = !open;
   const width = collapsed ? WIDTH_COLLAPSED : WIDTH_OPEN;
   const [collapsedLogoHovered, setCollapsedLogoHovered] = useState(false);
-  useEffect(() => {
-    if (collapsed) {
-      setCollapsedLogoHovered(false);
-    }
-  }, [collapsed]);
+  // Collapsing clears the hover state (adjusted while rendering, not in an effect).
+  const [prevCollapsed, setPrevCollapsed] = useState(collapsed);
+  if (collapsed !== prevCollapsed) {
+    setPrevCollapsed(collapsed);
+    if (collapsed) setCollapsedLogoHovered(false);
+  }
 
   const isWorkspace = pathname?.includes("/workspace");
   const [mode, setMode] = useState<"console" | "workspace">(
     isWorkspace ? "workspace" : "console",
   );
 
-  useEffect(() => {
+  // Navigating sets the mode from the URL; the switch can still change it in between.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMode(pathname?.includes("/workspace") ? "workspace" : "console");
-  }, [pathname]);
+  }
 
   const nav = mode === "workspace" ? WORKSPACE_NAV : CONSOLE_NAV;
 

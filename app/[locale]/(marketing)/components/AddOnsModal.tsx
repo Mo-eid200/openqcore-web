@@ -25,7 +25,7 @@ function formatPrice(value: number) {
 // visually consistent whether purchased from the chat app or this
 // dashboard.
 export default function AddOnsModal({ open, onClose, targetType = "user", workspaceId }: Props): React.ReactNode {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pickedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const { data: packsData, isLoading: loadingPacks } = useQuery<AddonPack[]>({
@@ -47,16 +47,17 @@ export default function AddOnsModal({ open, onClose, targetType = "user", worksp
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
-  useEffect(() => {
+  // Each opening starts from the default pack (the second largest);
+  // adjusted while rendering, not in effects.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setSelectedId(null);
-  }, [open]);
-
-  useEffect(() => {
-    if (packs.length > 0 && !selectedId) {
-      const idx = Math.max(0, packs.length - 2);
-      setSelectedId(packs[idx]?.id ?? packs[0].id);
-    }
-  }, [packs, selectedId]);
+  }
+  const selectedId =
+    pickedId !== null && packs.some((p) => p.id === pickedId)
+      ? pickedId
+      : (packs[Math.max(0, packs.length - 2)]?.id ?? null);
 
   if (!open) return null;
 

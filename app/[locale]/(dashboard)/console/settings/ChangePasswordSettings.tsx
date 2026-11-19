@@ -8,6 +8,7 @@ import {
   getPasswordStatus,
   changePassword,
 } from "@/app/lib/api/auth/password.api";
+import { asApiError } from "@/app/lib/errors";
 
 type Accent = "red" | "amber";
 
@@ -139,7 +140,8 @@ export function ChangePasswordSettings({
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err.message || "Failed to update password.");
     } finally {
       setSubmitting(false);

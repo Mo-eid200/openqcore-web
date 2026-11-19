@@ -65,7 +65,7 @@ export default function BillingHistory({
         </thead>
 
         <tbody>
-          {entries.map((e, i) => (
+          {entries.map((e) => (
             <tr
               key={e.id}
               className="border-b border-white/[0.04] transition-colors last:border-b-0 hover:bg-white/[0.02]"

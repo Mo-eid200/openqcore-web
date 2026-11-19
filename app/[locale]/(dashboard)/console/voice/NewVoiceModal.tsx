@@ -20,6 +20,7 @@ import {
   type VoiceItem,
 } from "@/app/lib/api/console/voice";
 import VoiceSelect from "./VoiceSelect";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 type Mode = "tts" | "stt";
 
@@ -93,8 +94,9 @@ export default function NewVoiceModal({ open, onClose, onCreated }: Props) {
         onCreated(item);
         handleClose();
       }, 900);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || "Generation failed");
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(detailText(err) || err?.message || "Generation failed");
     } finally {
       setLoading(false);
     }

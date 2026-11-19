@@ -1,6 +1,7 @@
 // app/lib/api/workspace/members.ts
 
 import { qxtApiClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 // Written once, used everywhere below — matches the convention your
 // other api/workspace/*.ts files use (qxtApiClient's baseURL does NOT
@@ -50,7 +51,7 @@ export interface InviteMemberResult {
  * FastAPI's default { detail: ... } shape.
  */
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 
@@ -63,7 +64,7 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 export function getErrorCode(err: unknown): string | undefined {
-  return (err as any)?.response?.data?.error?.code;
+  return asApiError(err).response?.data?.error?.code;
 }
 
 // =========================================================

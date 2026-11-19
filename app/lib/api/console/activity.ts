@@ -122,7 +122,7 @@ export async function getConsoleActivity(
         },
         events: Array.isArray(data?.events)
             ? data.events.map(
-                (item: any): ConsoleActivityEvent => ({
+                (item: Partial<ConsoleActivityEvent> & { id?: string | number; tokens?: unknown }): ConsoleActivityEvent => ({
                     id: String(item?.id ?? ""),
                     type: item?.type ?? "chat",
                     category: String(item?.category ?? ""),

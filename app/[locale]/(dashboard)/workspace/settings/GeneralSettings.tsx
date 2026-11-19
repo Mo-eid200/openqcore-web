@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, AlertTriangle, Loader2, Check, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/app/context/WorkspaceContext";
+import { asApiError } from "@/app/lib/errors";
 
 const cardCls = "rounded-2xl border border-white/[0.07] bg-[#0c0a06]/95 backdrop-blur-xl p-5";
 const inputCls =
@@ -32,16 +33,17 @@ export function GeneralSettings() {
   // instead of a confusing post-submit failure.
   const isAdmin = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
 
-  // Hooks run before any early return (rules of hooks): this one used to
-  // sit after the non-admin return and crashed the page when the role or
-  // the active workspace changed while it was open.
-  // Keep the field in sync if the active workspace changes (e.g.
-  // switching workspaces while this page is open).
-  useEffect(() => {
+  // Keep the field in sync if the active workspace changes (e.g. switching
+  // workspaces while this page is open). Adjusted while rendering, before
+  // any early return: this used to be an effect placed after the non-admin
+  // return, which crashed the page when the role or workspace changed.
+  const [formFor, setFormFor] = useState(activeWorkspace?.id);
+  if (activeWorkspace?.id !== formFor) {
+    setFormFor(activeWorkspace?.id);
     setName(activeWorkspace?.name ?? "");
     setSuccess(false);
     setError(null);
-  }, [activeWorkspace?.id]);
+  }
 
   if (activeWorkspace && !isAdmin) {
     return (
@@ -51,9 +53,9 @@ export function GeneralSettings() {
             <ShieldAlert className="h-5 w-5 text-white/40" />
           </div>
           <div>
-            <div className="text-base font-semibold text-white">You're not an admin in this workspace</div>
+            <div className="text-base font-semibold text-white">You&apos;re not an admin in this workspace</div>
             <div className="mt-0.5 text-xs text-white/35">
-              Only the owner or an admin of "{activeWorkspace.name}" can change its name or delete it.
+              Only the owner or an admin of &quot;{activeWorkspace.name}&quot; can change its name or delete it.
               Ask a workspace admin if you need this changed.
             </div>
           </div>
@@ -80,7 +82,8 @@ export function GeneralSettings() {
     try {
       await updateWorkspace(activeWorkspace.id, { name: trimmed });
       setSuccess(true);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err?.response?.data?.error?.message || err?.message || "Couldn't save changes.");
     } finally {
       setSubmitting(false);
@@ -119,7 +122,8 @@ export function GeneralSettings() {
           router.push("/console");
         }
       }, 2500);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setDeleteError(err?.response?.data?.error?.message || err?.message || "Couldn't delete workspace.");
       setDeleting(false);
     }
@@ -220,11 +224,11 @@ export function GeneralSettings() {
 
         <div className="rounded-xl border border-red-500/15 bg-red-500/[0.04] px-4 py-3.5">
           <div className="text-sm font-medium text-white/85">
-            Delete "{activeWorkspace.name}"
+            Delete &quot;{activeWorkspace.name}&quot;
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-white/45">
             Are you sure you want to delete this workspace? All members, billing history,
-            Q-Power balance, projects, and any other data belonging to "{activeWorkspace.name}"
+            Q-Power balance, projects, and any other data belonging to &quot;{activeWorkspace.name}&quot;
             will be permanently deleted from the system. This action cannot be undone.
           </p>
 

@@ -5,6 +5,7 @@
 // update the types here to match — don't let them drift.
 
 import { qxtApiClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 const API_V1 = "/api/v1";
 
@@ -53,11 +54,8 @@ export interface WorkspaceSubscription {
   billing_cycle: "monthly" | "yearly" | null;
   renews_at: string | null;
   monthly_credits: number;
-  // Present when a downgrade is scheduled — not set by this endpoint
-  // today (subscription_payload doesn't include them), but the page
-  // reads them defensively via `(sub as any)?.x`. Included here as
-  // optional so that can eventually become a real typed field instead
-  // of an `any` cast once the backend adds them.
+  // Present when a downgrade is scheduled or a cancellation is pending
+  // (optional: older responses do not include them).
   scheduled_plan_name?: string;
   scheduled_change_at?: string;
   cancel_at_period_end?: boolean;
@@ -110,7 +108,7 @@ export interface WorkspaceBillingData {
 // =========================================================
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  const responseData = (err as any)?.response?.data;
+  const responseData = asApiError(err).response?.data;
   const message = responseData?.error?.message;
   if (typeof message === "string" && message.trim()) return message;
 

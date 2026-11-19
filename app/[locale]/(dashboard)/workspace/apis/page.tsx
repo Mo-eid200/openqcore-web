@@ -12,14 +12,7 @@ import { ApiEndpointCard }  from "./ApiEndpointCard";
 import { RateLimitCard }    from "./RateLimitCard";
 
 import { useWorkspace } from "@/app/context/WorkspaceContext";
-import {
-  getWorkspaceApiKeys,
-  createWorkspaceApiKey,
-  revokeWorkspaceApiKey,
-  type WorkspaceApiKey,
-  type WorkspaceApiKeyCreated,
-  type ApiKeyListResponse,
-} from "@/app/lib/api/workspace/api-keys";
+import { getWorkspaceApiKeys, createWorkspaceApiKey, revokeWorkspaceApiKey, type WorkspaceApiKeyCreated, type ApiKeyListResponse } from "@/app/lib/api/workspace/api-keys";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -229,7 +222,7 @@ export default function ApiPage() {
               <span className="text-[15px] font-semibold text-white">API Key Created</span>
             </div>
             <p className="text-[12px] text-white/40">
-              Copy this key now — it won't be shown again.
+              Copy this key now — it won&apos;t be shown again.
             </p>
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04]">
               <code className="text-[12px] text-emerald-300 flex-1 truncate font-mono">

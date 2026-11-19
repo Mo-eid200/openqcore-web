@@ -1,9 +1,8 @@
-import Image from "next/image";
+
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
-
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 const baseMetadata: Metadata = {
@@ -36,7 +35,6 @@ export async function generateMetadata(
     alternates: pageAlternates(locale, "/process/research-discovery"),
   };
 }
-
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the /solutions pages)

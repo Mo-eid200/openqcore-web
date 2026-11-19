@@ -12,10 +12,7 @@ import {
 
 import ActivityCard from "./ActivityCard";
 
-import type {
-    ConsoleActivityEvent,
-    ConsoleActivitySummary,
-} from "../../../../lib/api/console/activity";
+import type { ConsoleActivityEvent } from "../../../../lib/api/console/activity";
 
 type Props = {
     events: ConsoleActivityEvent[];

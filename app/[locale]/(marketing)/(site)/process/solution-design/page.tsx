@@ -2,8 +2,6 @@ import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import ArchitectureImage from "../../../components/ArchitectureImage";
-import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
-
 
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -36,7 +34,6 @@ export async function generateMetadata(
     alternates: pageAlternates(locale, "/process/solution-design"),
   };
 }
-
 
 /* ════════════════════════════════════════════════════════════
    Shared primitives (identical to the other process pages)

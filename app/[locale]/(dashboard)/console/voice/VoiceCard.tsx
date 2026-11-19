@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import {
-  AudioLines,
-  Play,
-  Pause,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Loader2,
-  FileText,
-  Mic,
-  Waves,
-} from "lucide-react";
+import { Play, Pause, CheckCircle2, Clock, AlertCircle, Loader2, FileText, Mic, Waves } from "lucide-react";
 import type { VoiceItem } from "./types";
 import CardActionsMenu from "./CardActionsMenu";
 import ConfirmDialog from "./ConfirmDialog";

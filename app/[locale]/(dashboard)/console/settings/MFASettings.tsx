@@ -11,6 +11,7 @@ import {
   verifyMfaSetup,
   disableMfa,
 } from "@/app/lib/api/auth/mfa.api";
+import { errorMessage } from "@/app/lib/errors";
 
 type View = "status" | "setup-qr" | "setup-codes" | "disable";
 type Accent = "red" | "amber";
@@ -118,8 +119,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       setOtpauthUri(data.otpauth_uri);
       setSetupCode("");
       setView("setup-qr");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -133,8 +134,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       const data = await verifyMfaSetup(setupCode.trim());
       setBackupCodes(data.backup_codes);
       setView("setup-codes");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
       setSetupCode("");
     } finally {
       setSubmitting(false);
@@ -162,8 +163,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       setDisablePassword("");
       setDisableCode("");
       setView("status");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }

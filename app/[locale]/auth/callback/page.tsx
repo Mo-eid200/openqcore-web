@@ -11,6 +11,7 @@ import {
   fetchBootstrap,
   invalidateAuthCache,
 } from "../../../lib/api/auth/auth.api";
+import { asApiError } from "@/app/lib/errors";
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
@@ -115,7 +116,8 @@ export default function OAuthCallbackPage() {
         // ---------------------------------------------------------
 
         router.replace("/");
-      } catch (error: any) {
+      } catch (caught) {
+        const error = asApiError(caught);
         console.error(
           "[OAuth] Authentication bootstrap failed:",
           error?.response?.data || error

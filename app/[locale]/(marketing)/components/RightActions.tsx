@@ -81,24 +81,23 @@ export default function RightActions() {
 
   const [personalSub, setPersonalSub] = useState<Subscription | null>(null);
 
-  const loadPersonalSubscription = useCallback(async () => {
-    if (!user) {
-      setPersonalSub(null);
-      return;
-    }
-    try {
-      const sub = await getSubscription("user");
-      setPersonalSub(sub);
-    } catch (err) {
-      console.error("[RightActions] Failed loading personal subscription", err);
-    }
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    getSubscription("user")
+      .then((sub) => {
+        if (alive) setPersonalSub(sub);
+      })
+      .catch((err) => {
+        console.error("[RightActions] Failed loading personal subscription", err);
+      });
+    return () => {
+      alive = false;
+    };
   }, [user]);
 
-  useEffect(() => {
-    loadPersonalSubscription();
-  }, [loadPersonalSubscription]);
-
-  const personalPlanName = personalSub?.plan_name || "Free";
+  // signed out: no subscription, whatever was loaded before
+  const personalPlanName = (user ? personalSub?.plan_name : null) || "Free";
 
   const workspacePlan = activeWorkspace?.plan || "";
   const hasWorkspaceSubscription = !!activeWorkspace && activeWorkspace.plan !== "Free Plan";

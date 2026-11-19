@@ -58,9 +58,6 @@ function SectionLabel({
   );
 }
 
-const baseCard =
-  "rounded-[28px] border border-white/[0.08] bg-[#0b1222] transition duration-300";
-
 const softCard =
   "rounded-[30px] border border-white/[0.08] bg-[#0b1222] transition duration-300 hover:border-white/[0.14]";
 

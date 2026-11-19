@@ -7,6 +7,7 @@ export interface Plan {
   name:                      string;
   plan_type:                 string;
   monthly_credits:           number | null;
+  fair_use_qxt?:             number | null;
   seat_limit:                number | null;
   storage_gb:                number | null;
   has_api:                   boolean;
@@ -167,6 +168,7 @@ export interface Subscription {
   renews_at:             string | null;
   scheduled_plan_name?:  string | null;
   scheduled_change_at?:  string | null;
+  cancel_at_period_end?: boolean;
 }
 
 export async function getSubscription(targetType = "user"): Promise<Subscription> {

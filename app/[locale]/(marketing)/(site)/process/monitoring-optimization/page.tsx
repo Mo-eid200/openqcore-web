@@ -177,25 +177,6 @@ function ArchitectureImage({
    (kept inline per page, matching the other process pages)
 ════════════════════════════════════════════════════════════ */
 
-function StatCard({
-  value,
-  label,
-  source
-}: {
-  value: string;
-  label: string;
-  source: string;
-}) {
-  return (
-    <div className="rounded-3xl border border-white/6 bg-[#0b1222] p-8 text-center">
-      <p className="ar-heading text-5xl font-bold tracking-tight text-[#d4af37] md:text-6xl">
-        {value}
-      </p>
-      <p className="ar-body mt-4 text-sm leading-6 text-slate-300">{label}</p>
-      <p className="ar-body mt-4 text-xs text-slate-500">{source}</p>
-    </div>
-  );
-}
 
 /* ════════════════════════════════════════════════════════════
    Page

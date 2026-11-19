@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Crown,
-  Zap,
-  RefreshCw,
-  Sparkles,
-  Clock,
-  Undo2,
-} from "lucide-react";
+import { Crown, Zap, Sparkles, Clock, Undo2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { PersonalUpgradeModal } from "../../../(marketing)/components/PersonalUpgradeModal";
@@ -30,6 +23,7 @@ import {
   removePaymentMethod,
   type PaymentMethod as PM,
 } from "@/app/lib/api/console/billing";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,9 +146,10 @@ export default function BillingPage() {
 
       await refetch();
       setShowUpgrade(false);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(
-        err?.response?.data?.detail?.message ||
+        detailText(err) ||
           err?.message ||
           "Upgrade failed"
       );
@@ -177,8 +172,9 @@ export default function BillingPage() {
         "Your subscription will cancel at the end of the current billing period."
       );
       await refetch();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Failed to cancel");
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(detailText(err) || "Failed to cancel");
     } finally {
       setActionPending(null);
     }
@@ -190,8 +186,9 @@ export default function BillingPage() {
       await undoCancelSubscription("user");
       setNotice("Cancellation reversed — your plan will continue as normal.");
       await refetch();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Failed to undo cancellation");
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(detailText(err) || "Failed to undo cancellation");
     } finally {
       setActionPending(null);
     }
@@ -205,9 +202,10 @@ export default function BillingPage() {
         "Scheduled plan change canceled — you'll stay on your current plan."
       );
       await refetch();
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(
-        err?.response?.data?.detail ||
+        detailText(err) ||
           "Failed to undo the scheduled change"
       );
     } finally {
@@ -218,7 +216,7 @@ export default function BillingPage() {
   async function handleSetDefault(id: string) {
     await setDefaultPaymentMethod(id);
 
-    queryClient.setQueryData(["console-billing"], (old: any) => ({
+    queryClient.setQueryData<typeof billing>(["console-billing"], (old) => old && ({
       ...old,
       payment_methods: (old?.payment_methods ?? []).map((m: PM) => ({
         ...m,
@@ -232,7 +230,7 @@ export default function BillingPage() {
 
     await removePaymentMethod(id);
 
-    queryClient.setQueryData(["console-billing"], (old: any) => ({
+    queryClient.setQueryData<typeof billing>(["console-billing"], (old) => old && ({
       ...old,
       payment_methods: (old?.payment_methods ?? []).filter(
         (m: PM) => m.id !== id
@@ -244,7 +242,7 @@ export default function BillingPage() {
 
   const isPaid = sub?.has_subscription && sub.status === "active";
   const isCancelPending =
-    isPaid && !!sub?.renews_at && (sub as any)?.cancel_at_period_end;
+    isPaid && !!sub?.renews_at && sub?.cancel_at_period_end;
 
   const hasScheduledDowngrade =
     !!sub?.scheduled_plan_name && !!sub?.scheduled_change_at;
@@ -264,7 +262,6 @@ export default function BillingPage() {
   const remaining = wallet?.remaining ?? 0;
   const monthlyLimit = wallet?.monthly_credits ?? 0;
   const usagePercent = wallet?.usage_percent ?? 0;
-  const tokensUsed = wallet?.tokens_used ?? 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
 

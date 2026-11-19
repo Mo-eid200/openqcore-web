@@ -159,7 +159,7 @@ export default function ProjectsPage() {
     },
   });
 
-  const rawProjects = data ?? [];
+  const rawProjects = useMemo(() => data ?? [], [data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

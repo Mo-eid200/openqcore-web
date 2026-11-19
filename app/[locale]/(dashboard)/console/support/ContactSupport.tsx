@@ -12,7 +12,8 @@ import {
 import {
   createSupportTicket,
   type SupportDepartment,
-} from "@/app/lib/api/support/support.api";
+} from "@/app/lib/api/support/support.api";
+import { asApiError } from "@/app/lib/errors";
 
 const DEPARTMENTS: { value: SupportDepartment; label: string }[] = [
   { value: "general", label: "General Support" },
@@ -102,7 +103,8 @@ export default function ContactSupport() {
       setMessage("");
       setDepartment("general");
       setDeptOpen(false);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err.message || "Failed to submit your request.");
     } finally {
       setSubmitting(false);

@@ -28,7 +28,7 @@ export default function PersonalVoicePage() {
             Voice
           </h1>
           <p className="mt-0.5 truncate text-sm text-white/45">
-            Text-to-speech, transcription, and your workspace's default voice
+            Text-to-speech, transcription, and your workspace&apos;s default voice
           </p>
         </div>
       </div>

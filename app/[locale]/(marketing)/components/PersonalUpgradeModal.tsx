@@ -35,7 +35,7 @@ function formatPrice(value?: number) {
 
 export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }: Props): React.ReactNode {
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pickedId, setSelectedId] = useState<number | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +55,7 @@ export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }
     enabled: open,
   });
 
-  const plans = plansData ?? [];
+  const plans = useMemo(() => plansData ?? [], [plansData]);
 
   /* ESC CLOSE */
   useEffect(() => {
@@ -67,10 +67,12 @@ export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
-  /* RESET ON OPEN */
-  useEffect(() => {
+  /* RESET ON OPEN (adjusted while rendering) */
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setSelectedId(null);
-  }, [open]);
+  }
 
   /* FILTERED — personal plans only, ever */
   const filteredPlans = useMemo(() => {
@@ -86,11 +88,11 @@ export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }
     return list;
   }, [plans]);
 
-  useEffect(() => {
-    if (filteredPlans.length > 0 && !selectedId) {
-      setSelectedId(filteredPlans[0].id);
-    }
-  }, [filteredPlans, selectedId]);
+  // the cheapest plan until the user picks one
+  const selectedId =
+    pickedId !== null && filteredPlans.some((plan) => plan.id === pickedId)
+      ? pickedId
+      : (filteredPlans[0]?.id ?? null);
 
   if (!open) return null;
 
@@ -332,7 +334,7 @@ export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }
                   {isDowngrade && selectedPlan?.id !== currentPlanId && (
                     <div className="flex items-center gap-1.5 text-[11px] text-cyan-300/80">
                       <ArrowDownCircle className="w-3 h-3" />
-                      You'll keep {currentPlan?.name}'s features until your next renewal
+                      You&apos;ll keep {currentPlan?.name}&apos;s features until your next renewal
                     </div>
                   )}
                 </div>

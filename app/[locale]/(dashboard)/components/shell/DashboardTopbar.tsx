@@ -7,17 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, LogOut, ChevronDown, Settings, User } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { getUnreadCount } from "@/app/lib/api/notifications/notifications.api";
-import { NotificationDropdown } from "./NotificationDropdown";
-
-const SIDEBAR_STORAGE_KEY = "oqc_sidebar_open";
-const SIDEBAR_EVENT = "oqc-sidebar-toggle";
-const SIDEBAR_OPEN_WIDTH = 240;
-const SIDEBAR_COLLAPSED_WIDTH = 60;
-
-function readSidebarOpen(): boolean {
-  if (typeof window === "undefined") return true;
-  return localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "false";
-}
+import { NotificationDropdown } from "./NotificationDropdown";
+import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_OPEN_WIDTH, useSidebarOpen } from "./sidebarStore";
 
 function PulseDot({ visible }: { visible: boolean }) {
   if (!visible) return null;
@@ -37,31 +28,9 @@ export default function Header() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sidebarOpen = useSidebarOpen();
 
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setSidebarOpen(readSidebarOpen());
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === SIDEBAR_STORAGE_KEY) {
-        setSidebarOpen(e.newValue !== "false");
-      }
-    }
-
-    function handleSidebarToggle() {
-      setSidebarOpen(readSidebarOpen());
-    }
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(SIDEBAR_EVENT, handleSidebarToggle);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(SIDEBAR_EVENT, handleSidebarToggle);
-    };
-  }, []);
 
   const sidebarWidth = sidebarOpen
     ? SIDEBAR_OPEN_WIDTH

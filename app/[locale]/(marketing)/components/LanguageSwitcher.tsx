@@ -78,12 +78,15 @@ export default function LanguageSwitcher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeIndex]);
 
-  useEffect(() => {
+  // highlight the current language each time the menu opens (adjusted while rendering)
+  const [highlightFor, setHighlightFor] = useState({ open, locale });
+  if (highlightFor.open !== open || highlightFor.locale !== locale) {
+    setHighlightFor({ open, locale });
     if (open) {
       const currentIndex = languages.findIndex((lang) => lang.code === locale);
       setActiveIndex(currentIndex >= 0 ? currentIndex : 0);
     }
-  }, [open, locale]);
+  }
 
   return (
     <div ref={wrapperRef} className="relative">

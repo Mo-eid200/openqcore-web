@@ -5,6 +5,7 @@ import {
   clearStoredContext,
   setStoredLastSession,
 } from "../../api/core/qxtClient";
+import type { AuthTokenResponse } from "./auth.api";
 
 const TOKEN_KEY = "qxt_access_token";
 
@@ -87,7 +88,7 @@ export function logoutSideEffects(): void {
 
 // ─── Token picker ─────────────────────────────────────────────────────────────
 
-export function pickTokenFromResponse(data: any): string {
+export function pickTokenFromResponse(data: AuthTokenResponse | null | undefined): string {
   return (
     data?.access_token ||
     data?.token ||

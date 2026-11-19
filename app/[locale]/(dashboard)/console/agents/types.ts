@@ -189,7 +189,7 @@ export interface AgentChatResponse {
         completion_tokens?: number;
     };
 
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 // =========================================================

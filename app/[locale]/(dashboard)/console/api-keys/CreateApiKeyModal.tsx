@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 
 import { createApiKey } from "@/app/lib/api/console/apikeys";
-import type { ApiKey } from "./types";
+import type { ApiKey } from "./types";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 type Props = {
   open: boolean;
@@ -72,9 +73,10 @@ export default function CreateApiKeyModal({
         created_at: res.created_at,
         raw_key: res.key,
       });
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(
-        err?.response?.data?.detail ||
+        detailText(err) ||
           err?.message ||
           "Failed to create key"
       );
@@ -162,7 +164,7 @@ export default function CreateApiKeyModal({
               <div className="flex items-start gap-2.5 rounded-xl border border-amber-300/12 bg-amber-300/[0.06] px-3.5 py-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
                 <p className="text-xs leading-relaxed text-amber-200/80">
-                  This is the only time you'll see this key. Copy it and store
+                  This is the only time you&apos;ll see this key. Copy it and store
                   it securely.
                 </p>
               </div>

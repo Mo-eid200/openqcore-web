@@ -11,6 +11,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import type { ImageItem } from "./types";
+import { useMounted } from "@/app/hooks/useMounted";
 
 type Props = {
   item: ImageItem | null;
@@ -19,9 +20,8 @@ type Props = {
 
 export default function ImageLightbox({ item, onClose }: Props) {
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
-  useEffect(() => setMounted(true), []);
 
   // Escape to close
   useEffect(() => {
@@ -91,6 +91,8 @@ export default function ImageLightbox({ item, onClose }: Props) {
             {/* Image */}
             <div className="relative flex max-h-[72vh] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
               {item.output_url && (
+                // Generated images live on the storage CDN under per-user URLs; plain <img> keeps them out of the image optimizer.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={item.output_url}
                   alt={item.prompt}

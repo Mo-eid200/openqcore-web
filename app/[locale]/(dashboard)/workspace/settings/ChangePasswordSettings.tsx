@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { KeyRound } from "lucide-react";
 import { getPasswordStatus, changePassword } from "@/app/lib/api/auth/password.api";
+import { errorMessage } from "@/app/lib/errors";
 
 type Accent = "red" | "amber";
 
@@ -89,8 +90,8 @@ export function ChangePasswordSettings({ accent = "red" }: { accent?: Accent }) 
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }

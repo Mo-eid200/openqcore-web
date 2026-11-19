@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 import {
   PrimaryCTA,
@@ -67,28 +67,6 @@ function SectionLabel({
   );
 }
 
-function ArrowIcon({
-  className = "",
-}: {
-  className?: string;
-}) {
-  return (
-    <svg
-      className={`h-4 w-4 rtl:rotate-180 ${className}`}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2}
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-      />
-    </svg>
-  );
-}
 
 const valueIcons: Record<string, string> = {
   curiosity:
@@ -345,7 +323,7 @@ export default async function CareersPage({
               </div>
               <div className="relative overflow-hidden rounded-[28px] border border-[#d4af37]/18 bg-gradient-to-br from-[#d4af37]/[0.07] to-transparent p-6">
                 <div className="pointer-events-none absolute right-4 top-3 select-none font-serif text-[72px] leading-none text-[#d4af37]/[0.08]">
-                  "
+                  &quot;
                 </div>
                 <p className="relative text-base font-medium leading-8 text-[#f3d98a]">
                   {t("approach.quote")}

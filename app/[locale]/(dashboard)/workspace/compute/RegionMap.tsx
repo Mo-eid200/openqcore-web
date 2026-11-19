@@ -1,5 +1,4 @@
 import React from "react";
-import { MapPin } from "lucide-react";
 
 type Cluster = {
   id:     string;

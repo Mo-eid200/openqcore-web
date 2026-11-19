@@ -3,6 +3,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, FileUp, Loader2, X, CheckCircle2 } from "lucide-react";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 const ACCEPTED = ".pdf,.doc,.docx,.txt,.md";
 const ACCEPT_MIME = [
@@ -89,8 +90,9 @@ export function UploadKnowledgeModal({
         reset();
         onClose();
       }, 1200);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.message || "Upload failed");
+    } catch (caught) {
+      const err = asApiError(caught);
+      setError(detailText(err) || err?.message || "Upload failed");
     }
   }
 

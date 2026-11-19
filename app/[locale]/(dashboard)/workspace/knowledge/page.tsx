@@ -95,7 +95,7 @@ export default function KnowledgePage() {
     refetchInterval: (query) => {
       const items = query.state.data?.items ?? [];
       const stillProcessing = items.some(
-        (item: any) => item.status === "processing" || item.status === "pending"
+        (item) => item.status === "processing" || item.status === "pending"
       );
       return stillProcessing ? 3000 : false;
     },

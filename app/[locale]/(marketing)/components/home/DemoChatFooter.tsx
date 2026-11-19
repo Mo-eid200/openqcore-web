@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Send, Loader2, Smile } from "lucide-react";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import { useMounted } from "@/app/hooks/useMounted";
 
 type Props = {
   input: string;
@@ -38,7 +39,7 @@ export default function DemoChatFooter({
 }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [emojiPos, setEmojiPos] = useState<{ top: number; left: number } | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [typedPlaceholder, setTypedPlaceholder] = useState("");
   const [suggestionIdx, setSuggestionIdx] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
@@ -48,7 +49,6 @@ export default function DemoChatFooter({
   const emojiPanelRef = useRef<HTMLDivElement>(null);
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => setMounted(true), []);
 
   // Auto-grow textarea
   useEffect(() => {
@@ -61,16 +61,25 @@ export default function DemoChatFooter({
   // 🔧 Typewriter effect — only runs while the field is empty and
   // unfocused, matching the old ChatFooter's exact behavior. Stops
   // immediately the moment the user types or focuses the field.
+  // The typed text is cleared while rendering (not in the effect): when
+  // the field is in use, and before each new phrase.
+  const typingPaused = !!input.trim() || isFocused;
+  const [typedFor, setTypedFor] = useState(suggestionIdx);
+  if (typedFor !== suggestionIdx) {
+    setTypedFor(suggestionIdx);
+    setTypedPlaceholder("");
+  } else if (typingPaused && typedPlaceholder) {
+    setTypedPlaceholder("");
+  }
+
   useEffect(() => {
-    if (input.trim() || isFocused) {
-      setTypedPlaceholder("");
+    if (typingPaused) {
       if (pauseTimer.current) clearTimeout(pauseTimer.current);
       return;
     }
 
     const phrase = TYPED_SUGGESTIONS[suggestionIdx];
     let i = 0;
-    setTypedPlaceholder("");
 
     const typing = setInterval(() => {
       if (i < phrase.length) {
@@ -84,7 +93,7 @@ export default function DemoChatFooter({
     }, 38);
 
     return () => clearInterval(typing);
-  }, [suggestionIdx, input, isFocused]);
+  }, [suggestionIdx, typingPaused]);
 
   // Close on outside click (checks both the button and the portaled panel)
   useEffect(() => {
@@ -116,7 +125,7 @@ export default function DemoChatFooter({
     setEmojiOpen((v) => !v);
   }, [emojiOpen]);
 
-  const handleEmojiClick = (obj: any) => {
+  const handleEmojiClick = (obj: EmojiClickData) => {
     const ta = textareaRef.current;
     if (!ta) {
       onChange(input + obj.emoji);

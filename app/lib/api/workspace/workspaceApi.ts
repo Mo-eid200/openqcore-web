@@ -174,7 +174,7 @@ function parseApiError(
     axios.isAxiosError(error)
   ) {
     const err =
-      error as AxiosError<any>;
+      error as AxiosError<{ detail?: string | { code?: string; message?: string } }>;
 
     const data = err.response?.data;
 

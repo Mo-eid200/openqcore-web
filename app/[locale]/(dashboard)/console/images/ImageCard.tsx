@@ -137,6 +137,8 @@ export default function ImageCard({
         }`}
       >
         {hasImage ? (
+          // Generated images live on the storage CDN under per-user URLs; plain <img> keeps them out of the image optimizer.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.output_url!}
             alt={item.prompt}

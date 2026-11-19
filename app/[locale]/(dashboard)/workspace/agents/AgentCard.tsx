@@ -3,34 +3,19 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Bot,
-  BrainCircuit,
   CalendarClock,
   ChevronRight,
-  Cpu,
   Database,
-  FolderKanban,
   Pause,
   Play,
-  Sparkles,
   Trash2,
   Zap,
 } from "lucide-react";
 import type { WorkspaceAgent } from "@/app/lib/api/workspace/agents";
 import { LinkKnowledgeModal } from "../components/shared/LinkKnowledgeModal";
+import { AgentIcon } from "@/app/[locale]/(dashboard)/components/ui/AgentIcon";
 
 // ─── Icon resolver (kept in sync with the personal AgentCard) ───────────────
-
-function resolveIcon(icon?: string) {
-  switch (icon) {
-    case "sparkles": return Sparkles;
-    case "folder-kanban": return FolderKanban;
-    case "brain": return BrainCircuit;
-    case "bot": return Bot;
-    case "cpu":
-    default: return Cpu;
-  }
-}
 
 const statusConfig = {
   active:   { label: "Active",   dot: "bg-emerald-400" },
@@ -61,7 +46,6 @@ export function AgentCard({
   const router = useRouter();
   const [showLinker, setShowLinker] = useState(false);
 
-  const Icon = resolveIcon(agent.icon);
   const cfg = statusConfig[agent.status as keyof typeof statusConfig] ?? statusConfig.idle;
 
   return (
@@ -121,7 +105,7 @@ export function AgentCard({
       <div className="relative flex items-start gap-4">
         <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/[0.08] text-red-400 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent" />
-          <Icon className="relative h-6 w-6" />
+          <AgentIcon icon={agent.icon} className="relative h-6 w-6" />
         </div>
 
         <div className="min-w-0 flex-1 pr-24">

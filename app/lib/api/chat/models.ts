@@ -1,4 +1,5 @@
-import { qxtApiClient } from "../core/qxtClient";
+import { qxtApiClient } from "../core/qxtClient";
+import { asApiError } from "@/app/lib/errors";
 
 /* =========================
    Types
@@ -52,7 +53,7 @@ function getBackendProductKey(frontendKey: string): string {
    Cache
 ========================= */
 
-let cachedModels: Map<string, { data: PublicModel[]; ts: number }> = new Map();
+const cachedModels: Map<string, { data: PublicModel[]; ts: number }> = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /* =========================
@@ -150,7 +151,8 @@ export async function fetchChatModels(
     console.log(`💾 Cached ${models.length} models for "${productKey}"\n`);
 
     return models;
-  } catch (err: any) {
+  } catch (caught) {
+    const err = asApiError(caught);
     console.error(
       `❌ Failed to fetch models for "${productKey}":`,
       err?.message || err

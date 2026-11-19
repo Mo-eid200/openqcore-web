@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
@@ -78,15 +78,20 @@ export function AccessLogs() {
     retry: 1,
   });
 
-  useEffect(() => {
-    if (!data) return;
+  // Pages are appended as they arrive; switching workspace starts over
+  // (adjusted while rendering, not in effects).
+  const [appended, setAppended] = useState<typeof data>(undefined);
+  if (data && data !== appended) {
+    setAppended(data);
     setAllLogs((prev) => (offset === 0 ? data.logs : [...prev, ...data.logs]));
-  }, [data, offset]);
+  }
 
-  useEffect(() => {
+  const [logsFor, setLogsFor] = useState(activeWorkspace?.id);
+  if (activeWorkspace?.id !== logsFor) {
+    setLogsFor(activeWorkspace?.id);
     setOffset(0);
     setAllLogs([]);
-  }, [activeWorkspace?.id]);
+  }
 
   const logs = allLogs;
   const hasMore = (data?.logs.length ?? 0) === limit;

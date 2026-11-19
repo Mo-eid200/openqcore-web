@@ -128,7 +128,7 @@ export function ApiCodeTab({ workspaceId, agentId }: { workspaceId: string; agen
       <div className="flex items-center gap-3 rounded-2xl border border-red-500/10 bg-red-500/[0.06] p-4">
         <KeyRound className="h-4 w-4 shrink-0 text-red-400" />
         <p className="flex-1 text-xs text-red-100/80">
-          Replace <code className="font-mono">YOUR_API_KEY</code> with a real key from your workspace's API Keys page.
+          Replace <code className="font-mono">YOUR_API_KEY</code> with a real key from your workspace&apos;s API Keys page.
         </p>
         <Link
           href="/workspace/apis"

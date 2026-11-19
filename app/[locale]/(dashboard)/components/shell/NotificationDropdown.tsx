@@ -121,7 +121,7 @@ export function NotificationDropdown({ open, onClose }: Props) {
     handleMarkRead(n);
     const target = safeLink(n.link);
     if (target) {
-      window.location.href = target;
+      window.location.assign(target);
       onClose();
     }
   }

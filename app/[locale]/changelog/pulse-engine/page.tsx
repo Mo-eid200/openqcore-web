@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import Image from "next/image";
+
 import { Link } from "@/i18n/navigation";
 import Header from "../../(marketing)/components/Header";
 import Footer from "../../(marketing)/components/Footer";
@@ -136,7 +136,6 @@ export default async function PulseEnginePremiumPage({ params }: PageProps) {
           <div className={`${wrap} py-14 md:py-18`}>
             <div className="rounded-3xl border border-white/10 bg-[#0b1222] p-5 md:p-6">
               <p className="mb-4 text-xs uppercase tracking-[0.2em] text-[#d4af37]">Engine Banner</p>
-
               
              <ImageWithLightbox
   src="/engines/pulse-banner-main.webp"

@@ -27,9 +27,8 @@ function VoiceOptionCard({
 }) {
   const queryClient = useQueryClient();
   const isWorkspace = props.scopeType === "workspace";
-  const workspaceId = isWorkspace ? (props as any).workspaceId : undefined;
+  const workspaceId = props.scopeType === "workspace" ? props.workspaceId : null;
 
-  const api = isWorkspace ? workspaceVoiceApi : consoleVoiceApi;
 
   const optionsKey = isWorkspace
     ? ["voice-options", workspaceId, capability]
@@ -42,28 +41,28 @@ function VoiceOptionCard({
   const { data: options, isLoading: loadingOptions } = useQuery({
     queryKey: optionsKey,
     queryFn: () =>
-      isWorkspace
-        ? (api as typeof workspaceVoiceApi).getVoiceOptions(workspaceId, capability)
-        : (api as typeof consoleVoiceApi).getVoiceOptions(capability),
+      workspaceId !== null
+        ? workspaceVoiceApi.getVoiceOptions(workspaceId, capability)
+        : consoleVoiceApi.getVoiceOptions(capability),
     staleTime: 60_000,
   });
 
   const { data: current, isLoading: loadingDefault } = useQuery({
     queryKey: defaultKey,
     queryFn: () =>
-      isWorkspace
-        ? (api as typeof workspaceVoiceApi).getDefaultVoice(workspaceId, capability)
-        : (api as typeof consoleVoiceApi).getDefaultVoice(capability),
+      workspaceId !== null
+        ? workspaceVoiceApi.getDefaultVoice(workspaceId, capability)
+        : consoleVoiceApi.getDefaultVoice(capability),
     staleTime: 30_000,
   });
 
   const { mutateAsync: setDefault, isPending } = useMutation({
     mutationFn: (voiceOptionId: string) =>
-      isWorkspace
-        ? (api as typeof workspaceVoiceApi).setDefaultVoice(workspaceId, capability, voiceOptionId)
-        : (api as typeof consoleVoiceApi).setDefaultVoice(capability, voiceOptionId),
+      workspaceId !== null
+        ? workspaceVoiceApi.setDefaultVoice(workspaceId, capability, voiceOptionId)
+        : consoleVoiceApi.setDefaultVoice(capability, voiceOptionId),
     onSuccess: (_, voiceOptionId) => {
-      queryClient.setQueryData(defaultKey, (old: any) => ({
+      queryClient.setQueryData<typeof current>(defaultKey, (old) => old && ({
         ...old,
         id: voiceOptionId,
       }));

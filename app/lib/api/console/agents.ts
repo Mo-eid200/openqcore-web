@@ -33,7 +33,7 @@ export interface AgentChatResponse {
     prompt_tokens?:     number;
     completion_tokens?: number;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface AgentChatApiResponse {
@@ -71,7 +71,7 @@ function normalizeDate(value: unknown): string | null {
 
 // ─── Normalizer ───────────────────────────────────────────────────────────────
 
-function normalizeAgent(item: any): Agent {
+function normalizeAgent(item: Record<string, unknown> | null | undefined): Agent {
   return {
     id:          String(item?.id || ""),
     slug:        typeof item?.slug === "string" && item.slug.trim() ? item.slug : String(item?.id || ""),

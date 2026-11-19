@@ -1,6 +1,6 @@
 import { qxtAuthClient, qxtApiClient, getStoredToken } from "../core/qxtClient";
 import { mapApiKeyFromList } from "./auth.mapper";
-import type { AuthUser, RawApiKey } from "./auth.types";
+import type { AuthUser, RawApiKey, RawBillingResponse } from "./auth.types";
 
 // ─── Simple TTL cache ─────────────────────────────────────────────────────────
 
@@ -99,7 +99,7 @@ async function loadBootstrap(): Promise<RawBootstrapResponse> {
   const res = await qxtAuthClient.get("/api/v1/bootstrap", {
     timeout: 30_000,
     __forcePersonalContext: true,
-  } as any);
+  });
 
   const data: RawBootstrapResponse = res.data;
 
@@ -148,7 +148,18 @@ export async function fetchMyApiKey(force = false): Promise<string | null> {
 
 // ─── Login / Register ─────────────────────────────────────────────────────────
 
-export async function apiLogin(email: string, password: string): Promise<any> {
+// Login, register and MFA answers: a token (under one of several names),
+// or, for accounts with MFA, a challenge to answer first.
+export type AuthTokenResponse = {
+  access_token?: string;
+  token?: string;
+  jwt?: string;
+  data?: { access_token?: string };
+  mfa_required?: boolean;
+  challenge_id?: string;
+};
+
+export async function apiLogin(email: string, password: string): Promise<AuthTokenResponse> {
   const res = await qxtAuthClient.post("/api/v1/auth/login", { email, password });
   return res.data;
 }
@@ -157,7 +168,7 @@ export async function apiRegister(
   email: string,
   password: string,
   fullName: string
-): Promise<any> {
+): Promise<AuthTokenResponse> {
   const res = await qxtAuthClient.post("/api/v1/auth/register", {
     email,
     password,
@@ -172,7 +183,7 @@ export async function apiRegister(
 // Called after apiLogin() returns { mfa_required: true, challenge_id }
 // instead of a token — see AuthContext.tsx's MfaRequiredError.
 
-export async function verifyMfaLogin(challengeId: string, code: string): Promise<any> {
+export async function verifyMfaLogin(challengeId: string, code: string): Promise<AuthTokenResponse> {
   const res = await qxtAuthClient.post("/api/v1/auth/mfa/verify-login", {
     challenge_id: challengeId,
     code,
@@ -182,7 +193,7 @@ export async function verifyMfaLogin(challengeId: string, code: string): Promise
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 
-export async function fetchBillingOverview(): Promise<any> {
+export async function fetchBillingOverview(): Promise<RawBillingResponse | null> {
   const res = await qxtApiClient.get("/api/v1/company/dashboard/overview", {
     timeout: 12000,
   });

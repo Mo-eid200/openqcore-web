@@ -1,5 +1,6 @@
 import { qxtApiClient } from "@/app/lib/api/core/qxtClient";
 import type { Agent }   from "../../../../types/agent";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 export async function getAgent(agentId: string): Promise<Agent> {
   if (!agentId) throw new Error("Agent id is required");
@@ -29,9 +30,10 @@ export async function getAgent(agentId: string): Promise<Agent> {
       updated_at:     data.updated_at  || null,
     };
 
-  } catch (error: any) {
+  } catch (caught) {
+    const error = asApiError(caught);
     throw new Error(
-      error?.response?.data?.detail || "Failed to load agent"
+      detailText(error) || "Failed to load agent"
     );
   }
 }

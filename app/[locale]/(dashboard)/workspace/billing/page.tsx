@@ -12,6 +12,7 @@ import { useWorkspace } from "../../../../context/WorkspaceContext";
 import { simulateWorkspaceUpgrade } from "@/app/lib/api/workspace/devSimulateUpgrade";
 
 import { getWorkspaceBilling } from "@/app/lib/api/workspace/billing";
+import { asApiError, detailText } from "@/app/lib/errors";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,8 @@ export default function WorkspaceBillingPage() {
     setError(null);
     try {
       await refetch();
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err?.message || "Failed to load");
     }
   }, [refetch]);
@@ -116,8 +118,9 @@ export default function WorkspaceBillingPage() {
           refreshWorkspaces(),
         ]);
         setShowUpgrade(false);
-      } catch (err: any) {
-        setError(err?.response?.data?.detail?.message || err?.message || "Upgrade failed");
+      } catch (caught) {
+        const err = asApiError(caught);
+        setError(detailText(err) || err?.message || "Upgrade failed");
       }
     },
     [createWorkspace, queryClient, refreshWorkspaces]
@@ -134,8 +137,8 @@ export default function WorkspaceBillingPage() {
   }
 
   const isPaid = sub?.has_subscription && sub.status === "active";
-  const isCancelPending = isPaid && !!sub?.renews_at && (sub as any)?.cancel_at_period_end;
-  const hasScheduledDowngrade = !!(sub as any)?.scheduled_plan_name && !!(sub as any)?.scheduled_change_at;
+  const isCancelPending = isPaid && !!sub?.renews_at && sub?.cancel_at_period_end;
+  const hasScheduledDowngrade = !!sub?.scheduled_plan_name && !!sub?.scheduled_change_at;
 
   // ✅ FIX: "balance" is now specifically the SUBSCRIPTION balance
   // (resets each cycle, doesn't roll over) — previously this read
@@ -231,8 +234,8 @@ export default function WorkspaceBillingPage() {
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-cyan-500/15 bg-cyan-500/[0.05] px-4 py-3">
                   <div className="flex items-center gap-2 text-xs text-cyan-300">
                     <Clock className="h-3.5 w-3.5" />
-                    Switching to {(sub as any)?.scheduled_plan_name} on{" "}
-                    {formatDate((sub as any)?.scheduled_change_at)}.
+                    Switching to {sub?.scheduled_plan_name} on{" "}
+                    {formatDate(sub?.scheduled_change_at)}.
                   </div>
                 </div>
               )}

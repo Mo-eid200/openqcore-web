@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { PageHeader }        from "../../components/ui/PageHeader";
 import { ProjectsToolbar }   from "./ProjectsToolbar";
 import { ProjectsGrid }      from "./ProjectsGrid";
 import { CreateProjectModal } from "./CreateProjectModal";
@@ -11,7 +10,6 @@ import { CreateProjectModal } from "./CreateProjectModal";
 import {
   getConsoleProjects,
   createConsoleProject,
-  deleteConsoleProject,
   type ConsoleProject,
 } from "@/app/lib/api/console/projects";
 
@@ -87,16 +85,6 @@ export default function ProjectsPage() {
         [created, ...(old ?? [])]
       );
       setShowCreate(false);
-    },
-  });
-
-  // ── Delete ─────────────────────────────────────────────────────────────────
-  const { mutateAsync: doDelete } = useMutation({
-    mutationFn: deleteConsoleProject,
-    onSuccess: (_, id) => {
-      queryClient.setQueryData(["console-projects"], (old: ConsoleProject[] | undefined) =>
-        (old ?? []).filter(p => p.id !== id)
-      );
     },
   });
 

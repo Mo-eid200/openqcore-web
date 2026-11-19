@@ -5,37 +5,7 @@ import { useTranslations } from "next-intl";
 
 /* ─── Architecture node ───────────────────────────────────────────────────── */
 
-function ArchNode({
-  label,
-  variant = "default",
-}: {
-  label: string;
-  variant?: "default" | "accent" | "compact";
-}) {
-  if (variant === "accent") {
-    return (
-      <div className="inline-flex items-center justify-center rounded-2xl border border-[#d4af37]/30 bg-[#d4af37]/[0.08] px-7 py-3.5 text-base font-semibold text-[#f1d27a] shadow-[0_0_50px_rgba(212,175,55,0.12)]">
-        {label}
-      </div>
-    );
-  }
-  if (variant === "compact") {
-    return (
-      <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3.5 text-center text-[13px] font-medium text-slate-300 transition-colors duration-200 hover:border-[#d4af37]/20">
-        {label}
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-4 text-center transition-colors duration-200 hover:border-[#d4af37]/20">
-      <span className="text-sm font-semibold text-[#f1f5f9]">{label}</span>
-    </div>
-  );
-}
 
-function Connector({ height = "h-10" }: { height?: string }) {
-  return <div className={`mx-auto ${height} w-px bg-gradient-to-b from-[#d4af37]/40 to-transparent`} />;
-}
 
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 

@@ -1,13 +1,19 @@
 import { qxtChatClient } from "../core/qxtClient";
-import { API_BASE } from "../config";
+
+import { asApiError, detailText } from "@/app/lib/errors";
 
 /* ======================================================
    TYPES
 ====================================================== */
 
+// One part of a multimodal message as the completions API expects it.
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
 export type ChatMessage = {
   role: "user" | "assistant" | "system";
-  content: any;
+  content: string;
   images?: string[] | null;
   videos?: string[] | null;
   documents?: Array<{
@@ -26,7 +32,7 @@ export type ChatMessage = {
 export type ChatCompletionRequest = {
   session_id: string;
   model: string;
-  messages: ChatMessage[];
+  messages: Array<{ role: ChatMessage["role"]; content: string | ContentPart[] }>;
   stream?: boolean;
   temperature?: number;
   max_tokens?: number;
@@ -162,13 +168,8 @@ export async function createChatCompletion(
 
     console.log(`📤 Sending message to session ${session_id}`);
 
-    console.log("🔥 HERE 1");
-
-    console.log("🔥 RAW MESSAGES =>", JSON.stringify(messages, null, 2));
-
-
     const sanitizedMessages = messages.map((m) => {
-      const content: any[] = [];
+      const content: ContentPart[] = [];
 
       // text
       if (m.content?.trim()) {
@@ -194,15 +195,6 @@ export async function createChatCompletion(
       };
     });
 
-    console.log(
-      "🔥 SANITIZED =>",
-      JSON.stringify(sanitizedMessages, null, 2)
-    );
-
-    console.log("🔥 RAW MESSAGES", messages);
-    console.log("🔥 SANITIZED", sanitizedMessages);
-
-
     const payload: ChatCompletionRequest = {
       session_id,
       model: options?.model || "pulse-core",
@@ -211,7 +203,6 @@ export async function createChatCompletion(
       temperature: options?.temperature,
       max_tokens: options?.max_tokens,
     };
-    console.log("🔥 PAYLOAD", JSON.stringify(payload, null, 2));
 
     const { data } = await qxtChatClient.post(
       "/api/v1/chat/completions",
@@ -235,9 +226,11 @@ export async function createChatCompletion(
       images,
       videos,
     };
-  } catch (err: any) {
+  } catch (caught) {
+    const err = asApiError(caught);
     const status = err?.response?.status;
-    const detail = err?.response?.data?.detail;
+    const rawDetail = err.response?.data?.detail;
+    const detail = typeof rawDetail === "object" ? rawDetail : undefined;
 
     console.error("❌ Chat completion failed:", err);
 
@@ -246,7 +239,7 @@ export async function createChatCompletion(
     }
 
     if (status === 429 || detail?.code === "QUOTA_EXCEEDED") {
-      const limit = detail?.limit || 3;
+      const limit = Number(detail?.limit) || 3;
       throw new Error(
         `Daily limit reached (${limit}/${limit}). Please upgrade.`
       );
@@ -257,7 +250,7 @@ export async function createChatCompletion(
     }
 
     throw new Error(
-      detail?.message || detail?.code || `Chat failed: ${status}`
+      detailText(err) || detail?.code || `Chat failed: ${status}`
     );
   }
 }

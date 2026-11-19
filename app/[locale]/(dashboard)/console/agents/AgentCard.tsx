@@ -3,16 +3,11 @@
 import React, { useState } from "react";
 
 import {
-    Bot,
-    BrainCircuit,
     CalendarClock,
     ChevronRight,
-    Cpu,
     Database,
-    FolderKanban,
     MessageSquare,
     Pencil,
-    Sparkles,
     Trash2,
     Zap,
 } from "lucide-react";
@@ -24,32 +19,11 @@ import type {
     Agent,
 } from "./types";
 import { CHAT_URL } from "@/app/lib/env";
+import { AgentIcon } from "@/app/[locale]/(dashboard)/components/ui/AgentIcon";
 
 // =========================================================
 // ICON RESOLVER
 // =========================================================
-
-function resolveIcon(
-    icon?: string,
-) {
-    switch (icon) {
-        case "sparkles":
-            return Sparkles;
-
-        case "folder-kanban":
-            return FolderKanban;
-
-        case "brain":
-            return BrainCircuit;
-
-        case "bot":
-            return Bot;
-
-        case "cpu":
-        default:
-            return Cpu;
-    }
-}
 
 // =========================================================
 // HELPERS
@@ -110,11 +84,6 @@ export default function AgentCard({
     onChat,
     onOpenDetails,
 }: Props) {
-    const Icon =
-        resolveIcon(
-            agent.icon
-        );
-
     const [showLinker, setShowLinker] = useState(false);
 
     const chatBase =
@@ -438,7 +407,7 @@ export default function AgentCard({
                             "
                         />
 
-                        <Icon
+                        <AgentIcon icon={agent.icon}
                             className="
                                 relative
 

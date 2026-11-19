@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+// locale-aware: "/" stays in the visitor's language instead of bouncing through a redirect
+import { useRouter } from "@/i18n/navigation";
 
 /**
  * 🔧 NEW: shows a clear "your session has expired" banner instead of
@@ -20,10 +22,16 @@ export default function SessionExpiredNotice() {
   const searchParams = useSearchParams();
   const [visible, setVisible] = useState(false);
 
+  // Show the banner when the flag arrives (adjusted while rendering).
+  const expired = searchParams.get("session_expired") === "true";
+  const [seenFlag, setSeenFlag] = useState(false);
+  if (expired !== seenFlag) {
+    setSeenFlag(expired);
+    if (expired) setVisible(true);
+  }
+
   useEffect(() => {
     if (searchParams.get("session_expired") !== "true") return;
-
-    setVisible(true);
 
     // Strip the query param so a page refresh doesn't re-trigger the
     // banner.
@@ -31,11 +39,17 @@ export default function SessionExpiredNotice() {
     params.delete("session_expired");
     const cleanQuery = params.toString();
     router.replace(cleanQuery ? `/?${cleanQuery}` : "/", { scroll: false });
-
-    const timer = setTimeout(() => setVisible(false), 6000);
-    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Hide after 6 seconds. Its own effect: the replace above changes the
+  // search params, which used to cancel a timer kept in that effect and
+  // left the banner up for good.
+  useEffect(() => {
+    if (!visible) return;
+    const timer = setTimeout(() => setVisible(false), 6000);
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   if (!visible) return null;
 

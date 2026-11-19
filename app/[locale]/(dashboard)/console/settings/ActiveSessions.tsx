@@ -15,6 +15,7 @@ import {
   revokeSession,
   type UserSession,
 } from "@/app/lib/api/auth/sessions.api";
+import { asApiError } from "@/app/lib/errors";
 
 function formatRelativeTime(iso: string | null): string {
   if (!iso) return "—";
@@ -81,7 +82,8 @@ export function ActiveSessions() {
         ["auth-sessions"],
         (prev) => prev?.filter((s) => s.id !== id) ?? []
       );
-    } catch (err: any) {
+    } catch (caught) {
+      const err = asApiError(caught);
       setError(err.message || "Failed to sign out this session.");
     } finally {
       setRevokingId(null);

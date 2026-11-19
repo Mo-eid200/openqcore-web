@@ -66,7 +66,7 @@ export function WorkspaceUpgradeModal({
   currentPlanId,
   onUpgrade,
 }: Props): React.ReactNode {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pickedId, setSelectedId] = useState<number | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
 
@@ -98,14 +98,18 @@ export function WorkspaceUpgradeModal({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [open, onClose]);
 
-  useEffect(() => {
+  // A fresh form on each opening (and if the workspace list changes while
+  // open); adjusted while rendering, not in an effect.
+  const [formFor, setFormFor] = useState({ open, workspaces });
+  if (formFor.open !== open || formFor.workspaces !== workspaces) {
+    setFormFor({ open, workspaces });
     if (open) {
       setSelectedId(null);
       setTargetMode(workspaces.length > 0 ? "existing" : "new");
       setSelectedWorkspaceId(workspaces[0]?.id ?? null);
       setNewWorkspaceName("");
     }
-  }, [open, workspaces]);
+  }
 
   const filteredPlans = useMemo(() => {
     let list = plans
@@ -120,11 +124,11 @@ export function WorkspaceUpgradeModal({
     return list;
   }, [plans]);
 
-  useEffect(() => {
-    if (filteredPlans.length > 0 && !selectedId) {
-      setSelectedId(filteredPlans[0].id);
-    }
-  }, [filteredPlans, selectedId]);
+  // the cheapest plan until the user picks one
+  const selectedId =
+    pickedId !== null && filteredPlans.some((plan) => plan.id === pickedId)
+      ? pickedId
+      : (filteredPlans[0]?.id ?? null);
 
   if (!open) return null;
 
@@ -461,7 +465,7 @@ export function WorkspaceUpgradeModal({
                   {isDowngrade && (
                     <div className="flex items-center gap-1.5 text-[11px] text-red-300/80">
                       <ArrowDownCircle className="w-3 h-3" />
-                      You'll keep {currentPlan?.name}'s features until your next renewal
+                      You&apos;ll keep {currentPlan?.name}&apos;s features until your next renewal
                     </div>
                   )}
                   {targetMode === "new" && !newWorkspaceName.trim() && (

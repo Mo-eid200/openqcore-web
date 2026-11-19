@@ -9,7 +9,8 @@ import {
   setupMfa,
   verifyMfaSetup,
   disableMfa,
-} from "@/app/lib/api/auth/mfa.api";
+} from "@/app/lib/api/auth/mfa.api";
+import { errorMessage } from "@/app/lib/errors";
 
 type View = "status" | "setup-qr" | "setup-codes" | "disable";
 type Accent = "red" | "amber";
@@ -84,8 +85,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       setOtpauthUri(data.otpauth_uri);
       setSetupCode("");
       setView("setup-qr");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -99,8 +100,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       const data = await verifyMfaSetup(setupCode.trim());
       setBackupCodes(data.backup_codes);
       setView("setup-codes");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
       setSetupCode("");
     } finally {
       setSubmitting(false);
@@ -128,8 +129,8 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
       setDisablePassword("");
       setDisableCode("");
       setView("status");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (caught) {
+      setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +220,7 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
                 </button>
               </div>
               <p className="text-xs text-white/40">
-                Use Google Authenticator, Authy, or any TOTP app. Can't scan? Enter the code manually below.
+                Use Google Authenticator, Authy, or any TOTP app. Can&apos;t scan? Enter the code manually below.
               </p>
 
               <motion.div
@@ -283,7 +284,7 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
               </div>
               <p className="text-xs text-white/40">
                 Save these backup codes somewhere safe. Each one can be used once if you lose access to your
-                authenticator app — they won't be shown again.
+                authenticator app — they won&apos;t be shown again.
               </p>
 
               <div className="grid grid-cols-2 gap-2 rounded-xl bg-white/[0.03] p-4 font-mono text-sm text-white/80">
@@ -300,7 +301,7 @@ export function MFASettings({ accent = "red" }: { accent?: Accent }) {
               </button>
 
               <button onClick={handleFinishSetup} className={`${primaryBtnCls} w-full`}>
-                I've saved these codes
+                I&apos;ve saved these codes
               </button>
             </motion.div>
           )}

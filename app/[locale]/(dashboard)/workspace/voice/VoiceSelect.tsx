@@ -103,7 +103,7 @@ export default function VoiceSelect({
         <div className="max-h-[320px] overflow-y-auto p-1">
           {grouped.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-zinc-500">
-              No voices match "{query}"
+              No voices match &quot;{query}&quot;
             </p>
           )}
 
