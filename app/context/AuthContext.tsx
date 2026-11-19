@@ -20,7 +20,6 @@ import {
 
 import {
   fetchBootstrap,
-  fetchMyApiKey,
   apiLogin,
   apiRegister,
   verifyMfaLogin as apiVerifyMfaLogin,
@@ -54,7 +53,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser]               = useState<AuthUser | null>(null);
-  const [apiKey, setApiKey]           = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
   const mountedRef = useRef(true);
@@ -76,7 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logoutSideEffects();
       if (mountedRef.current) {
         setUser(null);
-        setApiKey(null);
         setLoadingUser(false);
       }
       return;
@@ -110,10 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(bootstrap.user);
         setLoadingUser(false);
 
-        const k = await fetchMyApiKey();
-        if (cancelled || !mountedRef.current) return;
-        setApiKey(k);
-
       } catch (error: any) {
         if (cancelled || !mountedRef.current) return;
 
@@ -121,10 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           logoutSideEffects();
           invalidateAuthCache();
           setUser(null);
-          setApiKey(null);
         } else {
           setUser(null);
-          setApiKey(null);
         }
 
         setLoadingUser(false);
@@ -135,15 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+  //
+  // The user's API keys are no longer fetched into the browser on every page
+  // load: nothing used them, and a secret that is never loaded cannot leak.
+  // The API-keys page asks for them when it is opened.
 
   async function refreshMeAndKeys() {
     const bootstrap = await fetchBootstrap(true);
     if (!bootstrap || !mountedRef.current) return;
     setUser(bootstrap.user);
-
-    const k = await fetchMyApiKey(true);
-    if (!mountedRef.current) return;
-    setApiKey(k);
   }
 
   async function setAuthFromToken(token: string) {
@@ -160,7 +151,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         invalidateAuthCache();
         if (mountedRef.current) {
           setUser(null);
-          setApiKey(null);
         }
       }
       throw error;
@@ -216,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     invalidateAuthCache();
     if (mountedRef.current) {
       setUser(null);
-      setApiKey(null);
       setLoadingUser(false);
     }
   }
@@ -226,7 +215,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      apiKey,
       loadingUser,
       login,
       verifyMfaLogin,
@@ -235,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthFromToken,
       refreshMeAndKeys,
     }),
-    [user, apiKey, loadingUser]
+    [user, loadingUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

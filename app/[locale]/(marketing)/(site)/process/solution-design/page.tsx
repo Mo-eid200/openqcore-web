@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ArchitectureImage from "../../../components/ArchitectureImage";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
@@ -160,6 +160,7 @@ export default async function SolutionDesignPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const specificationTypes = [
@@ -369,7 +370,7 @@ export default async function SolutionDesignPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/solution-design/architecture-to-specification.png"
+              src="/images/process/solution-design/architecture-to-specification.webp"
               alt="Reference architecture decomposing into workflow, interface, data contract and behavioral specifications, converging into a draft solution specification"
               width={1792}
               height={1008}
@@ -434,7 +435,7 @@ export default async function SolutionDesignPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/solution-design/workflow-human-in-the-loop.png"
+              src="/images/process/solution-design/workflow-human-in-the-loop.webp"
               alt="Workflow diagram with an automated lane and a human lane, showing explicit human-in-the-loop handoff points"
               width={1792}
               height={1008}
@@ -516,7 +517,7 @@ export default async function SolutionDesignPage({
             </div>
 
             <ArchitectureImage
-              src="/images/process/solution-design/prototype-test-refine-loop.png"
+              src="/images/process/solution-design/prototype-test-refine-loop.webp"
               alt="Closed loop: design, prototype, test with representative data, measure against baseline, refine or reject"
               width={1200}
               height={1400}
@@ -673,7 +674,7 @@ export default async function SolutionDesignPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/solution-design/design-review-gate.png"
+              src="/images/process/solution-design/design-review-gate.webp"
               alt="Design review gate branching into proceed to build, iterate design, return to architecture, or escalate risk"
               width={1792}
               height={1008}

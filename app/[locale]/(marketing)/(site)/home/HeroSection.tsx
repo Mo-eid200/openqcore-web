@@ -80,7 +80,7 @@ export default function HeroSection() {
 
           <div className="mt-6 mb-6 flex justify-center">
             <Image
-              src="/engines/corelogo.png"
+              src="/engines/corelogo.webp"
               alt="OpenQCore"
               width={128}
               height={128}

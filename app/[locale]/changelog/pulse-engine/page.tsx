@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import Header from "../../(marketing)/components/Header";
@@ -13,6 +13,7 @@ type PageProps = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "changelog_pulse_engine.seo" });
+  const en = await getTranslations({ locale: "en", namespace: "changelog_pulse_engine.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: t("og_description"),
       type: "website",
       url: localizedUrl(locale, "/changelog/pulse-engine"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/changelog/pulse-engine"),
   };
@@ -33,6 +35,7 @@ const body = "text-sm md:text-[15px] leading-8 text-slate-300";
 
 export default async function PulseEnginePremiumPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "changelog_pulse_engine" });
 
   const lifecycle = ["understand", "decide", "execute"] as const;
@@ -84,7 +87,7 @@ export default async function PulseEnginePremiumPage({ params }: PageProps) {
                   <div className="absolute -inset-3 rounded-3xl bg-[#d4af37]/10 blur-2xl" />
                   <div className="relative">
                                  <ImageWithLightbox
-  src="/engines/pulse-logo.png"
+  src="/engines/pulse-logo.webp"
   alt="Pulse Engine Banner"
   width={780}
   height={520}
@@ -136,7 +139,7 @@ export default async function PulseEnginePremiumPage({ params }: PageProps) {
 
               
              <ImageWithLightbox
-  src="/engines/pulse-banner-main.png"
+  src="/engines/pulse-banner-main.webp"
   alt="Pulse Engine Banner"
   width={1600}
   height={700}

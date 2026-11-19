@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
@@ -9,6 +9,7 @@ type PageProps = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "company_about_page.seo" });
+  const en = await getTranslations({ locale: "en", namespace: "company_about_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/company/about"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/company/about"),
   };
@@ -84,6 +86,7 @@ function CardIcon({ children }: { children: React.ReactNode }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default async function CompanyAboutPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "company_about_page" });
 
   const whatWeBuild  = ["ai_platforms", "research_systems", "intelligent_infrastructure", "foundation_initiatives"] as const;
@@ -143,7 +146,7 @@ export default async function CompanyAboutPage({ params }: PageProps) {
     {/* frame */}
     <div className="relative rounded-[20px] border border-white/10 bg-[#0b1222] p-3">
       <ImageWithLightbox
-        src="/engines/openqcore-logo-full-light.png"
+        src="/engines/openqcore-logo-full-light.webp"
         alt="OpenQCore Logo"
         width={960}
         height={960}

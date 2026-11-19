@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { pageAlternates, localizedUrl } from "@/app/lib/seo/alternates";
+import { pageAlternates, pageOpenGraph } from "@/app/lib/seo/alternates";
 
 // The page is a client component, so its metadata lives here.
 export async function generateMetadata(
@@ -9,11 +9,17 @@ export async function generateMetadata(
   const { locale } = await params;
   const meta: Metadata = {
     alternates: pageAlternates(locale, "/company/legal/terms"),
-    openGraph: { url: localizedUrl(locale, "/company/legal/terms") },
+    openGraph: pageOpenGraph(locale, "/company/legal/terms"),
   };
-  const t = await getTranslations({ locale, namespace: 'terms_page' });
+  const t = await getTranslations({ locale, namespace: "terms_page" });
   if (t.has("seo.title")) meta.title = t("seo.title");
   if (t.has("seo.description")) meta.description = t("seo.description");
+  if (meta.title || meta.description) {
+    meta.openGraph = pageOpenGraph(locale, "/company/legal/terms", {
+      ...(meta.title ? { title: String(meta.title) } : {}),
+      ...(meta.description ? { description: String(meta.description) } : {}),
+    });
+  }
   return meta;
 }
 

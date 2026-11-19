@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -62,6 +62,7 @@ export default async function InfrastructurePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const aiStack = [
@@ -89,22 +90,22 @@ export default async function InfrastructurePage({
       role: t("infrastructure_page.engines.pulse.role"),
       desc: t("infrastructure_page.engines.pulse.description"),
       accent: "border-[#d4af37]/25",
-      logo: "/engines/pulse-logo1.png"
+      logo: "/engines/pulse-logo1.webp"
     },
     {
       name: t("infrastructure_page.engines.iris.title"),
       role: t("infrastructure_page.engines.iris.role"),
       desc: t("infrastructure_page.engines.iris.description"),
       accent: "border-[#8b5cf6]/25",
-      logo: "/engines/iris-logo.png"
+      logo: "/engines/iris-logo.webp"
     }
   ];
 
   const logos = [
-    { name: t("infrastructure_page.identity.pulse"), src: "/engines/pulse-logo1.png" },
-    { name: t("infrastructure_page.identity.iris"), src: "/engines/iris-logo.png" },
-    { name: t("infrastructure_page.identity.memory"), src: "/engines/memory-logo.png" },
-    { name: t("infrastructure_page.identity.runtime"), src: "/engines/runtime-logo.png" }
+    { name: t("infrastructure_page.identity.pulse"), src: "/engines/pulse-logo1.webp" },
+    { name: t("infrastructure_page.identity.iris"), src: "/engines/iris-logo.webp" },
+    { name: t("infrastructure_page.identity.memory"), src: "/engines/memory-logo.webp" },
+    { name: t("infrastructure_page.identity.runtime"), src: "/engines/runtime-logo.webp" }
   ];
 
   return (

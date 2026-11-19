@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 
 type PageProps = {
@@ -6,6 +7,7 @@ type PageProps = {
 
 export default async function InfrastructureRedirectPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
 
   redirect({
     href: "/platform/infrastructure",

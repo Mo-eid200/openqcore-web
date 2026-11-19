@@ -169,7 +169,7 @@ export function PersonalUpgradeModal({ open, onClose, onUpgrade, currentPlanId }
               <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="relative h-[64px] w-[64px] shrink-0">
-                    <Image src="/oqc-logo.png" alt="OpenQCore" fill priority sizes="48px" className="object-contain" />
+                    <Image src="/oqc-logo.webp" alt="OpenQCore" fill priority sizes="48px" className="object-contain" />
                   </div>
                   <div>
                     <h2 className="text-[24px] font-semibold tracking-tight text-white">Upgrade your plan</h2>

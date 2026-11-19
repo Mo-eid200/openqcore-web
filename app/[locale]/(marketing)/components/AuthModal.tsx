@@ -322,7 +322,7 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
               {/* ── Left ── */}
               <aside className="relative flex flex-col justify-center px-14 py-14 bg-[#0f1725] border-r border-white/5">
                 <div className="flex flex-col items-center gap-4 w-full">
-                  <Image src="/oqc-logo.png" alt="OpenQCore" width={120} height={120} priority className="mx-auto" />
+                  <Image src="/oqc-logo.webp" alt="OpenQCore" width={120} height={120} priority className="mx-auto" />
 
                   <h2 className="font-extrabold text-[22px] text-center text-white tracking-tight">
                     OpenQCore <span className="text-[#d4af37]">AI</span>

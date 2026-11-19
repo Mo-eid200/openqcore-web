@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -69,6 +69,7 @@ export default async function PulseEnginePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "pulse_engine_page" });
 
   const metrics = [
@@ -185,13 +186,13 @@ export default async function PulseEnginePage({
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <article className="rounded-3xl border border-[#d4af37]/25 bg-[#0b1222] p-8">
-              <Image className="mb-5" src="/engines/pulse-logo.png" alt={t("interop.pulse.logo_slot")} width={180} height={180} />
+              <Image className="mb-5" src="/engines/pulse-logo.webp" alt={t("interop.pulse.logo_slot")} width={180} height={180} />
               <h3 className="text-2xl font-bold">{t("interop.pulse.title")}</h3>
               <p className="mt-3 text-slate-400">{t("interop.pulse.body")}</p>
             </article>
 
             <article className="rounded-3xl border border-[#8b5cf6]/25 bg-[#0b1222] p-8">
-              <Image className="mb-5" src="/engines/iris-logo.png" alt={t("interop.iris.logo_slot")} width={160} height={160} />
+              <Image className="mb-5" src="/engines/iris-logo.webp" alt={t("interop.iris.logo_slot")} width={160} height={160} />
               <h3 className="text-2xl font-bold">{t("interop.iris.title")}</h3>
               <p className="mt-3 text-slate-400">{t("interop.iris.body")}</p>
             </article>

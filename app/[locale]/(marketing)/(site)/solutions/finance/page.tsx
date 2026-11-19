@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -246,6 +246,7 @@ export default async function FinancePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const operationsCapabilityKeys = [
@@ -415,7 +416,7 @@ export default async function FinancePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/finance/financial-intelligence-loop.png"
+              src="/images/finance/financial-intelligence-loop.webp"
               alt="OpenQCore closed-loop financial intelligence architecture"
               priority
             />
@@ -560,7 +561,7 @@ export default async function FinancePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/finance/fraud-entity-graph.png"
+              src="/images/finance/fraud-entity-graph.webp"
               alt="OpenQCore fraud and financial crime entity graph connecting accounts, transactions and devices to investigation workflows"
             />
           </div>
@@ -660,7 +661,7 @@ export default async function FinancePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/finance/payments-lifecycle.png"
+              src="/images/finance/payments-lifecycle.webp"
               alt="OpenQCore intelligence across the payment lifecycle from initiation to monitoring"
             />
           </div>
@@ -773,7 +774,7 @@ export default async function FinancePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/finance/financial-ai-architecture.png"
+              src="/images/finance/financial-ai-architecture.webp"
               alt="OpenQCore financial AI architecture across interfaces, intelligence core, data and core systems"
               light
             />
@@ -805,7 +806,7 @@ export default async function FinancePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/finance/model-risk-governance-framework.png"
+              src="/images/finance/model-risk-governance-framework.webp"
               alt="OpenQCore model risk and governance framework: observe, analyze, recommend, authorize, execute, monitor"
             />
           </div>

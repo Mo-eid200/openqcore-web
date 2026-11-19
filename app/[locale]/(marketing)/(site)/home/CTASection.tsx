@@ -81,7 +81,7 @@ export default function CTASection() {
 
           <div className="mt-14 flex justify-center">
             <Image
-              src="/oqc-logo.png"
+              src="/oqc-logo.webp"
               alt="OpenQCore"
               width={112}
               height={112}

@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -207,6 +207,7 @@ export default async function MonitoringOptimizationPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const goldenSignals = ["latency", "traffic", "errors", "saturation"];
@@ -427,7 +428,7 @@ export default async function MonitoringOptimizationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/monitoring-optimization/signals-to-understanding.png"
+              src="/images/process/monitoring-optimization/signals-to-understanding.webp"
               alt="Logs, metrics and traces feeding into dashboards, which feed into alerts, which feed into insight"
               width={1400}
               height={650}
@@ -541,7 +542,7 @@ export default async function MonitoringOptimizationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/monitoring-optimization/continuous-feedback-loop.png"
+              src="/images/process/monitoring-optimization/continuous-feedback-loop.webp"
               alt="The six-stage OpenQCore methodology as a closed loop, with monitoring and optimization feeding evidence back into research and discovery"
               width={1300}
               height={1300}
@@ -670,7 +671,7 @@ export default async function MonitoringOptimizationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/monitoring-optimization/optimization-review-gate.png"
+              src="/images/process/monitoring-optimization/optimization-review-gate.webp"
               alt="Optimization review gate branching into continue monitoring, optimize, re-enter discovery, or deprecate"
               width={1200}
               height={650}

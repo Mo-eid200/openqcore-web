@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 
@@ -206,6 +206,7 @@ export default async function ResearchDiscoveryPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const methodologySteps = [
@@ -402,7 +403,7 @@ export default async function ResearchDiscoveryPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/research-discovery/technology-first-vs-evidence-first.png"
+              src="/images/process/research-discovery/technology-first-vs-evidence-first.webp"
               alt="Comparison between a technology-first sequence and OpenQCore's evidence-first discovery sequence"
               width={1200}
               height={600}
@@ -487,7 +488,7 @@ export default async function ResearchDiscoveryPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/research-discovery/three-lenses-venn.png"
+              src="/images/process/research-discovery/three-lenses-venn.webp"
               alt="Scientific reasoning, systems and engineering, and business and operations converging on evidence-based engineering"
               width={800}
               height={600}
@@ -624,7 +625,7 @@ export default async function ResearchDiscoveryPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/research-discovery/discovery-cycle.png"
+              src="/images/process/research-discovery/discovery-cycle.webp"
               alt="OpenQCore discovery cycle: observe, analyze, map, hypothesize, validate, define, feeding into strategy and architecture"
               width={1000}
               height={600}
@@ -678,7 +679,7 @@ export default async function ResearchDiscoveryPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/research-discovery/root-cause-chain.png"
+              src="/images/process/research-discovery/root-cause-chain.webp"
               alt="Root cause chain from an observed condition through workflow, system and data evidence to a root-cause hypothesis"
               width={1000}
               height={600}
@@ -987,7 +988,7 @@ export default async function ResearchDiscoveryPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/research-discovery/discovery-decision-gate.png"
+              src="/images/process/research-discovery/discovery-decision-gate.webp"
               alt="Discovery decision gate branching into proceed, investigate further, reframe, redesign the approach, or do not build"
               width={1200}
               height={600}

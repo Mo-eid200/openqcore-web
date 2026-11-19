@@ -58,7 +58,7 @@ export default function ContactPage() {
           <div className="relative w-full">
             <div className="pointer-events-none absolute -inset-2 rounded-[20px] bg-[#d4af37]/[0.04] blur-xl" />
             <ImageWithLightbox
-              src="/engines/contact-banner.png"
+              src="/engines/contact-banner.webp"
               alt="OpenQCore Contact"
               width={1800}
               height={900}

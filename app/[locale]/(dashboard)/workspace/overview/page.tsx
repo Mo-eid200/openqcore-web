@@ -77,7 +77,7 @@ export default function OverviewPage() {
         <User className="w-5 h-5 text-black" />
       </div>
     ) : (
-      <img src="/icons/workspace.png" alt="Workspace" className="w-32 h-32 object-contain" />
+      <img src="/icons/workspace.webp" alt="Workspace" className="w-32 h-32 object-contain" />
     )}
     <div>
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">

@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -207,6 +207,7 @@ export default async function DevelopmentIntegrationPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const implementationElements = [
@@ -435,7 +436,7 @@ export default async function DevelopmentIntegrationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/development-integration/testing-pyramid.png"
+              src="/images/process/development-integration/testing-pyramid.webp"
               alt="Testing pyramid: a wide base of unit tests, a narrower layer of integration tests, and a small top layer of end-to-end tests"
               width={900}
               height={700}
@@ -547,7 +548,7 @@ export default async function DevelopmentIntegrationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/development-integration/ci-pipeline.png"
+              src="/images/process/development-integration/ci-pipeline.webp"
               alt="Continuous integration pipeline: commit, automated build, unit and integration tests, static and security analysis, contract verification, ready for deployment"
               width={1400}
               height={650}
@@ -634,7 +635,7 @@ export default async function DevelopmentIntegrationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/development-integration/verification-gate.png"
+              src="/images/process/development-integration/verification-gate.webp"
               alt="Integration verification gate branching into ready for deployment, return for fixes, return to design, or escalate risk"
               width={1200}
               height={650}

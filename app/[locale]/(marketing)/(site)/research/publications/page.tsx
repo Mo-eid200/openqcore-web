@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -8,6 +8,7 @@ type PageProps = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "research_publications_page.seo" });
+  const en = await getTranslations({ locale: "en", namespace: "research_publications_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/research/publications"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/research/publications"),
   };
@@ -28,6 +30,7 @@ const wrap = "mx-auto w-full max-w-[1400px] px-6 lg:px-8";
 
 export default async function ResearchPublicationsPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "research_publications_page" });
 
   return (

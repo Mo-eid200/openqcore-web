@@ -438,7 +438,7 @@ export default function LiveAISection() {
             className="group inline-flex items-center"
           >
             <Image
-              src="/engines/try-qxt-chat.png"
+              src="/engines/try-qxt-chat.webp"
               alt={t("try_qxt_alt")}
               width={288}
               height={288}

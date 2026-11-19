@@ -497,7 +497,7 @@ export function UpgradeModal({
                     "
                   >
                     <Image
-                      src="/oqc-logo.png"
+                      src="/oqc-logo.webp"
                       alt="OpenQCore"
                       fill
                       priority

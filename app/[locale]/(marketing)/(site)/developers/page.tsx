@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ImageWithLightbox from "../../components/common/ImageWithLightbox";
 import {
@@ -18,6 +18,7 @@ export async function generateMetadata({
     locale,
     namespace: "developers_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "developers_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -31,6 +32,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/developers"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/developers"),
   };
@@ -67,6 +69,7 @@ const softCard =
 
 export default async function DevelopersPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "developers_page",
@@ -288,7 +291,7 @@ export default async function DevelopersPage({ params }: PageProps) {
             <div className="lg:col-span-5">
               <div className={softCard + " p-2"}>
                 <ImageWithLightbox
-                  src="/engines/pulse-logo.png"
+                  src="/engines/pulse-logo.webp"
                   alt="Pulse Engine v1.0"
                   width={1400}
                   height={1000}

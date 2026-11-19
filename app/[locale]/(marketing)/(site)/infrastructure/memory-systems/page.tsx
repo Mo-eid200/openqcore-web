@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -63,6 +63,7 @@ export default async function MemorySystemsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "memory_systems_page" });
 
   const metrics = [
@@ -147,7 +148,7 @@ export default async function MemorySystemsPage({
 
           <div className="rounded-3xl border border-white/[0.10] bg-[#0b1222] p-8">
             <Image
-              src="/engines/memory-logo.png"
+              src="/engines/memory-logo.webp"
               alt={t("identity.logo_alt")}
               width={220}
               height={220}

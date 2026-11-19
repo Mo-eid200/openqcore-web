@@ -597,7 +597,7 @@ export default function TermsPage() {
                   {/* mini logo mark */}
                   <div className="flex items-center gap-2 opacity-60">
                     <Image
-                      src="/oqc-logo.png"
+                      src="/oqc-logo.webp"
                       alt="OpenQCore"
                       width={60}
                       height={60}

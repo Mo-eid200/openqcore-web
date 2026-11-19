@@ -166,7 +166,7 @@ export default function Footer() {
   const socialLinks = [
     {
       label: "GitHub",
-      href: "https://github.com",
+      href: "https://github.com/Open-QCore/openqcore-platform-overview",
       icon: FaGithub,
     },
     {
@@ -176,7 +176,7 @@ export default function Footer() {
     },
     {
       label: "LinkedIn",
-      href: "https://linkedin.com",
+      href: "https://www.linkedin.com/company/openqcore/home/",
       icon: FaLinkedinIn,
     },
     {
@@ -191,7 +191,7 @@ export default function Footer() {
     },
     {
       label: "Facebook",
-      href: "https://facebook.com",
+      href: "https://www.facebook.com/profile.php?id=61591431485321",
       icon: FaFacebookF,
     },
     {

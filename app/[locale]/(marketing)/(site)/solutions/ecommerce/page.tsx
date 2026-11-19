@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -245,6 +245,7 @@ export default async function EcommercePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const customerCapabilityKeys = [
@@ -385,7 +386,7 @@ export default async function EcommercePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/ecommerce/autonomous-commerce-loop.png"
+              src="/images/ecommerce/autonomous-commerce-loop.webp"
               alt="OpenQCore autonomous commerce loop connecting customer intent, personalization, purchase, fulfilment and commerce intelligence"
               priority
             />
@@ -525,7 +526,7 @@ export default async function EcommercePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/ecommerce/commerce-knowledge-graph.png"
+              src="/images/ecommerce/commerce-knowledge-graph.webp"
               alt="OpenQCore commerce knowledge graph connecting customer intent to products, categories, attributes, inventory, orders, reviews, content and promotions"
               light
             />
@@ -613,7 +614,7 @@ export default async function EcommercePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/ecommerce/order-fulfilment-lifecycle.png"
+              src="/images/ecommerce/order-fulfilment-lifecycle.webp"
               alt="OpenQCore intelligence across the order and fulfilment lifecycle from order to returns"
             />
           </div>
@@ -769,7 +770,7 @@ export default async function EcommercePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/ecommerce/commerce-ai-architecture.png"
+              src="/images/ecommerce/commerce-ai-architecture.webp"
               alt="OpenQCore commerce AI architecture across interfaces, intelligence core, data layer and commerce systems"
               light
             />
@@ -802,7 +803,7 @@ export default async function EcommercePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/ecommerce/autonomy-scale.png"
+              src="/images/ecommerce/autonomy-scale.webp"
               alt="OpenQCore commerce autonomy scale: assist, recommend, optimize, orchestrate, execute"
             />
           </div>

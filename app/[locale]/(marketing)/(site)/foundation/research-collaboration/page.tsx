@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 import {
   PrimaryCTA,
@@ -19,6 +19,7 @@ export async function generateMetadata({
     locale,
     namespace: "foundation_research_collaboration_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "foundation_research_collaboration_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -32,6 +33,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/foundation/research-collaboration"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/foundation/research-collaboration"),
   };
@@ -59,6 +61,7 @@ export default async function ResearchCollaborationPage({
   params,
 }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "foundation_research_collaboration_page",
@@ -144,7 +147,7 @@ export default async function ResearchCollaborationPage({
                 <div className="absolute -inset-5 rounded-[30px] bg-[#d4af37]/10 blur-2xl" />
                 <div className="relative rounded-[26px] border border-white/[0.08] bg-[#0b1222]/85 p-2.5 shadow-[0_20px_70px_rgba(0,0,0,0.28)]">
                   <ImageWithLightbox
-                    src="/engines/openqcore-research-collaboration-hero.png"
+                    src="/engines/openqcore-research-collaboration-hero.webp"
                     alt="OpenQCore Research Collaboration"
                     width={1400}
                     height={1000}

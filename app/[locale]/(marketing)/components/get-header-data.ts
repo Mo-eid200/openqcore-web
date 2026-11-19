@@ -72,7 +72,7 @@ export function getHeaderData(
           title: t("navbar.platform_card_title"),
           desc: t("navbar.platform_card_desc"),
           href: "/platform",
-          image: "/engines/platform-card.png",
+          image: "/engines/platform-card.webp",
         },
       },
 
@@ -130,7 +130,7 @@ export function getHeaderData(
           title: t("navbar.pulse_card_title"),
           desc: t("navbar.pulse_card_desc"),
           href: "/infrastructure/pulse-engine",
-          image: "/engines/pulse-logo.png",
+          image: "/engines/pulse-logo.webp",
         },
       },
 
@@ -311,7 +311,7 @@ export function getHeaderData(
           title: t("navbar.research_card_title"),
           desc: t("navbar.research_card_desc"),
           href: "/research/publications",
-          image: "/engines/research-card.png",
+          image: "/engines/research-card.webp",
         },
       },
 

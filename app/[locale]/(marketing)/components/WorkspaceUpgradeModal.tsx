@@ -227,7 +227,7 @@ export function WorkspaceUpgradeModal({
               <div className="flex flex-col items-center text-center gap-3">
                 <div className="flex items-center gap-3">
                   <div className="relative h-[40px] w-[40px] shrink-0">
-                    <Image src="/oqc-logo.png" alt="OpenQCore" fill priority sizes="40px" className="object-contain" />
+                    <Image src="/oqc-logo.webp" alt="OpenQCore" fill priority sizes="40px" className="object-contain" />
                   </div>
                   <div className="text-left">
                     <h2 className="text-[20px] font-semibold tracking-tight text-white leading-tight">

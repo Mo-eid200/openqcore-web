@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -136,6 +136,7 @@ export default async function StrategyArchitecturePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const discoveryInputs = [
@@ -289,7 +290,7 @@ export default async function StrategyArchitecturePage({
 
           <div className="mt-16">
             <ImageWithLightbox
-              src="/images/process/strategy-architecture/strategy-vs-architecture.png"
+              src="/images/process/strategy-architecture/strategy-vs-architecture.webp"
               alt="Strategy layer (business objectives, transformation roadmap) above the architecture layer (intelligent, scalable, secure, future-ready)"
               width={1400}
               height={1750}
@@ -385,7 +386,7 @@ export default async function StrategyArchitecturePage({
 
           <div className="mt-16">
             <ImageWithLightbox
-              src="/images/process/strategy-architecture/discovery-inputs-to-decisions.png"
+              src="/images/process/strategy-architecture/discovery-inputs-to-decisions.webp"
               alt="Requirements, constraints and risks, and success criteria from discovery converging into architecture decisions and a reference architecture"
               width={1792}
               height={1008}
@@ -424,7 +425,7 @@ export default async function StrategyArchitecturePage({
 
           <div className="mt-16">
             <ImageWithLightbox
-              src="/images/process/strategy-architecture/reference-architecture.png"
+              src="/images/process/strategy-architecture/reference-architecture.webp"
               alt="OpenQCore reference architecture: interfaces, intelligence layer, data layer and infrastructure layer, with security, governance, observability and scalability as cross-cutting concerns"
               width={1792}
               height={1024}
@@ -528,7 +529,7 @@ export default async function StrategyArchitecturePage({
 
           <div className="mt-16">
             <ImageWithLightbox
-              src="/images/process/strategy-architecture/architecture-decision-record.png"
+              src="/images/process/strategy-architecture/architecture-decision-record.webp"
               alt="Architecture decision record example: context, options considered, decision, trade-offs and consequences"
               width={1400}
               height={1120}

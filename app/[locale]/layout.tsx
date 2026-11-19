@@ -6,7 +6,10 @@ import { Suspense } from "react";
 import SessionExpiredNotice from "../../app/[locale]/(marketing)/components/SessionExpiredNotice";
 
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { locales } from "@/i18n/config";
+import { pickClientMessages } from "@/app/lib/i18n/client-namespaces";
 
 import Providers from "../providers";
 
@@ -117,7 +120,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "OpenQCore AI Platform",
@@ -134,7 +137,7 @@ export const metadata: Metadata = {
     description:
       "Enterprise AI platform for intelligent agents, automation, multimodal AI, APIs, and white-label AI solutions.",
 
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
 
   icons: {
@@ -144,6 +147,14 @@ export const metadata: Metadata = {
   },
 };
 
+// Every language is rendered at build time (static pages, served from the
+// CDN); an unknown language segment is a 404 instead of a page in English.
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export const dynamicParams = false;
+
 export default async function LocaleRootLayout({
   children,
   params
@@ -152,7 +163,10 @@ export default async function LocaleRootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const messages = await getMessages({ locale });
+  if (!locales.includes(locale as (typeof locales)[number])) notFound();
+  setRequestLocale(locale);
+  // only what client components need goes into the page (see client-namespaces.ts)
+  const messages = pickClientMessages(await getMessages({ locale }));
 
   return (
     <html

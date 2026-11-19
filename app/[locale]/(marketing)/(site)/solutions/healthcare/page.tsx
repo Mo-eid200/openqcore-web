@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -245,6 +245,7 @@ export default async function HealthcarePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const healthcareCapabilityKeys = [
@@ -380,7 +381,7 @@ export default async function HealthcarePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/healthcare/healthcare-mission-loop.png"
+              src="/images/healthcare/healthcare-mission-loop.webp"
               alt="OpenQCore closed-loop intelligence across the medical and scientific lifecycle"
               priority
             />
@@ -526,7 +527,7 @@ export default async function HealthcarePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/healthcare/drug-discovery-pipeline.png"
+              src="/images/healthcare/drug-discovery-pipeline.webp"
               alt="OpenQCore computational intelligence pipeline across drug discovery and development"
             />
           </div>
@@ -610,7 +611,7 @@ export default async function HealthcarePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/healthcare/scientific-ai-architecture.png"
+              src="/images/healthcare/scientific-ai-architecture.webp"
               alt="OpenQCore scientific AI architecture across research, data and compute layers"
               light
             />
@@ -648,7 +649,7 @@ export default async function HealthcarePage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/healthcare/autonomy-levels-scale.png"
+              src="/images/healthcare/autonomy-levels-scale.webp"
               alt="OpenQCore configurable autonomy levels: assist, analyze, recommend, execute"
             />
           </div>
@@ -699,7 +700,7 @@ export default async function HealthcarePage({
 
           <div className="mt-10">
             <ArchitectureImage
-              src="/images/healthcare/interoperability-badges.png"
+              src="/images/healthcare/interoperability-badges.webp"
               alt="FHIR, HL7, DICOM and API interoperability standards"
             />
           </div>

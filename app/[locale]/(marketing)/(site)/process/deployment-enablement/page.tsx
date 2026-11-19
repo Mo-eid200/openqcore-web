@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -208,6 +208,7 @@ export default async function DeploymentEnablementPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const deliveryStrategies = ["blue_green", "canary_releases", "feature_flags"];
@@ -430,7 +431,7 @@ export default async function DeploymentEnablementPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/deployment-enablement/environment-promotion.png"
+              src="/images/process/deployment-enablement/environment-promotion.webp"
               alt="Environment promotion flow: development, staging, production, with explicit verification gates between each stage"
               width={1400}
               height={650}
@@ -585,7 +586,7 @@ export default async function DeploymentEnablementPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/deployment-enablement/progressive-rollout-pipeline.png"
+              src="/images/process/deployment-enablement/progressive-rollout-pipeline.webp"
               alt="Progressive rollout pipeline: canary, monitor signals, expand exposure, monitor signals, full rollout, with a rollback path at every stage"
               width={1500}
               height={700}
@@ -670,7 +671,7 @@ export default async function DeploymentEnablementPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/process/deployment-enablement/deployment-decision-gate.png"
+              src="/images/process/deployment-enablement/deployment-decision-gate.webp"
               alt="Deployment decision gate branching into deploy, delay, rollback, or escalate incident"
               width={1200}
               height={650}

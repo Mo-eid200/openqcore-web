@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Image from "next/image";
 import {
   PrimaryCTA,
@@ -19,6 +19,7 @@ export async function generateMetadata({
     locale,
     namespace: "enterprise_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "enterprise_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -32,6 +33,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/solutions/enterprise"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
@@ -67,6 +69,7 @@ export default async function EnterprisePage({
   params,
 }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "enterprise_page",
@@ -177,7 +180,7 @@ export default async function EnterprisePage({
                 <div className="rounded-[24px] border border-white/[0.08] bg-[#0b1222] p-5">
                   <div className="flex items-center gap-3">
                     <Image
-                      src="/oqc-logo.png"
+                      src="/oqc-logo.webp"
                       alt="OpenQCore"
                       width={200}
                       height={200}

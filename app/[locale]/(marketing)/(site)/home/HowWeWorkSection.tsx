@@ -12,12 +12,12 @@ interface Step {
 }
 
 const steps: Step[] = [
-  { id: "research_discovery", roman: "Ⅰ", image: "/images/process/research.jpg", href: "/process/research-discovery" },
-  { id: "strategy_architecture", roman: "Ⅱ", image: "/images/process/architecture.jpg", href: "/process/strategy-architecture" },
-  { id: "solution_design", roman: "Ⅲ", image: "/images/process/design.jpg", href: "/process/solution-design" },
-  { id: "development_integration", roman: "Ⅳ", image: "/images/process/development.jpg", href: "/process/development-integration" },
-  { id: "deployment_enablement", roman: "Ⅴ", image: "/images/process/deployment.jpg", href: "/process/deployment-enablement" },
-  { id: "monitoring_optimization", roman: "Ⅵ", image: "/images/process/optimization.jpg", href: "/process/monitoring-optimization" },
+  { id: "research_discovery", roman: "Ⅰ", image: "/images/process/research.webp", href: "/process/research-discovery" },
+  { id: "strategy_architecture", roman: "Ⅱ", image: "/images/process/architecture.webp", href: "/process/strategy-architecture" },
+  { id: "solution_design", roman: "Ⅲ", image: "/images/process/design.webp", href: "/process/solution-design" },
+  { id: "development_integration", roman: "Ⅳ", image: "/images/process/development.webp", href: "/process/development-integration" },
+  { id: "deployment_enablement", roman: "Ⅴ", image: "/images/process/deployment.webp", href: "/process/deployment-enablement" },
+  { id: "monitoring_optimization", roman: "Ⅵ", image: "/images/process/optimization.webp", href: "/process/monitoring-optimization" },
 ];
 
 export default function HowWeWorkSection() {

@@ -113,7 +113,7 @@ export function CreateWorkspaceModal({ open, onClose, onCreate }: Props): React.
             <div className="relative px-7 pt-8 pb-7">
               <div className="flex flex-col items-center text-center">
                 <div className="relative h-12 w-12 shrink-0 mb-4">
-                  <Image src="/oqc-logo.png" alt="OpenQCore" fill priority sizes="48px" className="object-contain" />
+                  <Image src="/oqc-logo.webp" alt="OpenQCore" fill priority sizes="48px" className="object-contain" />
                 </div>
 
                 <h2 className="text-[20px] font-semibold tracking-tight text-white">Create a new workspace</h2>

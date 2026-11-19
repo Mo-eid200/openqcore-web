@@ -546,7 +546,7 @@ export default function Sidebar() {
                       transition={{ duration: 0.12 }}
                     >
                       <Image
-                        src="/oqc-logo.png"
+                        src="/oqc-logo.webp"
                         alt="OpenQCore"
                         width={42}
                         height={42}
@@ -559,7 +559,7 @@ export default function Sidebar() {
               <>
                 <Link href="/" className="flex items-center gap-2.5">
                   <Image
-                    src="/oqc-logo.png"
+                    src="/oqc-logo.webp"
                     alt="OpenQCore"
                     width={55}
                     height={55}

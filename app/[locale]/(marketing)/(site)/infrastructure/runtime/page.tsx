@@ -278,7 +278,7 @@ export default function RealtimeRuntimePage() {
                 aria-label={t("identity.diagram_alt")}
               >
                 <Image
-                  src="/engines/runtime-graph.png"
+                  src="/engines/runtime-graph.webp"
                   alt={t("identity.diagram_alt")}
                   width={1200}
                   height={760}
@@ -316,7 +316,7 @@ export default function RealtimeRuntimePage() {
       <Lightbox
         items={[
           {
-            src: "/engines/runtime-graph.png",
+            src: "/engines/runtime-graph.webp",
             alt: t("identity.diagram_alt"),
           },
         ]}

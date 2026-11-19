@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
 const baseMetadata: Metadata = {
@@ -107,6 +107,7 @@ export default async function AnalyticsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const capabilities = [

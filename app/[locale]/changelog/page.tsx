@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import Header from "../(marketing)/components/Header";
 import Footer from "../(marketing)/components/Footer";
@@ -64,6 +64,7 @@ const entries = [
 
 export default async function ChangelogPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "changelog_page" });
 
   return (

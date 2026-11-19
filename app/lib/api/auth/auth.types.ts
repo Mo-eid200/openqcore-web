@@ -43,7 +43,6 @@ export interface BillingState {
 export type AuthContextValue = {
   user: AuthUser | null;
   loadingUser: boolean;
-  apiKey: string | null;
 
   login: (email: string, password: string) => Promise<void>;
 

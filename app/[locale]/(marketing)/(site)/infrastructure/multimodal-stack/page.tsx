@@ -55,19 +55,19 @@ export default function MultimodalStackPage() {
   const gallery = useMemo<GalleryItem[]>(
     () => [
       {
-        src: "/engines/multimodal-hero.png",
+        src: "/engines/multimodal-hero.webp",
         alt: t("gallery.images.hero_alt"),
       },
       {
-        src: "/engines/multimodal-routing-matrix.png",
+        src: "/engines/multimodal-routing-matrix.webp",
         alt: t("gallery.images.routing_alt"),
       },
       {
-        src: "/engines/multimodal-provider-layer.png",
+        src: "/engines/multimodal-provider-layer.webp",
         alt: t("gallery.images.provider_alt"),
       },
       {
-        src: "/engines/multimodal-output-contract.png",
+        src: "/engines/multimodal-output-contract.webp",
         alt: t("gallery.images.output_alt"),
       },
     ],
@@ -139,7 +139,7 @@ export default function MultimodalStackPage() {
               aria-label={t("gallery.images.hero_alt")}
             >
               <Image
-                src="/engines/multimodal-hero.png"
+                src="/engines/multimodal-hero.webp"
                 alt={t("gallery.images.hero_alt")}
                 width={900}
                 height={620}

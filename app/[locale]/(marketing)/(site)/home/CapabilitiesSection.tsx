@@ -5,22 +5,22 @@ import Link from "next/link";
 const row1 = [
   {
     title: "AI Agents",
-    image: "/images/capabilities/agents.jpg",
+    image: "/images/capabilities/agents.webp",
     href: "/platform/agents",
   },
   {
     title: "Vision Intelligence",
-    image: "/images/capabilities/vision.jpg",
+    image: "/images/capabilities/vision.webp",
     href: "/platform/vision",
   },
   {
     title: "Voice & Speech",
-    image: "/images/capabilities/voice.jpg",
+    image: "/images/capabilities/voice.webp",
     href: "/platform/voice",
   },
   {
     title: "AI Search",
-    image: "/images/capabilities/search.jpg",
+    image: "/images/capabilities/search.webp",
     href: "/platform/search",
   },
 ];
@@ -28,22 +28,22 @@ const row1 = [
 const row2 = [
   {
     title: "Enterprise Automation",
-    image: "/images/capabilities/automation.jpg",
+    image: "/images/capabilities/automation.webp",
     href: "/platform/automation",
   },
   {
     title: "Developer APIs",
-    image: "/images/capabilities/apis.jpg",
+    image: "/images/capabilities/apis.webp",
     href: "/platform/api",
   },
   {
     title: "Analytics",
-    image: "/images/capabilities/analytics6.jpg",
+    image: "/images/capabilities/analytics6.webp",
     href: "/platform/analytics",
   },
   {
     title: "Security",
-    image: "/images/capabilities/security6.jpg",
+    image: "/images/capabilities/security6.webp",
     href: "/platform/security",
   },
 ];

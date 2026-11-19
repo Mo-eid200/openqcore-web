@@ -75,6 +75,10 @@ const bootstrapCache = makeCache<RawBootstrapResponse>(30_000);
 
 // ─── fetchBootstrap ───────────────────────────────────────────────────────────
 
+// Auth and Workspace providers both ask for the bootstrap when a page
+// loads; concurrent callers share one request instead of sending two.
+let bootstrapInFlight: Promise<RawBootstrapResponse> | null = null;
+
 export async function fetchBootstrap(force = false): Promise<RawBootstrapResponse | null> {
   const token = getStoredToken();
   if (!token) return null;
@@ -82,8 +86,14 @@ export async function fetchBootstrap(force = false): Promise<RawBootstrapRespons
   if (!force) {
     const cached = bootstrapCache.get();
     if (cached) return cached;
+    if (bootstrapInFlight) return bootstrapInFlight;
   }
 
+  bootstrapInFlight = loadBootstrap().finally(() => { bootstrapInFlight = null; });
+  return bootstrapInFlight;
+}
+
+async function loadBootstrap(): Promise<RawBootstrapResponse> {
   // Bootstrap is identity-level discovery.
   // It must never inherit a previously selected workspace context.
   const res = await qxtAuthClient.get("/api/v1/bootstrap", {

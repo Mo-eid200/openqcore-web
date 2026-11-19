@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 import {
   PrimaryCTA,
@@ -19,6 +19,7 @@ export async function generateMetadata({
     locale,
     namespace: "foundation_education_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "foundation_education_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -32,6 +33,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/foundation/education"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/foundation/education"),
   };
@@ -59,6 +61,7 @@ export default async function EducationPage({
   params,
 }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "foundation_education_page",
@@ -125,7 +128,7 @@ export default async function EducationPage({
     <div className="pointer-events-none absolute -inset-10 rounded-[40px] bg-[#d4af37]/10 blur-3xl" />
 
     <ImageWithLightbox
-      src="/engines/openqcore-education-hero.png"
+      src="/engines/openqcore-education-hero.webp"
       alt="OpenQCore Education"
       width={1400}
       height={1000}

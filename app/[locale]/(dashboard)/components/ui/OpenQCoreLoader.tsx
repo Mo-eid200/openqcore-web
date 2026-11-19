@@ -16,7 +16,7 @@ export default function OpenQCoreLoader() {
           <div className="relative grid h-[120px] w-[120px] place-items-center">
             <div className="oq-loader-logo-glow absolute h-[110px] w-[110px] rounded-full" />
             <Image
-              src="/engines/corelogo.png"
+              src="/engines/corelogo.webp"
               alt="OpenQCore logo"
               width={84}
               height={84}

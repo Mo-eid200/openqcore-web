@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ImageWithLightbox from "../../components/common/ImageWithLightbox";
 import {
@@ -18,6 +18,7 @@ export async function generateMetadata({
     locale,
     namespace: "company_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "company_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -31,6 +32,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/company"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/company"),
   };
@@ -150,6 +152,7 @@ export default async function CompanyAboutPage({
   params,
 }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "company_page",
@@ -204,7 +207,7 @@ export default async function CompanyAboutPage({
                 <div className="pointer-events-none absolute -inset-10 rounded-[40px] bg-[#d4af37]/10 blur-3xl" />
 
                 <ImageWithLightbox
-                  src="/engines/openqcore-logo-full-light.png"
+                  src="/engines/openqcore-logo-full-light.webp"
                   alt="OpenQCore Logo"
                   width={960}
                   height={960}
@@ -271,7 +274,7 @@ export default async function CompanyAboutPage({
             <div className="pointer-events-none absolute -inset-6 rounded-[32px] bg-[#d4af37]/[0.05] blur-2xl" />
 
             <ImageWithLightbox
-              src="/engines/openqcore-company-banner.png"
+              src="/engines/openqcore-company-banner.webp"
               alt="OpenQCore Company Banner"
               width={1800}
               height={1100}

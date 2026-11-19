@@ -450,7 +450,7 @@ export default function Navbar({ items = [] }: NavbarProps) {
                                     "
                                 >
                                     <Image
-                                        src={activeFeatureCard?.image ?? "/engines/pulse-logo.png"}
+                                        src={activeFeatureCard?.image ?? "/engines/pulse-logo.webp"}
                                         alt={activeFeatureCard?.title ?? "OpenQCore"}
                                         width={640}
                                         height={480}

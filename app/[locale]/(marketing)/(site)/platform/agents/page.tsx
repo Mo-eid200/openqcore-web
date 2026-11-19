@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA } from "../../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -49,6 +49,7 @@ export default async function AgentsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const core = [

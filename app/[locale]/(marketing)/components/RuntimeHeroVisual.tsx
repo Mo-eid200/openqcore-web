@@ -75,7 +75,7 @@ export default function RuntimeHeroVisual({
     <div className="absolute inset-0">
       {/* Static high-quality background */}
       <Image
-        src="/images/runtime/runtime-hero-orbital.png"
+        src="/images/runtime/runtime-hero-orbital.webp"
         alt="OpenQCore Runtime — global AI orchestration network"
         fill
         sizes="(max-width: 1024px) 100vw, 66vw"

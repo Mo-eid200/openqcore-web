@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -244,6 +244,7 @@ export default async function EducationPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const learnerCapabilityKeys = [
@@ -502,7 +503,7 @@ export default async function EducationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/education/learning-intelligence-loop.png"
+              src="/images/education/learning-intelligence-loop.webp"
               alt="OpenQCore continuous learning intelligence loop connecting learner evidence, the learner model and adaptive content"
               priority
             />
@@ -587,7 +588,7 @@ export default async function EducationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/education/curriculum-knowledge-graph.png"
+              src="/images/education/curriculum-knowledge-graph.webp"
               alt="OpenQCore curriculum and academic knowledge graph connecting concepts, prerequisites, resources, assessments and learner evidence"
               light
             />
@@ -763,7 +764,7 @@ export default async function EducationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/education/education-ai-architecture.png"
+              src="/images/education/education-ai-architecture.webp"
               alt="OpenQCore education AI architecture across interfaces, intelligence core, knowledge data and institutional systems"
               light
             />
@@ -794,7 +795,7 @@ export default async function EducationPage({
 
           <div className="mt-16">
             <ArchitectureImage
-              src="/images/education/responsible-ai-framework.png"
+              src="/images/education/responsible-ai-framework.webp"
               alt="OpenQCore responsible AI framework in education: assist, guide, teach, assess, act"
             />
           </div>

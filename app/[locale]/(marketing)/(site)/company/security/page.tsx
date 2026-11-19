@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ImageWithLightbox from "../../../components/common/ImageWithLightbox";
 
@@ -13,6 +13,7 @@ type PageProps = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "company_security_page.seo" });
+  const en = await getTranslations({ locale: "en", namespace: "company_security_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/company/security"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     alternates: pageAlternates(locale, "/company/security"),
   };
@@ -127,6 +129,7 @@ const capabilityChecks: Record<string, readonly string[]> = {
 
 export default async function SecurityPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "company_security_page" });
 
   return (
@@ -203,7 +206,7 @@ export default async function SecurityPage({ params }: PageProps) {
                 <div className="pointer-events-none absolute -inset-4 rounded-[28px] bg-emerald-500/[0.06] blur-2xl" />
                 <div className="relative rounded-[24px] border border-white/[0.07] bg-[#0b1222] p-3 shadow-[0_0_0_1px_rgba(16,185,129,.05)_inset]">
                   <ImageWithLightbox
-                    src="/engines/security-hero.png"
+                    src="/engines/security-hero.webp"
                     alt="OpenQCore Security"
                     width={960}
                     height={960}
@@ -279,7 +282,7 @@ export default async function SecurityPage({ params }: PageProps) {
                 <div className="pointer-events-none absolute -inset-3 rounded-[26px] bg-emerald-500/[0.05] blur-xl" />
                 <div className="relative rounded-[22px] border border-white/[0.07] bg-[#0b1222] p-2.5 shadow-[0_0_0_1px_rgba(16,185,129,.04)_inset]">
                   <ImageWithLightbox
-                    src="/engines/security-banner.png"
+                    src="/engines/security-banner.webp"
                     alt="OpenQCore Security Banner"
                     width={2000}
                     height={900}

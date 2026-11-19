@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PrimaryCTA, SecondaryCTA, ArrowIcon } from "../../components/common/CTAButtons";
 
 import { localizedUrl, pageAlternates } from "@/app/lib/seo/alternates";
@@ -57,6 +57,7 @@ export default async function PlatformPage({
     params: Promise<{ locale: string }>;
 }) {
     const { locale } = await params;
+  setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
     const platformLayers = [
@@ -149,21 +150,21 @@ export default async function PlatformPage({
         {
             label: t("platform_page.product_surfaces"),
             items: t("platform_page.product_surfaces_items"),
-            icon: "/icons/1.png",
+            icon: "/icons/1.webp",
             border: "border-[#d4af37]/10 hover:border-[#d4af37]/20",
             labelColor: "text-[#d4af37]/70",
         },
         {
             label: t("platform_page.control_layer"),
             items: t("platform_page.control_layer_items"),
-            icon: "/icons/2.png",
+            icon: "/icons/2.webp",
             border: "border-[#3b82f6]/10 hover:border-[#3b82f6]/20",
             labelColor: "text-[#60a5fa]/70",
         },
         {
             label: t("platform_page.runtime_layer"),
             items: t("platform_page.runtime_layer_items"),
-            icon: "/icons/3.png",
+            icon: "/icons/3.webp",
             border: "border-[#8b5cf6]/10 hover:border-[#8b5cf6]/20",
             labelColor: "text-[#a78bfa]/70",
         },

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   PrimaryCTA,
   SecondaryCTA,
@@ -18,6 +18,7 @@ export async function generateMetadata({
     locale,
     namespace: "startup_page.seo",
   });
+  const en = await getTranslations({ locale: "en", namespace: "startup_page.seo" });   // the preview image renders Latin text only
 
   return {
     title: t("title"),
@@ -31,6 +32,7 @@ export async function generateMetadata({
       type: "website",
       siteName: "OpenQCore",
       url: localizedUrl(locale, "/solutions/startups"),
+      images: [{ url: `/api/og?title=${encodeURIComponent(en("og_title"))}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
@@ -66,6 +68,7 @@ export default async function StartupsPage({
   params,
 }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({
     locale,
     namespace: "startup_page",
