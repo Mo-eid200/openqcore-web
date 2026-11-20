@@ -72,6 +72,39 @@ function MicrosoftIcon() {
   );
 }
 
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
+      <path
+        fill="#181717"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+      />
+    </svg>
+  );
+}
+
+// The ORCID iD icon (the green "iD" roundel ORCID asks sign-in buttons to use).
+function OrcidIcon() {
+  return (
+    <svg viewBox="0 0 256 256" className="h-[18px] w-[18px]" aria-hidden="true">
+      <path fill="#A6CE39" d="M256 128c0 70.7-57.3 128-128 128S0 198.7 0 128 57.3 0 128 0s128 57.3 128 128z" />
+      <path fill="#fff" d="M86.3 186.2H70.9V79.1h15.4v107.1z" />
+      <path fill="#fff" d="M108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7C191.7 111.2 178 93 148 93h-23.7v79.4z" />
+      <path fill="#fff" d="M88.7 56.8c0 5.5-4.5 10.1-10.1 10.1s-10.1-4.6-10.1-10.1c0-5.6 4.5-10.1 10.1-10.1s10.1 4.6 10.1 10.1z" />
+    </svg>
+  );
+}
+
+type OAuthProvider = "google" | "outlook" | "apple" | "github" | "orcid";
+
+const OAUTH_START: Record<OAuthProvider, string> = {
+  google: "/api/v1/auth/oauth/google/start",
+  outlook: "/api/v1/auth/oauth/outlook/start",
+  apple: "/api/v1/auth/oauth/apple/start",
+  github: "/api/v1/auth/oauth/github/start",
+  orcid: "/api/v1/auth/oauth/orcid/start",
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
@@ -265,29 +298,15 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
 
   // ── OAuth ─────────────────────────────────────────────────────────────────
 
-  function startOAuth(provider: "google" | "outlook" | "apple") {
+  function startOAuth(provider: OAuthProvider) {
     if (typeof window === "undefined") return;
 
-    const baseURL =
-      API_BASE_URL;
-
-    const returnTo =
-      FRONTEND_CALLBACK_URL;
-
-    const paths = {
-      google: "/api/v1/auth/oauth/google/start",
-      outlook: "/api/v1/auth/oauth/outlook/start",
-      apple: "/api/v1/auth/oauth/apple/start",
-    } as const;
-
     const params = new URLSearchParams({
-      return_to: returnTo,
+      return_to: FRONTEND_CALLBACK_URL,
       next: "/",
     });
 
-    window.location.assign(
-      `${baseURL}${paths[provider]}?${params.toString()}`
-    );
+    window.location.assign(`${API_BASE_URL}${OAUTH_START[provider]}?${params.toString()}`);
   }
 
   // ── SSR guard ─────────────────────────────────────────────────────────────
@@ -348,6 +367,20 @@ export default function WorkspaceModal({ open, onClose, onSuccess }: Props) {
                           <MicrosoftIcon />
                         </div>
                         <span className="text-sm font-semibold text-white">{t("oauth.microsoft")}</span>
+                      </button>
+
+                      <button type="button" onClick={() => startOAuth("github")} className={oauthButtonCls}>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
+                          <GitHubIcon />
+                        </div>
+                        <span className="text-sm font-semibold text-white">{t("oauth.github")}</span>
+                      </button>
+
+                      <button type="button" onClick={() => startOAuth("orcid")} className={oauthButtonCls}>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
+                          <OrcidIcon />
+                        </div>
+                        <span className="text-sm font-semibold text-white">{t("oauth.orcid")}</span>
                       </button>
                     </div>
                   )}

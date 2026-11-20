@@ -41,8 +41,22 @@
 }
 
 /* ========================
-   RTL
+   Arabic
 ======================== */
+
+/* One typeface on Arabic pages. Headings, body text, buttons and the
+   Tailwind font-sans class all read --font-sans; before this, the body was
+   Cairo but headings fell back to the system Arabic font. */
+html[lang="ar"] {
+  --font-sans: var(--font-arabic), system-ui, sans-serif;
+}
+
+/* Arabic letters join; letter-spacing (the tracking-* classes, the heading
+   style below) pulls them apart. Unlayered, so it wins over the utilities. */
+html[lang="ar"] body,
+html[lang="ar"] body * {
+  letter-spacing: 0;
+}
 
 html[lang="ar"] .ar-heading {
   letter-spacing: 0;

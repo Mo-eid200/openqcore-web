@@ -9190,9 +9190,24 @@
   "logout": "Dil",
   "auth_modal": {
     "close_aria": "Mbyll",
+    "callback": {
+      "completing": "Po përfundon hyrja",
+      "connecting": "Po lidhet llogaria jote OpenQCore…",
+      "error_title": "Hyrja nuk përfundoi",
+      "back": "Kthehu në faqen kryesore",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "Llogaria jote GitHub nuk ka adresë e-maili të verifikuar. Verifiko një te cilësimet e GitHub dhe provo përsëri.",
+        "ORCID_NO_ACCOUNT": "Asnjë llogari OpenQCore nuk është e lidhur me këtë ORCID iD dhe regjistri yt ORCID nuk ka e-mail publik të verifikuar. Hyr në një mënyrë tjetër, pastaj lidh ORCID nga profili yt kërkimor.",
+        "ACCOUNT_DISABLED": "Kjo llogari është çaktivizuar. Kontakto mbështetjen nëse mendon se është gabim.",
+        "DENIED": "Hyrja u anulua.",
+        "default": "Diçka shkoi keq gjatë hyrjes. Provo përsëri."
+      }
+    },
     "oauth": {
       "google": "Hyr me Google",
-      "microsoft": "Hyr me Microsoft"
+      "microsoft": "Hyr me Microsoft",
+      "github": "Hyr me GitHub",
+      "orcid": "Hyr me ORCID"
     },
     "titles": {
       "signin": "Hyni në llogarinë tuaj",

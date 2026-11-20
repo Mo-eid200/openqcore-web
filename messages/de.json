@@ -9190,9 +9190,24 @@
   "logout": "Abmelden",
   "auth_modal": {
     "close_aria": "Schließen",
+    "callback": {
+      "completing": "Anmeldung wird abgeschlossen",
+      "connecting": "Dein OpenQCore-Konto wird verbunden…",
+      "error_title": "Anmeldung nicht abgeschlossen",
+      "back": "Zurück zur Startseite",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "Dein GitHub-Konto hat keine bestätigte E-Mail-Adresse. Bestätige eine in den GitHub-Einstellungen und versuche es erneut.",
+        "ORCID_NO_ACCOUNT": "Mit dieser ORCID iD ist kein OpenQCore-Konto verbunden, und dein ORCID-Datensatz hat keine öffentliche, bestätigte E-Mail-Adresse. Melde dich anders an und verbinde ORCID dann in deinem Forschungsprofil.",
+        "ACCOUNT_DISABLED": "Dieses Konto ist deaktiviert. Wende dich an den Support, wenn du das für einen Fehler hältst.",
+        "DENIED": "Die Anmeldung wurde abgebrochen.",
+        "default": "Bei der Anmeldung ist etwas schiefgelaufen. Bitte versuche es erneut."
+      }
+    },
     "oauth": {
       "google": "Mit Google anmelden",
-      "microsoft": "Mit Microsoft anmelden"
+      "microsoft": "Mit Microsoft anmelden",
+      "github": "Mit GitHub anmelden",
+      "orcid": "Mit ORCID anmelden"
     },
     "titles": {
       "signin": "Melden Sie sich bei Ihrem Konto an",

@@ -9190,9 +9190,24 @@
   "logout": "Cerrar sesión",
   "auth_modal": {
     "close_aria": "Cerrar",
+    "callback": {
+      "completing": "Completando el inicio de sesión",
+      "connecting": "Conectando tu cuenta de OpenQCore…",
+      "error_title": "No se completó el inicio de sesión",
+      "back": "Volver a la página de inicio",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "Tu cuenta de GitHub no tiene ningún correo verificado. Verifica uno en la configuración de GitHub y vuelve a intentarlo.",
+        "ORCID_NO_ACCOUNT": "Ninguna cuenta de OpenQCore está conectada a este ORCID iD y tu registro de ORCID no tiene un correo público verificado. Inicia sesión de otra forma y luego conecta ORCID desde tu perfil de investigador.",
+        "ACCOUNT_DISABLED": "Esta cuenta está desactivada. Contacta con soporte si crees que es un error.",
+        "DENIED": "Se canceló el inicio de sesión.",
+        "default": "Algo salió mal al iniciar sesión. Inténtalo de nuevo."
+      }
+    },
     "oauth": {
       "google": "Iniciar sesión con Google",
-      "microsoft": "Iniciar sesión con Microsoft"
+      "microsoft": "Iniciar sesión con Microsoft",
+      "github": "Iniciar sesión con GitHub",
+      "orcid": "Iniciar sesión con ORCID"
     },
     "titles": {
       "signin": "Inicia sesión en tu cuenta",

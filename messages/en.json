@@ -9101,9 +9101,24 @@
 
   "auth_modal": {
     "close_aria": "Close",
+    "callback": {
+      "completing": "Completing sign-in",
+      "connecting": "Connecting your OpenQCore account…",
+      "error_title": "Sign-in didn't finish",
+      "back": "Back to the home page",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "Your GitHub account has no verified e-mail address. Verify one in your GitHub settings, then try again.",
+        "ORCID_NO_ACCOUNT": "No OpenQCore account is connected to this ORCID iD, and your ORCID record has no public verified e-mail. Sign in another way, then connect ORCID from your research profile.",
+        "ACCOUNT_DISABLED": "This account is disabled. Contact support if you think this is a mistake.",
+        "DENIED": "Sign-in was cancelled.",
+        "default": "Something went wrong while signing you in. Please try again."
+      }
+    },
     "oauth": {
       "google": "Sign in with Google",
-      "microsoft": "Sign in with Microsoft"
+      "microsoft": "Sign in with Microsoft",
+      "github": "Sign in with GitHub",
+      "orcid": "Sign in with ORCID"
     },
     "titles": {
       "signin": "Sign in to your account",

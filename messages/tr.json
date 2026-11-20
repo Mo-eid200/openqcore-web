@@ -9070,9 +9070,24 @@
       "back": "Geri"
     },
     "close_aria": "Kapat",
+    "callback": {
+      "completing": "Giriş tamamlanıyor",
+      "connecting": "OpenQCore hesabın bağlanıyor…",
+      "error_title": "Giriş tamamlanamadı",
+      "back": "Ana sayfaya dön",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "GitHub hesabında doğrulanmış bir e-posta adresi yok. GitHub ayarlarından birini doğrula ve tekrar dene.",
+        "ORCID_NO_ACCOUNT": "Bu ORCID iD'ye bağlı bir OpenQCore hesabı yok ve ORCID kaydında herkese açık, doğrulanmış bir e-posta bulunmuyor. Başka bir yolla giriş yap, ardından ORCID'i araştırma profilinden bağla.",
+        "ACCOUNT_DISABLED": "Bu hesap devre dışı. Bunun bir hata olduğunu düşünüyorsan destekle iletişime geç.",
+        "DENIED": "Giriş iptal edildi.",
+        "default": "Giriş yapılırken bir sorun oluştu. Lütfen tekrar dene."
+      }
+    },
     "oauth": {
       "google": "Google ile giriş yap",
-      "microsoft": "Microsoft ile giriş yap"
+      "microsoft": "Microsoft ile giriş yap",
+      "github": "GitHub ile giriş yap",
+      "orcid": "ORCID ile giriş yap"
     },
     "titles": {
       "signin": "Hesabınıza giriş yapın",

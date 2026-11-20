@@ -9190,9 +9190,24 @@
   "logout": "Déconnexion",
   "auth_modal": {
     "close_aria": "Fermer",
+    "callback": {
+      "completing": "Connexion en cours",
+      "connecting": "Connexion à votre compte OpenQCore…",
+      "error_title": "La connexion n'a pas abouti",
+      "back": "Retour à l'accueil",
+      "errors": {
+        "GITHUB_NO_VERIFIED_EMAIL": "Votre compte GitHub n'a aucune adresse e-mail vérifiée. Vérifiez-en une dans les paramètres GitHub, puis réessayez.",
+        "ORCID_NO_ACCOUNT": "Aucun compte OpenQCore n'est associé à cet identifiant ORCID et votre profil ORCID n'a pas d'e-mail public vérifié. Connectez-vous autrement, puis associez ORCID depuis votre profil de chercheur.",
+        "ACCOUNT_DISABLED": "Ce compte est désactivé. Contactez le support si vous pensez qu'il s'agit d'une erreur.",
+        "DENIED": "La connexion a été annulée.",
+        "default": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+      }
+    },
     "oauth": {
       "google": "Se connecter avec Google",
-      "microsoft": "Se connecter avec Microsoft"
+      "microsoft": "Se connecter avec Microsoft",
+      "github": "Se connecter avec GitHub",
+      "orcid": "Se connecter avec ORCID"
     },
     "titles": {
       "signin": "Connectez-vous à votre compte",

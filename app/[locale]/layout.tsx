@@ -13,9 +13,11 @@ import { pickClientMessages } from "@/app/lib/i18n/client-namespaces";
 
 import Providers from "../providers";
 
+// Arabic pages use Cairo for everything, Latin words included, so a page
+// shows one typeface (see the html[lang="ar"] rule in globals.css).
 const cairo = Cairo({
   variable: "--font-arabic",
-  subsets: ["arabic"],
+  subsets: ["arabic", "latin"],
   weight: ["300", "400", "500", "600", "700"]
 });
 
@@ -198,7 +200,7 @@ export default async function LocaleRootLayout({
         style={{
           fontFamily:
             locale === "ar"
-              ? "var(--font-arabic), sans-serif"
+              ? "var(--font-sans)"
               : "var(--font-geist-sans), Inter, sans-serif"
         }}
       >
