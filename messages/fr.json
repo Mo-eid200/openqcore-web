@@ -9191,6 +9191,37 @@
   "auth_modal": {
     "close_aria": "Fermer",
     "callback": {
+      "signup": {
+        "title_orcid": "Terminer la connexion avec ORCID",
+        "title_github": "Terminer la connexion avec GitHub",
+        "intro_orcid": "ORCID n'a pas partagé votre adresse e-mail. Saisissez-la et nous vous enverrons un code pour confirmer qu'elle vous appartient.",
+        "intro_github": "Votre compte GitHub n'a aucune adresse e-mail vérifiée. Saisissez la vôtre et nous vous enverrons un code pour la confirmer.",
+        "existing_orcid": "Vous avez déjà un compte OpenQCore ? Utilisez son e-mail et votre identifiant ORCID y sera associé.",
+        "existing_github": "Vous avez déjà un compte OpenQCore ? Utilisez son e-mail pour vous y connecter.",
+        "signing_in_as": "Connexion en tant que",
+        "email_label": "Adresse e-mail",
+        "send": "Envoyer le code",
+        "sending": "Envoi…",
+        "code_sent": "Nous avons envoyé un code à 6 chiffres à {email}. Il expire dans {minutes} minutes.",
+        "code_label": "Code",
+        "verify": "Confirmer et se connecter",
+        "verifying": "Confirmation…",
+        "change_email": "Utiliser une autre adresse",
+        "resend": "Envoyer un nouveau code",
+        "start_again": "Recommencer",
+        "errors": {
+          "SIGNUP_EXPIRED": "La connexion a pris trop de temps. Veuillez recommencer.",
+          "SIGNUP_OTHER_BROWSER": "Terminez la connexion dans le navigateur où vous l'avez commencée.",
+          "SIGNUP_INVALID": "Ce lien de connexion n'est pas valide. Veuillez recommencer.",
+          "EMAIL_INVALID": "Saisissez une adresse e-mail valide.",
+          "TOO_MANY_CODES": "Trop de codes ont été demandés. Réessayez plus tard.",
+          "EMAIL_NOT_SENT": "Nous n'avons pas pu envoyer l'e-mail. Réessayez dans un instant.",
+          "CODE_WRONG": "Ce code est incorrect. Il vous reste {left} essais.",
+          "CODE_EXPIRED": "Le code a expiré. Demandez-en un nouveau.",
+          "TOO_MANY_ATTEMPTS": "Trop de codes incorrects. Demandez-en un nouveau.",
+          "ORCID_IN_USE": "Cet identifiant ORCID est déjà associé à un autre compte."
+        }
+      },
       "completing": "Connexion en cours",
       "connecting": "Connexion à votre compte OpenQCore…",
       "error_title": "La connexion n'a pas abouti",

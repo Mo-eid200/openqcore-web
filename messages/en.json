@@ -9102,6 +9102,37 @@
   "auth_modal": {
     "close_aria": "Close",
     "callback": {
+      "signup": {
+        "title_orcid": "Finish signing in with ORCID",
+        "title_github": "Finish signing in with GitHub",
+        "intro_orcid": "ORCID didn't share your e-mail address. Enter it and we'll send you a code to confirm it's yours.",
+        "intro_github": "Your GitHub account has no verified e-mail address. Enter yours and we'll send you a code to confirm it.",
+        "existing_orcid": "Already have an OpenQCore account? Use its e-mail and your ORCID iD will be connected to it.",
+        "existing_github": "Already have an OpenQCore account? Use its e-mail to sign in to it.",
+        "signing_in_as": "Signing in as",
+        "email_label": "E-mail address",
+        "send": "Send code",
+        "sending": "Sending…",
+        "code_sent": "We sent a 6-digit code to {email}. It expires in {minutes} minutes.",
+        "code_label": "Code",
+        "verify": "Confirm and sign in",
+        "verifying": "Confirming…",
+        "change_email": "Use a different e-mail",
+        "resend": "Send a new code",
+        "start_again": "Start again",
+        "errors": {
+          "SIGNUP_EXPIRED": "This sign-in took too long. Please start again.",
+          "SIGNUP_OTHER_BROWSER": "Finish signing in in the same browser you started in.",
+          "SIGNUP_INVALID": "This sign-in link isn't valid. Please start again.",
+          "EMAIL_INVALID": "Enter a valid e-mail address.",
+          "TOO_MANY_CODES": "Too many codes were requested. Try again later.",
+          "EMAIL_NOT_SENT": "We couldn't send the e-mail. Try again in a moment.",
+          "CODE_WRONG": "That code isn't right. {left} tries left.",
+          "CODE_EXPIRED": "The code expired. Send a new one.",
+          "TOO_MANY_ATTEMPTS": "Too many wrong codes. Send a new one.",
+          "ORCID_IN_USE": "This ORCID iD is already connected to another account."
+        }
+      },
       "completing": "Completing sign-in",
       "connecting": "Connecting your OpenQCore account…",
       "error_title": "Sign-in didn't finish",

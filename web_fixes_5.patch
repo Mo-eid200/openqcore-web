@@ -1,0 +1,755 @@
+diff --git a/app/[locale]/auth/callback/SignupForm.tsx b/app/[locale]/auth/callback/SignupForm.tsx
+new file mode 100644
+index 0000000..a558f72
+--- /dev/null
++++ b/app/[locale]/auth/callback/SignupForm.tsx
+@@ -0,0 +1,233 @@
++"use client";
++
++// The provider came back without an e-mail we can use (ORCID record without a
++// public e-mail, GitHub account without a verified one). The person types an
++// address, gets a 6-digit code there, and enters it; the API then signs them
++// in to the account with that address (connecting their ORCID iD) or makes
++// one. The pending token only works in the browser that came back from the
++// provider (an httpOnly cookie on the API host).
++//
++// Text blocks are <div>s: the global `p` style would override font sizes.
++
++import { FormEvent, useEffect, useState } from "react";
++import { useTranslations } from "next-intl";
++import { Mail } from "lucide-react";
++
++import {
++  oauthSignupInfo,
++  oauthSignupSendCode,
++  oauthSignupVerify,
++  type OAuthSignupInfo,
++  type OAuthSignupResult,
++} from "@/app/lib/api/auth/auth.api";
++import { errorCode, errorExtra } from "@/app/lib/errors";
++
++// errors after which this pending sign-in can't continue
++const FINAL = new Set(["SIGNUP_EXPIRED", "SIGNUP_OTHER_BROWSER", "SIGNUP_INVALID", "ORCID_IN_USE", "ACCOUNT_DISABLED"]);
++const KNOWN = new Set([
++  ...FINAL,
++  "EMAIL_INVALID",
++  "TOO_MANY_CODES",
++  "EMAIL_NOT_SENT",
++  "CODE_WRONG",
++  "CODE_EXPIRED",
++  "TOO_MANY_ATTEMPTS",
++]);
++
++const inputCls =
++  "h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]";
++const primaryCls =
++  "h-11 w-full rounded-xl border border-white/10 bg-gradient-to-r from-[#d4af37] via-[#ffe89e] to-[#ffd466] text-base font-bold text-[#161d2a] shadow transition hover:opacity-90 disabled:opacity-50";
++const linkCls = "text-xs font-medium text-slate-400 underline-offset-4 transition hover:text-white hover:underline";
++
++type Props = {
++  token: string;
++  provider: "orcid" | "github";
++  onSignedIn: (result: OAuthSignupResult) => void;
++  onStartAgain: () => void;
++};
++
++export default function SignupForm({ token, provider, onSignedIn, onStartAgain }: Props) {
++  const t = useTranslations("auth_modal.callback");
++  const [info, setInfo] = useState<OAuthSignupInfo | null>(null);
++  const [email, setEmail] = useState("");
++  const [sentTo, setSentTo] = useState<string | null>(null);
++  const [code, setCode] = useState("");
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState<{ code: string; left?: number } | null>(null);
++
++  // who is signing in (also checks early that this is the right browser)
++  useEffect(() => {
++    let alive = true;
++    oauthSignupInfo(token)
++      .then((data) => {
++        if (alive) setInfo(data);
++      })
++      .catch((caught) => {
++        if (alive) setError({ code: errorCode(caught) || "default" });
++      });
++    return () => {
++      alive = false;
++    };
++  }, [token]);
++
++  function fail(caught: unknown) {
++    const c = errorCode(caught) || "default";
++    const left = errorExtra(caught).attempts_left;
++    setError({ code: c, left: typeof left === "number" ? left : undefined });
++    if (c === "CODE_EXPIRED" || c === "TOO_MANY_ATTEMPTS") {
++      setCode("");
++    }
++  }
++
++  async function sendCode(e?: FormEvent) {
++    e?.preventDefault();
++    if (busy || !email.trim()) return;
++    setBusy(true);
++    setError(null);
++    try {
++      await oauthSignupSendCode(token, email.trim());
++      setSentTo(email.trim().toLowerCase());
++      setCode("");
++    } catch (caught) {
++      fail(caught);
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  async function verify(e: FormEvent) {
++    e.preventDefault();
++    if (busy || !code.trim()) return;
++    setBusy(true);
++    setError(null);
++    try {
++      onSignedIn(await oauthSignupVerify(token, code.trim()));
++    } catch (caught) {
++      fail(caught);
++      setBusy(false);
++    }
++  }
++
++  const final = error && FINAL.has(error.code);
++  const message = error
++    ? error.code === "ACCOUNT_DISABLED"
++      ? t("errors.ACCOUNT_DISABLED")
++      : KNOWN.has(error.code)
++        ? t(`signup.errors.${error.code}`, { left: error.left ?? 0 })
++        : t("errors.default")
++    : null;
++
++  return (
++    <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-7">
++      <Mail className="mx-auto h-8 w-8 text-[#d4af37]" />
++      <h1 className="mt-4 text-center text-lg font-semibold text-white">
++        {provider === "orcid" ? t("signup.title_orcid") : t("signup.title_github")}
++      </h1>
++
++      {info && (info.name || info.orcid) && (
++        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center">
++          <div className="text-[11px] uppercase tracking-wider text-slate-500">{t("signup.signing_in_as")}</div>
++          {info.name && <div className="mt-1 text-sm font-semibold text-white">{info.name}</div>}
++          {info.orcid && (
++            <a
++              href={`https://orcid.org/${info.orcid}`}
++              target="_blank"
++              rel="noopener noreferrer"
++              className="mt-0.5 inline-block font-mono text-xs text-[#a6ce39] hover:underline"
++            >
++              {info.orcid}
++            </a>
++          )}
++        </div>
++      )}
++
++      {final ? (
++        <>
++          <div className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-xs leading-5 text-red-200">
++            {message}
++          </div>
++          <button type="button" onClick={onStartAgain} className={`mt-4 ${primaryCls}`}>
++            {t("signup.start_again")}
++          </button>
++        </>
++      ) : !sentTo ? (
++        <form onSubmit={sendCode} className="mt-4">
++          <div className="text-center text-xs leading-5 text-slate-400">
++            {provider === "orcid" ? t("signup.intro_orcid") : t("signup.intro_github")}
++          </div>
++          <label htmlFor="signup-email" className="mt-5 mb-2 block text-xs font-medium text-neutral-400">
++            {t("signup.email_label")}
++          </label>
++          <input
++            id="signup-email"
++            type="email"
++            autoComplete="email"
++            value={email}
++            onChange={(e) => setEmail(e.target.value)}
++            placeholder="you@university.edu"
++            autoFocus
++            required
++            className={inputCls}
++          />
++          <div className="mt-2 text-[11px] leading-4 text-slate-500">
++            {provider === "orcid" ? t("signup.existing_orcid") : t("signup.existing_github")}
++          </div>
++          {message && (
++            <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
++              {message}
++            </div>
++          )}
++          <button type="submit" disabled={busy || !info} className={`mt-4 ${primaryCls}`}>
++            {busy ? t("signup.sending") : t("signup.send")}
++          </button>
++        </form>
++      ) : (
++        <form onSubmit={verify} className="mt-4">
++          <div className="text-center text-xs leading-5 text-slate-400">
++            {t("signup.code_sent", { email: sentTo, minutes: info?.code_minutes ?? 10 })}
++          </div>
++          <label htmlFor="signup-code" className="mt-5 mb-2 block text-xs font-medium text-neutral-400">
++            {t("signup.code_label")}
++          </label>
++          <input
++            id="signup-code"
++            type="text"
++            inputMode="numeric"
++            autoComplete="one-time-code"
++            maxLength={6}
++            value={code}
++            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
++            placeholder="123456"
++            autoFocus
++            required
++            className={`${inputCls} text-center text-lg font-medium tracking-[0.3em]`}
++          />
++          {message && (
++            <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
++              {message}
++            </div>
++          )}
++          <button type="submit" disabled={busy || code.length < 6} className={`mt-4 ${primaryCls}`}>
++            {busy ? t("signup.verifying") : t("signup.verify")}
++          </button>
++          <div className="mt-4 flex items-center justify-between">
++            <button
++              type="button"
++              className={linkCls}
++              onClick={() => {
++                setSentTo(null);
++                setError(null);
++              }}
++            >
++              {t("signup.change_email")}
++            </button>
++            <button type="button" className={linkCls} disabled={busy} onClick={() => void sendCode()}>
++              {t("signup.resend")}
++            </button>
++          </div>
++        </form>
++      )}
++    </div>
++  );
++}
+diff --git a/app/[locale]/auth/callback/page.tsx b/app/[locale]/auth/callback/page.tsx
+index 0c20c5b..0b4752d 100644
+--- a/app/[locale]/auth/callback/page.tsx
++++ b/app/[locale]/auth/callback/page.tsx
+@@ -7,6 +7,8 @@
+ // back to. The API sends one of:
+ //   ?token=<jwt>&next=<path>          signed in
+ //   ?mfa_challenge=<id>&next=<path>   two-factor sign-in is on: ask for the code
++//   ?signup=<token>&provider=<p>      no usable e-mail came back (ORCID, GitHub):
++//                                     ask for one and confirm it (SignupForm)
+ //   ?auth_error=<CODE>                nothing signed in (GitHub and ORCID)
+ //   ?error=...                        the provider refused (older flows)
+ 
+@@ -18,6 +20,8 @@ import { ShieldCheck } from "lucide-react";
+ import { useAuth } from "@/app/context/AuthContext";
+ import { useMounted } from "@/app/hooks/useMounted";
+ import { errorMessage } from "@/app/lib/errors";
++import type { OAuthSignupResult } from "@/app/lib/api/auth/auth.api";
++import SignupForm from "./SignupForm";
+ 
+ const KNOWN_ERRORS = new Set(["GITHUB_NO_VERIFIED_EMAIL", "ORCID_NO_ACCOUNT", "ACCOUNT_DISABLED"]);
+ const DENIED = new Set(["GITHUB_DENIED", "ORCID_DENIED", "access_denied"]);
+@@ -50,8 +54,19 @@ export default function OAuthCallbackPage() {
+ 
+   const hashToken = useHashParam("token");
+   const hashAccessToken = useHashParam("access_token");
+-  const token = searchParams.get("token") || searchParams.get("access_token") || hashToken || hashAccessToken;
+-  const challenge = searchParams.get("mfa_challenge");
++  const signupToken = searchParams.get("signup");
++  const signupProvider = searchParams.get("provider") === "github" ? "github" : "orcid";
++  const [signupResult, setSignupResult] = useState<OAuthSignupResult | null>(null);
++
++  const token =
++    searchParams.get("token") ||
++    searchParams.get("access_token") ||
++    hashToken ||
++    hashAccessToken ||
++    (signupResult && "token" in signupResult ? signupResult.token : null);
++  const challenge =
++    searchParams.get("mfa_challenge") ||
++    (signupResult && "mfa_challenge" in signupResult ? signupResult.mfa_challenge : null);
+   const next = safeNext(searchParams.get("next"));
+   const providerError = searchParams.get("auth_error") || searchParams.get("error");
+ 
+@@ -98,7 +113,7 @@ export default function OAuthCallbackPage() {
+     errorKey = KNOWN_ERRORS.has(providerError) ? providerError : DENIED.has(providerError) ? "DENIED" : "default";
+   }
+   // nothing to work with (opened directly, or the token was already used)
+-  if (!errorKey && mounted && !token && !challenge) errorKey = "default";
++  if (!errorKey && mounted && !token && !challenge && !signupToken) errorKey = "default";
+ 
+   return (
+     <main className="flex min-h-screen items-center justify-center bg-[#050811] px-4">
+@@ -153,6 +168,13 @@ export default function OAuthCallbackPage() {
+             {submitting ? t("mfa.verifying") : t("mfa.verify_cta")}
+           </button>
+         </form>
++      ) : signupToken && !signupResult ? (
++        <SignupForm
++          token={signupToken}
++          provider={signupProvider}
++          onSignedIn={setSignupResult}
++          onStartAgain={() => router.replace("/")}
++        />
+       ) : (
+         <div className="flex flex-col items-center gap-5">
+           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#d4af37]" />
+diff --git a/app/lib/api/auth/auth.api.ts b/app/lib/api/auth/auth.api.ts
+index c73676d..358ae22 100644
+--- a/app/lib/api/auth/auth.api.ts
++++ b/app/lib/api/auth/auth.api.ts
+@@ -191,6 +191,35 @@ export async function verifyMfaLogin(challengeId: string, code: string): Promise
+   return res.data;
+ }
+ 
++// ─── Finishing a social sign-in without a provider e-mail ─────────────────────
++//
++// ORCID without a public e-mail, GitHub without a verified one: the callback
++// page gets ?signup=<token>. The API binds the token to this browser with an
++// httpOnly cookie, which these calls send (withCredentials).
++
++export type OAuthSignupInfo = {
++  provider: "orcid" | "github";
++  name: string | null;
++  orcid: string | null;
++  code_minutes: number;
++};
++
++export type OAuthSignupResult = { token: string } | { mfa_challenge: string };
++
++export async function oauthSignupInfo(token: string): Promise<OAuthSignupInfo> {
++  const res = await qxtAuthClient.get("/api/v1/auth/oauth/signup", { params: { token } });
++  return res.data;
++}
++
++export async function oauthSignupSendCode(token: string, email: string): Promise<void> {
++  await qxtAuthClient.post("/api/v1/auth/oauth/signup/email", { token, email });
++}
++
++export async function oauthSignupVerify(token: string, code: string): Promise<OAuthSignupResult> {
++  const res = await qxtAuthClient.post("/api/v1/auth/oauth/signup/verify", { token, code });
++  return res.data;
++}
++
+ // ─── Billing ──────────────────────────────────────────────────────────────────
+ 
+ export async function fetchBillingOverview(): Promise<RawBillingResponse | null> {
+diff --git a/app/lib/errors.ts b/app/lib/errors.ts
+index 9fd8e8b..7e00157 100644
+--- a/app/lib/errors.ts
++++ b/app/lib/errors.ts
+@@ -13,7 +13,7 @@ export type ApiErrorLike = {
+     data?: {
+       detail?: string | { message?: string; code?: string; [key: string]: unknown };
+       message?: string;
+-      error?: { message?: string; code?: string };
++      error?: { message?: string; code?: string; extra?: Record<string, unknown> };
+       [key: string]: unknown;
+     };
+   };
+@@ -32,6 +32,17 @@ export function errorMessage(caught: unknown, fallback = "Something went wrong")
+   return detail || d?.error?.message || d?.message || e.message || fallback;
+ }
+ 
++/** The API's machine-readable error code ({"error": {"code"}} or {"detail": {"code"}}). */
++export function errorCode(caught: unknown): string | undefined {
++  const d = asApiError(caught).response?.data;
++  return d?.error?.code || (typeof d?.detail === "object" ? d.detail.code : undefined) || undefined;
++}
++
++/** Extra fields the API attached to an error ({"error": {"extra": {...}}}). */
++export function errorExtra(caught: unknown): Record<string, unknown> {
++  return asApiError(caught).response?.data?.error?.extra ?? {};
++}
++
+ export function errorStatus(caught: unknown): number | undefined {
+   const e = asApiError(caught);
+   return e.response?.status ?? e.status;
+diff --git a/messages/ar.json b/messages/ar.json
+index ebdb980..a2f9aa3 100644
+--- a/messages/ar.json
++++ b/messages/ar.json
+@@ -9189,6 +9189,37 @@
+   "auth_modal": {
+     "close_aria": "إغلاق",
+     "callback": {
++      "signup": {
++        "title_orcid": "أكمل تسجيل الدخول باستخدام ORCID",
++        "title_github": "أكمل تسجيل الدخول باستخدام GitHub",
++        "intro_orcid": "لم يشارك ORCID بريدك الإلكتروني. أدخله وسنرسل لك رمزًا للتأكد من أنه بريدك.",
++        "intro_github": "لا يوجد بريد إلكتروني موثّق في حسابك على GitHub. أدخل بريدك وسنرسل لك رمزًا لتأكيده.",
++        "existing_orcid": "لديك حساب في OpenQCore بالفعل؟ استخدم بريده، وسيُربط معرّف ORCID الخاص بك به.",
++        "existing_github": "لديك حساب في OpenQCore بالفعل؟ استخدم بريده لتسجيل الدخول إليه.",
++        "signing_in_as": "تسجيل الدخول باسم",
++        "email_label": "البريد الإلكتروني",
++        "send": "إرسال الرمز",
++        "sending": "جارٍ الإرسال…",
++        "code_sent": "أرسلنا رمزًا من 6 أرقام إلى {email}. تنتهي صلاحيته بعد {minutes} دقائق.",
++        "code_label": "الرمز",
++        "verify": "تأكيد وتسجيل الدخول",
++        "verifying": "جارٍ التأكيد…",
++        "change_email": "استخدام بريد آخر",
++        "resend": "إرسال رمز جديد",
++        "start_again": "البدء من جديد",
++        "errors": {
++          "SIGNUP_EXPIRED": "استغرق تسجيل الدخول وقتًا طويلًا. ابدأ من جديد.",
++          "SIGNUP_OTHER_BROWSER": "أكمل تسجيل الدخول في نفس المتصفح الذي بدأت منه.",
++          "SIGNUP_INVALID": "رابط تسجيل الدخول هذا غير صالح. ابدأ من جديد.",
++          "EMAIL_INVALID": "أدخل بريدًا إلكترونيًا صحيحًا.",
++          "TOO_MANY_CODES": "طُلب عدد كبير من الرموز. حاول لاحقًا.",
++          "EMAIL_NOT_SENT": "تعذّر إرسال البريد. حاول بعد قليل.",
++          "CODE_WRONG": "الرمز غير صحيح. تبقّى {left} محاولات.",
++          "CODE_EXPIRED": "انتهت صلاحية الرمز. أرسل رمزًا جديدًا.",
++          "TOO_MANY_ATTEMPTS": "محاولات خاطئة كثيرة. أرسل رمزًا جديدًا.",
++          "ORCID_IN_USE": "معرّف ORCID هذا مرتبط بحساب آخر بالفعل."
++        }
++      },
+       "completing": "جارٍ إكمال تسجيل الدخول",
+       "connecting": "جارٍ ربط حسابك في OpenQCore…",
+       "error_title": "لم يكتمل تسجيل الدخول",
+diff --git a/messages/de.json b/messages/de.json
+index 7e01ea3..2fadc53 100644
+--- a/messages/de.json
++++ b/messages/de.json
+@@ -9191,6 +9191,37 @@
+   "auth_modal": {
+     "close_aria": "Schließen",
+     "callback": {
++      "signup": {
++        "title_orcid": "Anmeldung mit ORCID abschließen",
++        "title_github": "Anmeldung mit GitHub abschließen",
++        "intro_orcid": "ORCID hat deine E-Mail-Adresse nicht geteilt. Gib sie ein, und wir schicken dir einen Code, um zu bestätigen, dass sie dir gehört.",
++        "intro_github": "Dein GitHub-Konto hat keine bestätigte E-Mail-Adresse. Gib deine ein, und wir schicken dir einen Code zur Bestätigung.",
++        "existing_orcid": "Du hast schon ein OpenQCore-Konto? Nutze dessen E-Mail, dann wird deine ORCID iD damit verbunden.",
++        "existing_github": "Du hast schon ein OpenQCore-Konto? Nutze dessen E-Mail, um dich anzumelden.",
++        "signing_in_as": "Anmeldung als",
++        "email_label": "E-Mail-Adresse",
++        "send": "Code senden",
++        "sending": "Wird gesendet…",
++        "code_sent": "Wir haben einen 6-stelligen Code an {email} gesendet. Er läuft in {minutes} Minuten ab.",
++        "code_label": "Code",
++        "verify": "Bestätigen und anmelden",
++        "verifying": "Wird bestätigt…",
++        "change_email": "Andere E-Mail verwenden",
++        "resend": "Neuen Code senden",
++        "start_again": "Neu beginnen",
++        "errors": {
++          "SIGNUP_EXPIRED": "Die Anmeldung hat zu lange gedauert. Bitte beginne neu.",
++          "SIGNUP_OTHER_BROWSER": "Schließe die Anmeldung im selben Browser ab, in dem du sie begonnen hast.",
++          "SIGNUP_INVALID": "Dieser Anmeldelink ist ungültig. Bitte beginne neu.",
++          "EMAIL_INVALID": "Gib eine gültige E-Mail-Adresse ein.",
++          "TOO_MANY_CODES": "Es wurden zu viele Codes angefordert. Versuche es später erneut.",
++          "EMAIL_NOT_SENT": "Wir konnten die E-Mail nicht senden. Versuche es gleich noch einmal.",
++          "CODE_WRONG": "Der Code ist falsch. Noch {left} Versuche.",
++          "CODE_EXPIRED": "Der Code ist abgelaufen. Fordere einen neuen an.",
++          "TOO_MANY_ATTEMPTS": "Zu viele falsche Codes. Fordere einen neuen an.",
++          "ORCID_IN_USE": "Diese ORCID iD ist bereits mit einem anderen Konto verbunden."
++        }
++      },
+       "completing": "Anmeldung wird abgeschlossen",
+       "connecting": "Dein OpenQCore-Konto wird verbunden…",
+       "error_title": "Anmeldung nicht abgeschlossen",
+diff --git a/messages/en.json b/messages/en.json
+index 5341dfe..09df40a 100644
+--- a/messages/en.json
++++ b/messages/en.json
+@@ -9102,6 +9102,37 @@
+   "auth_modal": {
+     "close_aria": "Close",
+     "callback": {
++      "signup": {
++        "title_orcid": "Finish signing in with ORCID",
++        "title_github": "Finish signing in with GitHub",
++        "intro_orcid": "ORCID didn't share your e-mail address. Enter it and we'll send you a code to confirm it's yours.",
++        "intro_github": "Your GitHub account has no verified e-mail address. Enter yours and we'll send you a code to confirm it.",
++        "existing_orcid": "Already have an OpenQCore account? Use its e-mail and your ORCID iD will be connected to it.",
++        "existing_github": "Already have an OpenQCore account? Use its e-mail to sign in to it.",
++        "signing_in_as": "Signing in as",
++        "email_label": "E-mail address",
++        "send": "Send code",
++        "sending": "Sending…",
++        "code_sent": "We sent a 6-digit code to {email}. It expires in {minutes} minutes.",
++        "code_label": "Code",
++        "verify": "Confirm and sign in",
++        "verifying": "Confirming…",
++        "change_email": "Use a different e-mail",
++        "resend": "Send a new code",
++        "start_again": "Start again",
++        "errors": {
++          "SIGNUP_EXPIRED": "This sign-in took too long. Please start again.",
++          "SIGNUP_OTHER_BROWSER": "Finish signing in in the same browser you started in.",
++          "SIGNUP_INVALID": "This sign-in link isn't valid. Please start again.",
++          "EMAIL_INVALID": "Enter a valid e-mail address.",
++          "TOO_MANY_CODES": "Too many codes were requested. Try again later.",
++          "EMAIL_NOT_SENT": "We couldn't send the e-mail. Try again in a moment.",
++          "CODE_WRONG": "That code isn't right. {left} tries left.",
++          "CODE_EXPIRED": "The code expired. Send a new one.",
++          "TOO_MANY_ATTEMPTS": "Too many wrong codes. Send a new one.",
++          "ORCID_IN_USE": "This ORCID iD is already connected to another account."
++        }
++      },
+       "completing": "Completing sign-in",
+       "connecting": "Connecting your OpenQCore account…",
+       "error_title": "Sign-in didn't finish",
+diff --git a/messages/es.json b/messages/es.json
+index 839c251..04d056d 100644
+--- a/messages/es.json
++++ b/messages/es.json
+@@ -9191,6 +9191,37 @@
+   "auth_modal": {
+     "close_aria": "Cerrar",
+     "callback": {
++      "signup": {
++        "title_orcid": "Termina de iniciar sesión con ORCID",
++        "title_github": "Termina de iniciar sesión con GitHub",
++        "intro_orcid": "ORCID no compartió tu correo. Escríbelo y te enviaremos un código para confirmar que es tuyo.",
++        "intro_github": "Tu cuenta de GitHub no tiene un correo verificado. Escribe el tuyo y te enviaremos un código para confirmarlo.",
++        "existing_orcid": "¿Ya tienes una cuenta de OpenQCore? Usa su correo y tu ORCID iD se conectará a ella.",
++        "existing_github": "¿Ya tienes una cuenta de OpenQCore? Usa su correo para entrar en ella.",
++        "signing_in_as": "Iniciando sesión como",
++        "email_label": "Correo electrónico",
++        "send": "Enviar código",
++        "sending": "Enviando…",
++        "code_sent": "Enviamos un código de 6 dígitos a {email}. Caduca en {minutes} minutos.",
++        "code_label": "Código",
++        "verify": "Confirmar e iniciar sesión",
++        "verifying": "Confirmando…",
++        "change_email": "Usar otro correo",
++        "resend": "Enviar un código nuevo",
++        "start_again": "Empezar de nuevo",
++        "errors": {
++          "SIGNUP_EXPIRED": "El inicio de sesión tardó demasiado. Empieza de nuevo.",
++          "SIGNUP_OTHER_BROWSER": "Termina de iniciar sesión en el mismo navegador donde empezaste.",
++          "SIGNUP_INVALID": "Este enlace de inicio de sesión no es válido. Empieza de nuevo.",
++          "EMAIL_INVALID": "Escribe un correo válido.",
++          "TOO_MANY_CODES": "Se pidieron demasiados códigos. Inténtalo más tarde.",
++          "EMAIL_NOT_SENT": "No pudimos enviar el correo. Inténtalo en un momento.",
++          "CODE_WRONG": "El código no es correcto. Te quedan {left} intentos.",
++          "CODE_EXPIRED": "El código caducó. Pide uno nuevo.",
++          "TOO_MANY_ATTEMPTS": "Demasiados códigos incorrectos. Pide uno nuevo.",
++          "ORCID_IN_USE": "Este ORCID iD ya está conectado a otra cuenta."
++        }
++      },
+       "completing": "Completando el inicio de sesión",
+       "connecting": "Conectando tu cuenta de OpenQCore…",
+       "error_title": "No se completó el inicio de sesión",
+diff --git a/messages/fr.json b/messages/fr.json
+index 49fcc23..1cc229d 100644
+--- a/messages/fr.json
++++ b/messages/fr.json
+@@ -9191,6 +9191,37 @@
+   "auth_modal": {
+     "close_aria": "Fermer",
+     "callback": {
++      "signup": {
++        "title_orcid": "Terminer la connexion avec ORCID",
++        "title_github": "Terminer la connexion avec GitHub",
++        "intro_orcid": "ORCID n'a pas partagé votre adresse e-mail. Saisissez-la et nous vous enverrons un code pour confirmer qu'elle vous appartient.",
++        "intro_github": "Votre compte GitHub n'a aucune adresse e-mail vérifiée. Saisissez la vôtre et nous vous enverrons un code pour la confirmer.",
++        "existing_orcid": "Vous avez déjà un compte OpenQCore ? Utilisez son e-mail et votre identifiant ORCID y sera associé.",
++        "existing_github": "Vous avez déjà un compte OpenQCore ? Utilisez son e-mail pour vous y connecter.",
++        "signing_in_as": "Connexion en tant que",
++        "email_label": "Adresse e-mail",
++        "send": "Envoyer le code",
++        "sending": "Envoi…",
++        "code_sent": "Nous avons envoyé un code à 6 chiffres à {email}. Il expire dans {minutes} minutes.",
++        "code_label": "Code",
++        "verify": "Confirmer et se connecter",
++        "verifying": "Confirmation…",
++        "change_email": "Utiliser une autre adresse",
++        "resend": "Envoyer un nouveau code",
++        "start_again": "Recommencer",
++        "errors": {
++          "SIGNUP_EXPIRED": "La connexion a pris trop de temps. Veuillez recommencer.",
++          "SIGNUP_OTHER_BROWSER": "Terminez la connexion dans le navigateur où vous l'avez commencée.",
++          "SIGNUP_INVALID": "Ce lien de connexion n'est pas valide. Veuillez recommencer.",
++          "EMAIL_INVALID": "Saisissez une adresse e-mail valide.",
++          "TOO_MANY_CODES": "Trop de codes ont été demandés. Réessayez plus tard.",
++          "EMAIL_NOT_SENT": "Nous n'avons pas pu envoyer l'e-mail. Réessayez dans un instant.",
++          "CODE_WRONG": "Ce code est incorrect. Il vous reste {left} essais.",
++          "CODE_EXPIRED": "Le code a expiré. Demandez-en un nouveau.",
++          "TOO_MANY_ATTEMPTS": "Trop de codes incorrects. Demandez-en un nouveau.",
++          "ORCID_IN_USE": "Cet identifiant ORCID est déjà associé à un autre compte."
++        }
++      },
+       "completing": "Connexion en cours",
+       "connecting": "Connexion à votre compte OpenQCore…",
+       "error_title": "La connexion n'a pas abouti",
+diff --git a/messages/it.json b/messages/it.json
+index f9eef68..0ef8c49 100644
+--- a/messages/it.json
++++ b/messages/it.json
+@@ -9191,6 +9191,37 @@
+   "auth_modal": {
+     "close_aria": "Chiudi",
+     "callback": {
++      "signup": {
++        "title_orcid": "Completa l'accesso con ORCID",
++        "title_github": "Completa l'accesso con GitHub",
++        "intro_orcid": "ORCID non ha condiviso il tuo indirizzo e-mail. Inseriscilo e ti invieremo un codice per confermare che è tuo.",
++        "intro_github": "Il tuo account GitHub non ha un indirizzo e-mail verificato. Inserisci il tuo e ti invieremo un codice per confermarlo.",
++        "existing_orcid": "Hai già un account OpenQCore? Usa la sua e-mail e il tuo ORCID iD verrà collegato.",
++        "existing_github": "Hai già un account OpenQCore? Usa la sua e-mail per accedervi.",
++        "signing_in_as": "Accesso come",
++        "email_label": "Indirizzo e-mail",
++        "send": "Invia codice",
++        "sending": "Invio…",
++        "code_sent": "Abbiamo inviato un codice di 6 cifre a {email}. Scade tra {minutes} minuti.",
++        "code_label": "Codice",
++        "verify": "Conferma e accedi",
++        "verifying": "Conferma…",
++        "change_email": "Usa un'altra e-mail",
++        "resend": "Invia un nuovo codice",
++        "start_again": "Ricomincia",
++        "errors": {
++          "SIGNUP_EXPIRED": "L'accesso ha richiesto troppo tempo. Ricomincia.",
++          "SIGNUP_OTHER_BROWSER": "Completa l'accesso nello stesso browser in cui l'hai iniziato.",
++          "SIGNUP_INVALID": "Questo link di accesso non è valido. Ricomincia.",
++          "EMAIL_INVALID": "Inserisci un indirizzo e-mail valido.",
++          "TOO_MANY_CODES": "Sono stati richiesti troppi codici. Riprova più tardi.",
++          "EMAIL_NOT_SENT": "Non siamo riusciti a inviare l'e-mail. Riprova tra poco.",
++          "CODE_WRONG": "Il codice non è corretto. Restano {left} tentativi.",
++          "CODE_EXPIRED": "Il codice è scaduto. Richiedine uno nuovo.",
++          "TOO_MANY_ATTEMPTS": "Troppi codici errati. Richiedine uno nuovo.",
++          "ORCID_IN_USE": "Questo ORCID iD è già collegato a un altro account."
++        }
++      },
+       "completing": "Accesso in corso",
+       "connecting": "Collegamento al tuo account OpenQCore…",
+       "error_title": "L'accesso non è stato completato",
+diff --git a/messages/pt.json b/messages/pt.json
+index 2faa76c..0ab4f9b 100644
+--- a/messages/pt.json
++++ b/messages/pt.json
+@@ -9023,6 +9023,37 @@
+     },
+     "close_aria": "Fechar",
+     "callback": {
++      "signup": {
++        "title_orcid": "Conclua o login com ORCID",
++        "title_github": "Conclua o login com GitHub",
++        "intro_orcid": "O ORCID não compartilhou seu e-mail. Digite-o e enviaremos um código para confirmar que é seu.",
++        "intro_github": "Sua conta do GitHub não tem um e-mail verificado. Digite o seu e enviaremos um código para confirmá-lo.",
++        "existing_orcid": "Já tem uma conta OpenQCore? Use o e-mail dela e seu ORCID iD será conectado a ela.",
++        "existing_github": "Já tem uma conta OpenQCore? Use o e-mail dela para entrar.",
++        "signing_in_as": "Entrando como",
++        "email_label": "Endereço de e-mail",
++        "send": "Enviar código",
++        "sending": "Enviando…",
++        "code_sent": "Enviamos um código de 6 dígitos para {email}. Ele expira em {minutes} minutos.",
++        "code_label": "Código",
++        "verify": "Confirmar e entrar",
++        "verifying": "Confirmando…",
++        "change_email": "Usar outro e-mail",
++        "resend": "Enviar um novo código",
++        "start_again": "Começar de novo",
++        "errors": {
++          "SIGNUP_EXPIRED": "O login demorou demais. Comece de novo.",
++          "SIGNUP_OTHER_BROWSER": "Conclua o login no mesmo navegador em que começou.",
++          "SIGNUP_INVALID": "Este link de login não é válido. Comece de novo.",
++          "EMAIL_INVALID": "Digite um e-mail válido.",
++          "TOO_MANY_CODES": "Foram pedidos códigos demais. Tente mais tarde.",
++          "EMAIL_NOT_SENT": "Não conseguimos enviar o e-mail. Tente daqui a pouco.",
++          "CODE_WRONG": "O código não está certo. Restam {left} tentativas.",
++          "CODE_EXPIRED": "O código expirou. Peça um novo.",
++          "TOO_MANY_ATTEMPTS": "Códigos errados demais. Peça um novo.",
++          "ORCID_IN_USE": "Este ORCID iD já está conectado a outra conta."
++        }
++      },
+       "completing": "Concluindo o login",
+       "connecting": "Conectando sua conta OpenQCore…",
+       "error_title": "O login não foi concluído",
+diff --git a/messages/sq.json b/messages/sq.json
+index 2d8b69d..bf4cb9c 100644
+--- a/messages/sq.json
++++ b/messages/sq.json
+@@ -9191,6 +9191,37 @@
+   "auth_modal": {
+     "close_aria": "Mbyll",
+     "callback": {
++      "signup": {
++        "title_orcid": "Përfundo hyrjen me ORCID",
++        "title_github": "Përfundo hyrjen me GitHub",
++        "intro_orcid": "ORCID nuk e ndau adresën tënde të e-mailit. Shkruaje dhe do të të dërgojmë një kod për të konfirmuar që është jotja.",
++        "intro_github": "Llogaria jote GitHub nuk ka adresë e-maili të verifikuar. Shkruaj tënden dhe do të të dërgojmë një kod për ta konfirmuar.",
++        "existing_orcid": "Ke tashmë një llogari OpenQCore? Përdor e-mailin e saj dhe ORCID iD yt do të lidhet me të.",
++        "existing_github": "Ke tashmë një llogari OpenQCore? Përdor e-mailin e saj për të hyrë në të.",
++        "signing_in_as": "Po hyn si",
++        "email_label": "Adresa e e-mailit",
++        "send": "Dërgo kodin",
++        "sending": "Po dërgohet…",
++        "code_sent": "Dërguam një kod 6-shifror te {email}. Skadon pas {minutes} minutash.",
++        "code_label": "Kodi",
++        "verify": "Konfirmo dhe hyr",
++        "verifying": "Po konfirmohet…",
++        "change_email": "Përdor një e-mail tjetër",
++        "resend": "Dërgo një kod të ri",
++        "start_again": "Fillo nga e para",
++        "errors": {
++          "SIGNUP_EXPIRED": "Hyrja zgjati shumë. Fillo nga e para.",
++          "SIGNUP_OTHER_BROWSER": "Përfundo hyrjen në të njëjtin shfletues ku e fillove.",
++          "SIGNUP_INVALID": "Kjo lidhje hyrjeje nuk është e vlefshme. Fillo nga e para.",
++          "EMAIL_INVALID": "Shkruaj një adresë e-maili të vlefshme.",
++          "TOO_MANY_CODES": "U kërkuan shumë kode. Provo më vonë.",
++          "EMAIL_NOT_SENT": "Nuk arritëm ta dërgojmë e-mailin. Provo pas pak.",
++          "CODE_WRONG": "Kodi nuk është i saktë. Të kanë mbetur {left} përpjekje.",
++          "CODE_EXPIRED": "Kodi skadoi. Dërgo një të ri.",
++          "TOO_MANY_ATTEMPTS": "Shumë kode të gabuara. Dërgo një të ri.",
++          "ORCID_IN_USE": "Ky ORCID iD është tashmë i lidhur me një llogari tjetër."
++        }
++      },
+       "completing": "Po përfundon hyrja",
+       "connecting": "Po lidhet llogaria jote OpenQCore…",
+       "error_title": "Hyrja nuk përfundoi",
+diff --git a/messages/tr.json b/messages/tr.json
+index 8e8056b..f207fb1 100644
+--- a/messages/tr.json
++++ b/messages/tr.json
+@@ -9071,6 +9071,37 @@
+     },
+     "close_aria": "Kapat",
+     "callback": {
++      "signup": {
++        "title_orcid": "ORCID ile girişi tamamla",
++        "title_github": "GitHub ile girişi tamamla",
++        "intro_orcid": "ORCID e-posta adresini paylaşmadı. Adresini yaz, senin olduğunu doğrulamak için bir kod gönderelim.",
++        "intro_github": "GitHub hesabında doğrulanmış bir e-posta yok. Kendi adresini yaz, doğrulamak için bir kod gönderelim.",
++        "existing_orcid": "Zaten bir OpenQCore hesabın var mı? Onun e-postasını kullan, ORCID iD'n o hesaba bağlansın.",
++        "existing_github": "Zaten bir OpenQCore hesabın var mı? Giriş yapmak için onun e-postasını kullan.",
++        "signing_in_as": "Şu kişi olarak giriş yapılıyor",
++        "email_label": "E-posta adresi",
++        "send": "Kodu gönder",
++        "sending": "Gönderiliyor…",
++        "code_sent": "{email} adresine 6 haneli bir kod gönderdik. {minutes} dakika içinde geçerliliğini yitirir.",
++        "code_label": "Kod",
++        "verify": "Onayla ve giriş yap",
++        "verifying": "Onaylanıyor…",
++        "change_email": "Başka bir e-posta kullan",
++        "resend": "Yeni kod gönder",
++        "start_again": "Baştan başla",
++        "errors": {
++          "SIGNUP_EXPIRED": "Giriş çok uzun sürdü. Lütfen baştan başla.",
++          "SIGNUP_OTHER_BROWSER": "Girişi başladığın tarayıcıda tamamla.",
++          "SIGNUP_INVALID": "Bu giriş bağlantısı geçersiz. Lütfen baştan başla.",
++          "EMAIL_INVALID": "Geçerli bir e-posta adresi yaz.",
++          "TOO_MANY_CODES": "Çok fazla kod istendi. Daha sonra tekrar dene.",
++          "EMAIL_NOT_SENT": "E-postayı gönderemedik. Biraz sonra tekrar dene.",
++          "CODE_WRONG": "Kod yanlış. {left} deneme hakkın kaldı.",
++          "CODE_EXPIRED": "Kodun süresi doldu. Yeni bir kod iste.",
++          "TOO_MANY_ATTEMPTS": "Çok fazla yanlış kod. Yeni bir kod iste.",
++          "ORCID_IN_USE": "Bu ORCID iD zaten başka bir hesaba bağlı."
++        }
++      },
+       "completing": "Giriş tamamlanıyor",
+       "connecting": "OpenQCore hesabın bağlanıyor…",
+       "error_title": "Giriş tamamlanamadı",

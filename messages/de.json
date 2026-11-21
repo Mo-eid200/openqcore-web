@@ -9191,6 +9191,37 @@
   "auth_modal": {
     "close_aria": "Schließen",
     "callback": {
+      "signup": {
+        "title_orcid": "Anmeldung mit ORCID abschließen",
+        "title_github": "Anmeldung mit GitHub abschließen",
+        "intro_orcid": "ORCID hat deine E-Mail-Adresse nicht geteilt. Gib sie ein, und wir schicken dir einen Code, um zu bestätigen, dass sie dir gehört.",
+        "intro_github": "Dein GitHub-Konto hat keine bestätigte E-Mail-Adresse. Gib deine ein, und wir schicken dir einen Code zur Bestätigung.",
+        "existing_orcid": "Du hast schon ein OpenQCore-Konto? Nutze dessen E-Mail, dann wird deine ORCID iD damit verbunden.",
+        "existing_github": "Du hast schon ein OpenQCore-Konto? Nutze dessen E-Mail, um dich anzumelden.",
+        "signing_in_as": "Anmeldung als",
+        "email_label": "E-Mail-Adresse",
+        "send": "Code senden",
+        "sending": "Wird gesendet…",
+        "code_sent": "Wir haben einen 6-stelligen Code an {email} gesendet. Er läuft in {minutes} Minuten ab.",
+        "code_label": "Code",
+        "verify": "Bestätigen und anmelden",
+        "verifying": "Wird bestätigt…",
+        "change_email": "Andere E-Mail verwenden",
+        "resend": "Neuen Code senden",
+        "start_again": "Neu beginnen",
+        "errors": {
+          "SIGNUP_EXPIRED": "Die Anmeldung hat zu lange gedauert. Bitte beginne neu.",
+          "SIGNUP_OTHER_BROWSER": "Schließe die Anmeldung im selben Browser ab, in dem du sie begonnen hast.",
+          "SIGNUP_INVALID": "Dieser Anmeldelink ist ungültig. Bitte beginne neu.",
+          "EMAIL_INVALID": "Gib eine gültige E-Mail-Adresse ein.",
+          "TOO_MANY_CODES": "Es wurden zu viele Codes angefordert. Versuche es später erneut.",
+          "EMAIL_NOT_SENT": "Wir konnten die E-Mail nicht senden. Versuche es gleich noch einmal.",
+          "CODE_WRONG": "Der Code ist falsch. Noch {left} Versuche.",
+          "CODE_EXPIRED": "Der Code ist abgelaufen. Fordere einen neuen an.",
+          "TOO_MANY_ATTEMPTS": "Zu viele falsche Codes. Fordere einen neuen an.",
+          "ORCID_IN_USE": "Diese ORCID iD ist bereits mit einem anderen Konto verbunden."
+        }
+      },
       "completing": "Anmeldung wird abgeschlossen",
       "connecting": "Dein OpenQCore-Konto wird verbunden…",
       "error_title": "Anmeldung nicht abgeschlossen",

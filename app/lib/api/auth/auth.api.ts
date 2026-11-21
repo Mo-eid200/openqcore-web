@@ -191,6 +191,35 @@ export async function verifyMfaLogin(challengeId: string, code: string): Promise
   return res.data;
 }
 
+// ─── Finishing a social sign-in without a provider e-mail ─────────────────────
+//
+// ORCID without a public e-mail, GitHub without a verified one: the callback
+// page gets ?signup=<token>. The API binds the token to this browser with an
+// httpOnly cookie, which these calls send (withCredentials).
+
+export type OAuthSignupInfo = {
+  provider: "orcid" | "github";
+  name: string | null;
+  orcid: string | null;
+  code_minutes: number;
+};
+
+export type OAuthSignupResult = { token: string } | { mfa_challenge: string };
+
+export async function oauthSignupInfo(token: string): Promise<OAuthSignupInfo> {
+  const res = await qxtAuthClient.get("/api/v1/auth/oauth/signup", { params: { token } });
+  return res.data;
+}
+
+export async function oauthSignupSendCode(token: string, email: string): Promise<void> {
+  await qxtAuthClient.post("/api/v1/auth/oauth/signup/email", { token, email });
+}
+
+export async function oauthSignupVerify(token: string, code: string): Promise<OAuthSignupResult> {
+  const res = await qxtAuthClient.post("/api/v1/auth/oauth/signup/verify", { token, code });
+  return res.data;
+}
+
 // ─── Billing ──────────────────────────────────────────────────────────────────
 
 export async function fetchBillingOverview(): Promise<RawBillingResponse | null> {

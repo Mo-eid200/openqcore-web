@@ -9191,6 +9191,37 @@
   "auth_modal": {
     "close_aria": "Cerrar",
     "callback": {
+      "signup": {
+        "title_orcid": "Termina de iniciar sesión con ORCID",
+        "title_github": "Termina de iniciar sesión con GitHub",
+        "intro_orcid": "ORCID no compartió tu correo. Escríbelo y te enviaremos un código para confirmar que es tuyo.",
+        "intro_github": "Tu cuenta de GitHub no tiene un correo verificado. Escribe el tuyo y te enviaremos un código para confirmarlo.",
+        "existing_orcid": "¿Ya tienes una cuenta de OpenQCore? Usa su correo y tu ORCID iD se conectará a ella.",
+        "existing_github": "¿Ya tienes una cuenta de OpenQCore? Usa su correo para entrar en ella.",
+        "signing_in_as": "Iniciando sesión como",
+        "email_label": "Correo electrónico",
+        "send": "Enviar código",
+        "sending": "Enviando…",
+        "code_sent": "Enviamos un código de 6 dígitos a {email}. Caduca en {minutes} minutos.",
+        "code_label": "Código",
+        "verify": "Confirmar e iniciar sesión",
+        "verifying": "Confirmando…",
+        "change_email": "Usar otro correo",
+        "resend": "Enviar un código nuevo",
+        "start_again": "Empezar de nuevo",
+        "errors": {
+          "SIGNUP_EXPIRED": "El inicio de sesión tardó demasiado. Empieza de nuevo.",
+          "SIGNUP_OTHER_BROWSER": "Termina de iniciar sesión en el mismo navegador donde empezaste.",
+          "SIGNUP_INVALID": "Este enlace de inicio de sesión no es válido. Empieza de nuevo.",
+          "EMAIL_INVALID": "Escribe un correo válido.",
+          "TOO_MANY_CODES": "Se pidieron demasiados códigos. Inténtalo más tarde.",
+          "EMAIL_NOT_SENT": "No pudimos enviar el correo. Inténtalo en un momento.",
+          "CODE_WRONG": "El código no es correcto. Te quedan {left} intentos.",
+          "CODE_EXPIRED": "El código caducó. Pide uno nuevo.",
+          "TOO_MANY_ATTEMPTS": "Demasiados códigos incorrectos. Pide uno nuevo.",
+          "ORCID_IN_USE": "Este ORCID iD ya está conectado a otra cuenta."
+        }
+      },
       "completing": "Completando el inicio de sesión",
       "connecting": "Conectando tu cuenta de OpenQCore…",
       "error_title": "No se completó el inicio de sesión",

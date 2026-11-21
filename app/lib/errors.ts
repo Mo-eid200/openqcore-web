@@ -13,7 +13,7 @@ export type ApiErrorLike = {
     data?: {
       detail?: string | { message?: string; code?: string; [key: string]: unknown };
       message?: string;
-      error?: { message?: string; code?: string };
+      error?: { message?: string; code?: string; extra?: Record<string, unknown> };
       [key: string]: unknown;
     };
   };
@@ -30,6 +30,17 @@ export function errorMessage(caught: unknown, fallback = "Something went wrong")
   const d = e.response?.data;
   const detail = typeof d?.detail === "string" ? d.detail : d?.detail?.message;
   return detail || d?.error?.message || d?.message || e.message || fallback;
+}
+
+/** The API's machine-readable error code ({"error": {"code"}} or {"detail": {"code"}}). */
+export function errorCode(caught: unknown): string | undefined {
+  const d = asApiError(caught).response?.data;
+  return d?.error?.code || (typeof d?.detail === "object" ? d.detail.code : undefined) || undefined;
+}
+
+/** Extra fields the API attached to an error ({"error": {"extra": {...}}}). */
+export function errorExtra(caught: unknown): Record<string, unknown> {
+  return asApiError(caught).response?.data?.error?.extra ?? {};
 }
 
 export function errorStatus(caught: unknown): number | undefined {

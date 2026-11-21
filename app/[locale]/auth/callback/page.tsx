@@ -7,6 +7,8 @@
 // back to. The API sends one of:
 //   ?token=<jwt>&next=<path>          signed in
 //   ?mfa_challenge=<id>&next=<path>   two-factor sign-in is on: ask for the code
+//   ?signup=<token>&provider=<p>      no usable e-mail came back (ORCID, GitHub):
+//                                     ask for one and confirm it (SignupForm)
 //   ?auth_error=<CODE>                nothing signed in (GitHub and ORCID)
 //   ?error=...                        the provider refused (older flows)
 
@@ -18,6 +20,8 @@ import { ShieldCheck } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useMounted } from "@/app/hooks/useMounted";
 import { errorMessage } from "@/app/lib/errors";
+import type { OAuthSignupResult } from "@/app/lib/api/auth/auth.api";
+import SignupForm from "./SignupForm";
 
 const KNOWN_ERRORS = new Set(["GITHUB_NO_VERIFIED_EMAIL", "ORCID_NO_ACCOUNT", "ACCOUNT_DISABLED"]);
 const DENIED = new Set(["GITHUB_DENIED", "ORCID_DENIED", "access_denied"]);
@@ -50,8 +54,19 @@ export default function OAuthCallbackPage() {
 
   const hashToken = useHashParam("token");
   const hashAccessToken = useHashParam("access_token");
-  const token = searchParams.get("token") || searchParams.get("access_token") || hashToken || hashAccessToken;
-  const challenge = searchParams.get("mfa_challenge");
+  const signupToken = searchParams.get("signup");
+  const signupProvider = searchParams.get("provider") === "github" ? "github" : "orcid";
+  const [signupResult, setSignupResult] = useState<OAuthSignupResult | null>(null);
+
+  const token =
+    searchParams.get("token") ||
+    searchParams.get("access_token") ||
+    hashToken ||
+    hashAccessToken ||
+    (signupResult && "token" in signupResult ? signupResult.token : null);
+  const challenge =
+    searchParams.get("mfa_challenge") ||
+    (signupResult && "mfa_challenge" in signupResult ? signupResult.mfa_challenge : null);
   const next = safeNext(searchParams.get("next"));
   const providerError = searchParams.get("auth_error") || searchParams.get("error");
 
@@ -98,7 +113,7 @@ export default function OAuthCallbackPage() {
     errorKey = KNOWN_ERRORS.has(providerError) ? providerError : DENIED.has(providerError) ? "DENIED" : "default";
   }
   // nothing to work with (opened directly, or the token was already used)
-  if (!errorKey && mounted && !token && !challenge) errorKey = "default";
+  if (!errorKey && mounted && !token && !challenge && !signupToken) errorKey = "default";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050811] px-4">
@@ -153,6 +168,13 @@ export default function OAuthCallbackPage() {
             {submitting ? t("mfa.verifying") : t("mfa.verify_cta")}
           </button>
         </form>
+      ) : signupToken && !signupResult ? (
+        <SignupForm
+          token={signupToken}
+          provider={signupProvider}
+          onSignedIn={setSignupResult}
+          onStartAgain={() => router.replace("/")}
+        />
       ) : (
         <div className="flex flex-col items-center gap-5">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#d4af37]" />

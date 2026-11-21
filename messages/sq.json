@@ -9191,6 +9191,37 @@
   "auth_modal": {
     "close_aria": "Mbyll",
     "callback": {
+      "signup": {
+        "title_orcid": "Përfundo hyrjen me ORCID",
+        "title_github": "Përfundo hyrjen me GitHub",
+        "intro_orcid": "ORCID nuk e ndau adresën tënde të e-mailit. Shkruaje dhe do të të dërgojmë një kod për të konfirmuar që është jotja.",
+        "intro_github": "Llogaria jote GitHub nuk ka adresë e-maili të verifikuar. Shkruaj tënden dhe do të të dërgojmë një kod për ta konfirmuar.",
+        "existing_orcid": "Ke tashmë një llogari OpenQCore? Përdor e-mailin e saj dhe ORCID iD yt do të lidhet me të.",
+        "existing_github": "Ke tashmë një llogari OpenQCore? Përdor e-mailin e saj për të hyrë në të.",
+        "signing_in_as": "Po hyn si",
+        "email_label": "Adresa e e-mailit",
+        "send": "Dërgo kodin",
+        "sending": "Po dërgohet…",
+        "code_sent": "Dërguam një kod 6-shifror te {email}. Skadon pas {minutes} minutash.",
+        "code_label": "Kodi",
+        "verify": "Konfirmo dhe hyr",
+        "verifying": "Po konfirmohet…",
+        "change_email": "Përdor një e-mail tjetër",
+        "resend": "Dërgo një kod të ri",
+        "start_again": "Fillo nga e para",
+        "errors": {
+          "SIGNUP_EXPIRED": "Hyrja zgjati shumë. Fillo nga e para.",
+          "SIGNUP_OTHER_BROWSER": "Përfundo hyrjen në të njëjtin shfletues ku e fillove.",
+          "SIGNUP_INVALID": "Kjo lidhje hyrjeje nuk është e vlefshme. Fillo nga e para.",
+          "EMAIL_INVALID": "Shkruaj një adresë e-maili të vlefshme.",
+          "TOO_MANY_CODES": "U kërkuan shumë kode. Provo më vonë.",
+          "EMAIL_NOT_SENT": "Nuk arritëm ta dërgojmë e-mailin. Provo pas pak.",
+          "CODE_WRONG": "Kodi nuk është i saktë. Të kanë mbetur {left} përpjekje.",
+          "CODE_EXPIRED": "Kodi skadoi. Dërgo një të ri.",
+          "TOO_MANY_ATTEMPTS": "Shumë kode të gabuara. Dërgo një të ri.",
+          "ORCID_IN_USE": "Ky ORCID iD është tashmë i lidhur me një llogari tjetër."
+        }
+      },
       "completing": "Po përfundon hyrja",
       "connecting": "Po lidhet llogaria jote OpenQCore…",
       "error_title": "Hyrja nuk përfundoi",

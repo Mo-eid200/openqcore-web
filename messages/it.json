@@ -9191,6 +9191,37 @@
   "auth_modal": {
     "close_aria": "Chiudi",
     "callback": {
+      "signup": {
+        "title_orcid": "Completa l'accesso con ORCID",
+        "title_github": "Completa l'accesso con GitHub",
+        "intro_orcid": "ORCID non ha condiviso il tuo indirizzo e-mail. Inseriscilo e ti invieremo un codice per confermare che è tuo.",
+        "intro_github": "Il tuo account GitHub non ha un indirizzo e-mail verificato. Inserisci il tuo e ti invieremo un codice per confermarlo.",
+        "existing_orcid": "Hai già un account OpenQCore? Usa la sua e-mail e il tuo ORCID iD verrà collegato.",
+        "existing_github": "Hai già un account OpenQCore? Usa la sua e-mail per accedervi.",
+        "signing_in_as": "Accesso come",
+        "email_label": "Indirizzo e-mail",
+        "send": "Invia codice",
+        "sending": "Invio…",
+        "code_sent": "Abbiamo inviato un codice di 6 cifre a {email}. Scade tra {minutes} minuti.",
+        "code_label": "Codice",
+        "verify": "Conferma e accedi",
+        "verifying": "Conferma…",
+        "change_email": "Usa un'altra e-mail",
+        "resend": "Invia un nuovo codice",
+        "start_again": "Ricomincia",
+        "errors": {
+          "SIGNUP_EXPIRED": "L'accesso ha richiesto troppo tempo. Ricomincia.",
+          "SIGNUP_OTHER_BROWSER": "Completa l'accesso nello stesso browser in cui l'hai iniziato.",
+          "SIGNUP_INVALID": "Questo link di accesso non è valido. Ricomincia.",
+          "EMAIL_INVALID": "Inserisci un indirizzo e-mail valido.",
+          "TOO_MANY_CODES": "Sono stati richiesti troppi codici. Riprova più tardi.",
+          "EMAIL_NOT_SENT": "Non siamo riusciti a inviare l'e-mail. Riprova tra poco.",
+          "CODE_WRONG": "Il codice non è corretto. Restano {left} tentativi.",
+          "CODE_EXPIRED": "Il codice è scaduto. Richiedine uno nuovo.",
+          "TOO_MANY_ATTEMPTS": "Troppi codici errati. Richiedine uno nuovo.",
+          "ORCID_IN_USE": "Questo ORCID iD è già collegato a un altro account."
+        }
+      },
       "completing": "Accesso in corso",
       "connecting": "Collegamento al tuo account OpenQCore…",
       "error_title": "L'accesso non è stato completato",
